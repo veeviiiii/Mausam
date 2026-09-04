@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useState } from "react";
 import { motion } from "framer-motion";
 import { PLACES } from "../data/seed";
 import { useApp } from "../state/AppState";
@@ -17,8 +17,14 @@ const LocationMap = lazy(() =>
   import("../components/LocationMap").then((m) => ({ default: m.LocationMap })),
 );
 
+/** Same chunk-splitting rationale as the map: radar is not homepage weight. */
+const RadarMap = lazy(() =>
+  import("../components/RadarMap").then((m) => ({ default: m.RadarMap })),
+);
+
 export function PlacesScreen() {
   const { place, selectPlace } = useApp();
+  const [radarOpen, setRadarOpen] = useState(false);
 
   return (
     <>
@@ -28,8 +34,19 @@ export function PlacesScreen() {
       />
 
       <Suspense fallback={<MapSkeleton />}>
-        <LocationMap places={PLACES} activeId={place.id} onSelect={selectPlace} />
+        <LocationMap
+          places={PLACES}
+          activeId={place.id}
+          onSelect={selectPlace}
+          onExpand={() => setRadarOpen(true)}
+        />
       </Suspense>
+
+      {radarOpen ? (
+        <Suspense fallback={null}>
+          <RadarMap onClose={() => setRadarOpen(false)} />
+        </Suspense>
+      ) : null}
 
       <div className="flex flex-col gap-2.5 px-4 lg:grid lg:grid-cols-2 lg:gap-4 lg:px-0 2xl:grid-cols-3">
         {PLACES.map((p) => (

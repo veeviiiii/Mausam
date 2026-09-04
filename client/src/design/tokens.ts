@@ -493,6 +493,11 @@ export function skyCssVars(
     "--hair-strong": g.hairStrong,
     "--chip-on": g.chip,
     "--tab-scrim": g.tabScrim,
+    // The blur-free treatment, always emitted so anything that needs to drop
+    // backdrop-filter mid-animation has a surface to fall back to that the
+    // contrast audit has already cleared (measureGlass(..., flat)).
+    "--glass-scrim-flat": `rgba(${g.scrim.join(",")},${GLASS_FLAT[sky.mode].scrimA})`,
+    "--glass-fill-flat": `rgba(${g.fill.join(",")},${GLASS_FLAT[sky.mode].fillA})`,
     "--hero-txt": sky.hero.text,
     "--hero-txt-2": sky.hero.textMuted,
   };
@@ -613,3 +618,44 @@ export const MAP = {
   fallbackBackground: "#0B1017",
   graticule: "rgba(150,175,200,.14)",
 } as const;
+
+/* ------------------------------------------------------------------ *
+ * 9. Radar overlays.
+ *
+ * Provider terms verified before wiring, not assumed:
+ *   - RainViewer  : keyless, global radar, ~5 min refresh. Attribution is a
+ *                   condition of use, so RADAR_ATTRIBUTION is not optional
+ *                   chrome — it ships whenever the layer is shown.
+ *   - WAQI        : works on the documented public demo token, upgradeable to
+ *                   your own via VITE_WAQI_TOKEN.
+ *   - OpenWeather : free tier, but needs its own key (VITE_OWM_KEY). Verified
+ *                   401 without one, so the layer declares itself unavailable
+ *                   rather than rendering an empty overlay.
+ *   - Humidity    : deliberately absent. OWM's free Weather Maps 1.0 set has
+ *                   no humidity layer, and Open-Meteo's map-layer project is
+ *                   still beta with breaking changes expected. Per CLAUDE.md,
+ *                   cut it cleanly rather than half-wire it — humidity is
+ *                   already covered per-city on the persona cards and in the
+ *                   hourly metric chart.
+ * ------------------------------------------------------------------ */
+
+export type RadarLayerId = "precipitation" | "wind" | "aqi";
+
+export const RADAR = {
+  /** Frame index endpoint; the tile template is built from its response. */
+  rainviewerIndex: "https://api.rainviewer.com/public/weather-maps.json",
+  owmTemplate: (key: string) =>
+    `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${key}`,
+  waqiTemplate: (token: string) =>
+    `https://tiles.aqicn.org/tiles/usepa-aqi/{z}/{x}/{y}.png?token=${token}`,
+  /** WAQI's documented public token, so the layer works with no setup. */
+  waqiDemoToken: "_openaq_",
+  /** Crossfade between overlays; never a hard pop. */
+  fadeMs: 350,
+} as const;
+
+export const RADAR_ATTRIBUTION: Record<RadarLayerId, { text: string; href: string }> = {
+  precipitation: { text: "Weather data by RainViewer", href: "https://www.rainviewer.com/" },
+  wind: { text: "Wind data by OpenWeather", href: "https://openweathermap.org/" },
+  aqi: { text: "Air quality by WAQI", href: "https://waqi.info/" },
+};

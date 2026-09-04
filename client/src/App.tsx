@@ -5,6 +5,7 @@ import { skyCssVars } from "./design/tokens";
 import { PLACES } from "./data/seed";
 import { SkyBackground } from "./components/SkyBackground";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { PerfOverlay } from "./components/PerfOverlay";
 import { PullToRefresh } from "./components/PullToRefresh";
 import { TabBar } from "./components/TabBar";
 import { SideNav } from "./components/SideNav";
@@ -49,8 +50,12 @@ export default function App() {
 
   const vars = skyCssVars(condition, timeOfDay, flatGlass) as React.CSSProperties;
 
+  const showPerf =
+    typeof window !== "undefined" && new URLSearchParams(window.location.search).has("perf");
+
   return (
     <div className="flex h-full justify-center bg-[#05080d]">
+      {showPerf ? <PerfOverlay /> : null}
       <main
         className="relative h-full w-full max-w-[430px] overflow-hidden lg:max-w-none"
         style={vars}

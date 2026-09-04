@@ -48,6 +48,19 @@
   }
   /* Deliberately no backdrop-filter: at chip size the blur is imperceptible but
      each one is a separate composited layer. The fill alone carries it. */
+  /* While a surface is animating, drop the blur and swap in the flat fill.
+     A transformed backdrop-filter element is re-sampled and re-blurred every
+     frame; across a stack of cards that is the dominant cost of the whole
+     interaction. Restored automatically when the motion window closes. */
+  [data-motion="on"] .glass,
+  [data-motion="on"] .glass-chip {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background:
+      linear-gradient(var(--glass-scrim-flat), var(--glass-scrim-flat)),
+      var(--glass-fill-flat);
+  }
+
   /* Stand-in for .glass-sheet while it is mid-morph: same colour weight, but
      no backdrop-filter, so resizing it costs nothing per frame. Swapped for the
      real frosted surface once the layout animation lands. */

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "../state/AppState";
 import { PLACES } from "../data/seed";
@@ -13,6 +14,7 @@ import { suppressedPersonas } from "../personalization/rules";
 import { CONDITION_LABEL } from "../design/tokens";
 import { springCard, fade } from "../animations/variants";
 import { relativeAge } from "../lib/time";
+import { useMotionWindow } from "../lib/useMotionWindow";
 import type { SheetTarget } from "../components/DetailSheet";
 
 export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
@@ -31,6 +33,17 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
   } = useApp();
 
   const suppressed = suppressedPersonas(place, personas);
+
+  /**
+   * Cards drop their blur while the stack is moving. Opened by any change to
+   * the stack's membership or order, by entering arrange mode, and by a tap
+   * (the press-scale and the sheet morph that follows are the same problem).
+   */
+  const [inMotion, beginMotion] = useMotionWindow();
+  const stackSignature = cards.map((c) => c.id).join("|") + (arrange ? "|arrange" : "");
+  useEffect(() => {
+    beginMotion();
+  }, [stackSignature, beginMotion]);
 
   return (
     <>
@@ -161,7 +174,10 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
       {loading ? (
         <SkeletonStack count={Math.max(2, cards.length)} />
       ) : (
-        <div className="flex flex-col gap-3 px-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:px-0 2xl:grid-cols-3">
+        <div
+          data-motion={inMotion ? "on" : "off"}
+          className="flex flex-col gap-3 px-4 lg:grid lg:grid-cols-2 lg:items-start lg:gap-4 lg:px-0 2xl:grid-cols-3"
+        >
           <AnimatePresence initial={false}>
             {cards.map((card, i) => (
               <PersonaCard
@@ -175,6 +191,7 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
                 arrange={arrange}
                 onOpen={() => onOpen({ kind: "card", id: card.id })}
                 onMove={(dir) => moveCard(card.id, dir)}
+                onPressStart={beginMotion}
               />
             ))}
           </AnimatePresence>

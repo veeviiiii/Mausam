@@ -25,6 +25,8 @@ interface Props {
   arrange: boolean;
   onOpen: () => void;
   onMove: (dir: "up" | "down") => void;
+  /** Opens the stack's motion window so the press-scale is not blurred. */
+  onPressStart?: () => void;
 }
 
 export function PersonaCard({
@@ -37,6 +39,7 @@ export function PersonaCard({
   arrange,
   onOpen,
   onMove,
+  onPressStart,
 }: Props) {
   const [whyOpen, setWhyOpen] = useState(false);
   const rule = CARD_RULES[card.id];
@@ -67,6 +70,7 @@ export function PersonaCard({
               }
             }
       }
+      onPointerDown={onPressStart}
       whileTap={arrange ? undefined : { scale: 0.975 }}
       className={`glass flex h-full flex-col px-4 pb-3.5 pt-4 ${arrange ? "" : "cursor-pointer"}`}
       style={{ borderRadius: RADIUS.card }}

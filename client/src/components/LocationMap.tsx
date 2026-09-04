@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MAP, WARNING_COLOR } from "../design/tokens";
@@ -22,10 +23,13 @@ export function LocationMap({
   places,
   activeId,
   onSelect,
+  onExpand,
 }: {
   places: Place[];
   activeId: string;
   onSelect: (id: string) => void;
+  /** Opens the full-screen radar; the container is its morph source. */
+  onExpand?: () => void;
 }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -202,7 +206,8 @@ export function LocationMap({
   }, [places]);
 
   return (
-    <div
+    <motion.div
+      layoutId="radar-map"
       className="relative mx-4 mb-3 h-[188px] overflow-hidden rounded-[20px] border lg:mx-0 lg:mb-5 lg:h-[340px]"
       style={{ borderColor: "var(--hair)", background: MAP.fallbackBackground }}
     >
@@ -216,13 +221,28 @@ export function LocationMap({
         <div ref={hostRef} className="h-full w-full" />
       )}
 
+      {onExpand ? (
+        <button
+          type="button"
+          onClick={onExpand}
+          className="absolute bottom-3 right-3 z-[2] rounded-lg px-2.5 py-1.5 text-[11.5px] font-semibold"
+          style={{
+            background: "rgba(6,10,16,.74)",
+            border: "1px solid rgba(255,255,255,.18)",
+            color: "#fff",
+          }}
+        >
+          Open radar
+        </button>
+      ) : null}
+
       <span
         className="instrument pointer-events-none absolute left-3 top-3 rounded px-1.5 py-0.5"
         style={{ background: "rgba(6,10,16,.6)", color: "rgba(255,255,255,.72)" }}
       >
         {status === "live" ? "OpenFreeMap · live" : status === "fallback" ? "Offline outline" : "Loading map"}
       </span>
-    </div>
+    </motion.div>
   );
 }
 
