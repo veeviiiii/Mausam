@@ -69,6 +69,36 @@ export const screenVariants: Variants = {
 export const skeletonStagger = TIMING.stagger;
 
 /**
+ * Detail sheet enter/exit.
+ *
+ * Transform and opacity only — no width/height/position, so nothing is
+ * scaled and no glyph is ever stretched mid-flight. A shared-element morph
+ * looked clever in a still frame but distorted the type on the way in and
+ * needed a layout projection pass every frame to do it.
+ *
+ * The scale barely moves (0.985 -> 1). It reads as the surface settling
+ * rather than as a zoom, which is what keeps it feeling liquid instead of
+ * bouncy.
+ */
+export const sheetVariants: Variants = {
+  initial: { opacity: 0, y: 22, scale: 0.985 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: SPRINGS.sheet as Transition },
+  exit: {
+    opacity: 0,
+    y: 14,
+    scale: 0.99,
+    transition: { duration: 0.2, ease: [0.4, 0, 1, 1] },
+  },
+};
+
+/** Dim behind the sheet; separate so it can fade faster than the panel moves. */
+export const scrimVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] } },
+  exit: { opacity: 0, transition: { duration: 0.16, ease: [0.4, 0, 1, 1] } },
+};
+
+/**
  * The disclosure row animates `grid-template-rows` between fr units, which
  * Framer cannot interpolate — CSS can. Same token, expressed as a CSS timing
  * function so there is still only one place the number lives.

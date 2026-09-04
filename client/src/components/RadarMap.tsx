@@ -3,7 +3,8 @@ import { motion } from "framer-motion";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { MAP, RADAR, RADAR_ATTRIBUTION, type RadarLayerId } from "../design/tokens";
-import { fade, springSheet } from "../animations/variants";
+import { PLACES, aqiBand } from "../data/seed";
+import { fade, sheetVariants } from "../animations/variants";
 
 /**
  * Full-screen weather radar.
@@ -29,9 +30,58 @@ interface LayerSpec {
 
 const layerOpacity = (id: RadarLayerId) => `radar-${id}`;
 
-export function RadarMap({ onClose }: { onClose: () => void }) {
+/** AQI's raster is dense badge art, so it sits well back behind our labels. */
+const OPACITY: Record<RadarLayerId, number> = {
+  precipitation: 0.85,
+  wind: 0.8,
+  aqi: 0.38,
+};
+
+/**
+ * Saved places, drawn as map labels rather than left to the provider's raster.
+ *
+ * The WAQI tiles render every station as a chunky badge, which at country zoom
+ * becomes an unreadable pile. These are DOM markers styled like the basemap's
+ * own place labels, so the cities the app actually cares about read cleanly on
+ * every layer — and on the AQI layer they carry the real number and its CPCB
+ * band colour instead of a generic badge.
+ */
+function cityMarker(name: string, value: string, color: string): HTMLElement {
+  const el = document.createElement("div");
+  el.style.cssText = [
+    "display:flex;align-items:center;gap:6px;padding:3px 8px 3px 6px",
+    "border-radius:999px;white-space:nowrap;pointer-events:none",
+    "font:600 11px/1 var(--font-ui, system-ui, sans-serif)",
+    "background:rgba(8,12,18,.82);color:#fff",
+    "border:1px solid rgba(255,255,255,.22)",
+    "box-shadow:0 2px 10px rgba(0,0,0,.45)",
+  ].join(";");
+
+  const dot = document.createElement("span");
+  dot.style.cssText = `width:7px;height:7px;border-radius:50%;flex:none;background:${color}`;
+
+  const label = document.createElement("span");
+  label.textContent = name;
+  label.style.cssText = "opacity:.82;font-weight:500";
+
+  const num = document.createElement("span");
+  num.textContent = value;
+  num.style.cssText = "font-variant-numeric:tabular-nums;font-weight:700";
+
+  el.append(dot, label, num);
+  return el;
+}
+
+export function RadarMap({
+  onClose,
+  closing = false,
+}: {
+  onClose: () => void;
+  closing?: boolean;
+}) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
+  const markersRef = useRef<maplibregl.Marker[]>([]);
   const [active, setActive] = useState<RadarLayerId>("precipitation");
   const [layers, setLayers] = useState<LayerSpec[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "failed">("loading");
@@ -160,7 +210,13 @@ export function RadarMap({ onClose }: { onClose: () => void }) {
             id: key,
             type: "raster",
             source: key,
-            paint: { "raster-opacity": layer.id === active ? 0.85 : 0 },
+            paint: {
+              // WAQI's raster is a wall of station badges at low zoom. Held
+              // back so it reads as a coloured field for global context, with
+              // our own labels carrying the actual numbers on top.
+              "raster-opacity": layer.id === active ? OPACITY[layer.id] : 0,
+              "raster-saturation": layer.id === "aqi" ? -0.25 : 0,
+            },
           });
           // MapLibre supports paint transitions, but its published types omit
           // the `-transition` keys; this is what turns the layer switch into a
@@ -187,6 +243,40 @@ export function RadarMap({ onClose }: { onClose: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [layers]);
 
+  /* ---- saved-place labels, re-rendered for the active layer ---- */
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || status !== "ready") return;
+
+    for (const m of markersRef.current) m.remove();
+    markersRef.current = [];
+
+    for (const p of PLACES) {
+      let value: string;
+      let color: string;
+      if (active === "aqi") {
+        const band = aqiBand(p.aqi);
+        value = String(p.aqi);
+        color = band.color;
+      } else if (active === "wind") {
+        value = `${p.wind}`;
+        color = "#8FB0CC";
+      } else {
+        value = `${p.rainProbability[0]}%`;
+        color = "#7FC4E8";
+      }
+      const marker = new maplibregl.Marker({ element: cityMarker(p.name, value, color) })
+        .setLngLat([p.lon, p.lat])
+        .addTo(map);
+      markersRef.current.push(marker);
+    }
+
+    return () => {
+      for (const m of markersRef.current) m.remove();
+      markersRef.current = [];
+    };
+  }, [active, status]);
+
   /* ---- crossfade on switch ---- */
   useEffect(() => {
     const map = mapRef.current;
@@ -205,10 +295,15 @@ export function RadarMap({ onClose }: { onClose: () => void }) {
 
   return (
     <motion.div
-      layoutId="radar-map"
-      transition={springSheet}
+      variants={sheetVariants}
+      initial="initial"
+      animate={closing ? "exit" : "animate"}
       className="absolute inset-0 z-30 overflow-hidden"
-      style={{ background: MAP.fallbackBackground, borderRadius: 0 }}
+      style={{
+        background: MAP.fallbackBackground,
+        borderRadius: 0,
+        willChange: "transform, opacity",
+      }}
       role="dialog"
       aria-modal="true"
       aria-label="Weather radar"

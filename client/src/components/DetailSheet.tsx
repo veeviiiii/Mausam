@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { springSheet, fade } from "../animations/variants";
+import { fade, scrimVariants, sheetVariants } from "../animations/variants";
 import { CARD_RULES } from "../personalization/rules";
 import { CARD_UI } from "../features/cards/registry";
 import { PERSONA_BY_ID } from "../data/seed";
@@ -24,11 +24,14 @@ export function DetailSheet({
   place,
   places,
   onClose,
+  closing = false,
 }: {
   target: SheetTarget;
   place: Place;
   places: Place[];
   onClose: () => void;
+  /** Drives the exit; the parent unmounts on a timer, not on a callback. */
+  closing?: boolean;
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -39,10 +42,9 @@ export function DetailSheet({
   }, [onClose]);
 
   /**
-   * Backdrop blur is applied only once the morph has landed. Blurring an
-   * element while its size animates forces a full blur recompute every frame
-   * over a growing area, which is what made the card open feel heavy. During
-   * the morph we use an opaque-enough stand-in that costs nothing.
+   * Blur switches on only after the entrance settles. Blurring a surface while
+   * it moves makes the browser re-sample its backdrop every frame; for the
+   * ~250ms of travel a flat stand-in of the same colour weight is free.
    */
   const [settled, setSettled] = useState(false);
 
@@ -62,19 +64,32 @@ export function DetailSheet({
 
   if (!content) return null;
 
-  const layoutId = target.kind === "card" ? `card-${target.id}` : `alert-${target.placeId}`;
+  const state = closing ? "exit" : "animate";
 
   return (
-    <motion.div
-      layoutId={layoutId}
-      transition={springSheet}
-      onLayoutAnimationComplete={() => setSettled(true)}
-      className={`absolute inset-0 z-20 overflow-hidden ${settled ? "glass-sheet" : "glass-sheet-solid"}`}
-      style={{ borderRadius: 0 }}
-      role="dialog"
-      aria-modal="true"
-      aria-label={content.title}
-    >
+    <>
+      {/* Dim first, so the panel appears to rise out of the darkened screen
+          rather than sliding over a still-bright one. */}
+      <motion.div
+        className="absolute inset-0 z-[19]"
+        style={{ background: "rgba(4,8,14,.42)" }}
+        variants={scrimVariants}
+        initial="initial"
+        animate={state}
+        aria-hidden="true"
+        onClick={onClose}
+      />
+
+      <motion.div
+        variants={sheetVariants}
+        initial="initial"
+        animate={state}
+        className={`absolute inset-0 z-20 overflow-hidden ${settled ? "glass-sheet" : "glass-sheet-solid"}`}
+        style={{ borderRadius: 0, willChange: "transform, opacity" }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={content.title}
+      >
       <button
         type="button"
         onClick={onClose}
@@ -90,7 +105,7 @@ export function DetailSheet({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ ...fade, delay: 0.16 }}
+        transition={fade}
         className="no-scrollbar mx-auto h-full max-w-[760px] overflow-y-auto px-5 pb-8 pt-14 lg:px-10 lg:pt-20"
       >
         <div className="instrument">{content.eyebrow}</div>
@@ -120,8 +135,9 @@ export function DetailSheet({
           <b className="instrument mb-1.5 block">Where this comes from</b>
           <p className="text-[12.5px] leading-[1.5]">{content.source}</p>
         </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
+    </>
   );
 }
 

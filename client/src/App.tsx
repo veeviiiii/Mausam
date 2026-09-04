@@ -28,6 +28,9 @@ import { screenVariants } from "./animations/variants";
  * The sky, the glass tokens and the contrast audit are shape-independent, so
  * nothing about the design system forks between the two.
  */
+/** Matches sheetVariants.exit; the unmount is timed, not callback-driven. */
+const SHEET_EXIT_MS = 210;
+
 export default function App() {
   const { tab, condition, timeOfDay, flatGlass, place, refresh } = useApp();
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
@@ -43,7 +46,22 @@ export default function App() {
    * is given up, and a sheet that always closes is worth more than one that
    * shrinks prettily most of the time.
    */
-  const closeSheet = useCallback(() => setSheet(null), []);
+  /**
+   * Closing plays the exit for a fixed beat, then unmounts on a timer. The
+   * unmount never waits on an animation callback — that is what left a
+   * full-screen sheet undismissable earlier in this project.
+   */
+  const [closing, setClosing] = useState(false);
+  const closeSheet = useCallback(() => setClosing(true), []);
+
+  useEffect(() => {
+    if (!closing) return;
+    const t = window.setTimeout(() => {
+      setSheet(null);
+      setClosing(false);
+    }, SHEET_EXIT_MS);
+    return () => window.clearTimeout(t);
+  }, [closing]);
 
   // Close the detail sheet whenever the thing behind it changes underneath.
   useEffect(() => setSheet(null), [tab, place.id]);
@@ -127,6 +145,7 @@ export default function App() {
             place={place}
             places={PLACES}
             onClose={closeSheet}
+            closing={closing}
           />
         ) : null}
       </main>

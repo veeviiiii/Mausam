@@ -49,8 +49,9 @@ export function PersonaCard({
 
   return (
     <motion.article
+      // `layout` stays for reorder FLIP; `layoutId` is gone with the
+      // card-to-sheet morph, which stretched the type while it animated.
       layout
-      layoutId={`card-${card.id}`}
       custom={index}
       variants={cardVariants}
       initial="initial"

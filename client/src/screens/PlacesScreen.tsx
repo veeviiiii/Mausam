@@ -25,6 +25,16 @@ const RadarMap = lazy(() =>
 export function PlacesScreen() {
   const { place, selectPlace } = useApp();
   const [radarOpen, setRadarOpen] = useState(false);
+  const [radarClosing, setRadarClosing] = useState(false);
+
+  // Same pattern as the detail sheet: play the exit, unmount on a timer.
+  const closeRadar = () => {
+    setRadarClosing(true);
+    window.setTimeout(() => {
+      setRadarOpen(false);
+      setRadarClosing(false);
+    }, 210);
+  };
 
   return (
     <>
@@ -44,7 +54,7 @@ export function PlacesScreen() {
 
       {radarOpen ? (
         <Suspense fallback={null}>
-          <RadarMap onClose={() => setRadarOpen(false)} />
+          <RadarMap onClose={closeRadar} closing={radarClosing} />
         </Suspense>
       ) : null}
 
