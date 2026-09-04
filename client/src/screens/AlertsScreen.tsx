@@ -22,6 +22,7 @@ export function AlertsScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
               key={p.id}
               alert={p.alert!}
               place={p.name}
+              placeId={p.id}
               onOpen={() => onOpen({ kind: "alert", placeId: p.id })}
             />
           ))}

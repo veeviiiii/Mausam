@@ -72,14 +72,15 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       </>
     ),
     Body: ({ place }) => {
-      const min = Math.min(...place.hourlyTemp);
+      const temps = place.hourly.slice(0, 8).map((h) => h.temp);
+      const min = Math.min(...temps);
       return (
         <>
           <Readout value={place.runStart} unit={`to ${place.runEnd}`} />
           <Note>Coolest stretch before the sun clears the horizon.</Note>
           <Bars
-            values={place.hourlyTemp.map((h) => h - min + 4)}
-            highlight={place.hourlyTemp.indexOf(min)}
+            values={temps.map((t) => t - min + 4)}
+            highlight={temps.indexOf(min)}
             axis={["04:00", "10:00", "16:00", "22:00"]}
           />
           <KeyValues

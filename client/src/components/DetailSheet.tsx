@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { springSheet, fade } from "../animations/variants";
 import { CARD_RULES } from "../personalization/rules";
@@ -38,6 +38,23 @@ export function DetailSheet({
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  /**
+   * Backdrop blur is applied only once the morph has landed. Blurring an
+   * element while its size animates forces a full blur recompute every frame
+   * over a growing area, which is what made the card open feel heavy. During
+   * the morph we use an opaque-enough stand-in that costs nothing.
+   */
+  const [settled, setSettled] = useState(false);
+
+  // Belt and braces: if the layout animation never reports completion (a
+  // backgrounded tab, a morph with nothing to move), the frosted surface would
+  // never appear. Nothing in this codebase gets to depend on an animation
+  // callback firing.
+  useEffect(() => {
+    const t = window.setTimeout(() => setSettled(true), 450);
+    return () => window.clearTimeout(t);
+  }, []);
+
   const content =
     target.kind === "card"
       ? cardContent(target.id, place)
@@ -51,7 +68,8 @@ export function DetailSheet({
     <motion.div
       layoutId={layoutId}
       transition={springSheet}
-      className="glass-sheet absolute inset-0 z-20 overflow-hidden"
+      onLayoutAnimationComplete={() => setSettled(true)}
+      className={`absolute inset-0 z-20 overflow-hidden ${settled ? "glass-sheet" : "glass-sheet-solid"}`}
       style={{ borderRadius: 0 }}
       role="dialog"
       aria-modal="true"

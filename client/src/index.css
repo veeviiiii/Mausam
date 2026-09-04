@@ -48,6 +48,17 @@
   }
   /* Deliberately no backdrop-filter: at chip size the blur is imperceptible but
      each one is a separate composited layer. The fill alone carries it. */
+  /* Stand-in for .glass-sheet while it is mid-morph: same colour weight, but
+     no backdrop-filter, so resizing it costs nothing per frame. Swapped for the
+     real frosted surface once the layout animation lands. */
+  .glass-sheet-solid {
+    background:
+      linear-gradient(var(--glass-scrim), var(--glass-scrim)),
+      var(--glass-fill);
+    border: 1px solid var(--hair);
+    color: var(--txt);
+    box-shadow: 0 20px 60px rgba(4, 10, 20, 0.4);
+  }
   .glass-chip {
     background: var(--glass-fill);
     border: 1px solid var(--hair);

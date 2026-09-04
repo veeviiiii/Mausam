@@ -69,7 +69,7 @@ export default function App() {
             />
           }
         >
-          <SkyBackground condition={condition} timeOfDay={timeOfDay} />
+          <SkyBackground condition={condition} timeOfDay={timeOfDay} covered={sheet !== null} />
         </ErrorBoundary>
 
         <div className="relative z-[4] mx-auto flex h-full lg:max-w-[1560px]">

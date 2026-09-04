@@ -21,9 +21,12 @@ import { AmbientLayer } from "./AmbientLayer";
 export function SkyBackground({
   condition,
   timeOfDay,
+  covered = false,
 }: {
   condition: Condition;
   timeOfDay: TimeOfDay;
+  /** An open sheet hides the sky entirely — no reason to keep animating it. */
+  covered?: boolean;
 }) {
   const sky = skyFor(condition, timeOfDay);
   const scrim = heroScrimCss(sky.hero);
@@ -65,7 +68,7 @@ export function SkyBackground({
         />
       ) : null}
 
-      <AmbientLayer condition={condition} timeOfDay={timeOfDay} mode={sky.mode} />
+      <AmbientLayer condition={condition} timeOfDay={timeOfDay} mode={sky.mode} paused={covered} />
 
       {/* The smallest scrim that gets bare hero text to AA on this sky — 0 on
           skies that already clear it, so most conditions paint nothing here. */}

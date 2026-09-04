@@ -5,6 +5,8 @@ import { BrandHeader } from "../components/BrandHeader";
 import { RollingText } from "../components/RollingText";
 import { WeatherIcon } from "../components/WeatherIcon";
 import { AlertBanner, NoAlerts } from "../components/AlertBanner";
+import { HourlyCarousel } from "../components/HourlyCarousel";
+import { HourlyMetricChart } from "../components/HourlyMetricChart";
 import { SkeletonStack } from "../components/SkeletonCard";
 import { PersonaCard } from "../features/cards/PersonaCard";
 import { suppressedPersonas } from "../personalization/rules";
@@ -78,6 +80,7 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
             key={`${place.id}-alert`}
             alert={place.alert}
             place={place.name}
+            placeId={place.id}
             onOpen={() => onOpen({ kind: "alert", placeId: place.id })}
           />
         ) : (
@@ -151,6 +154,8 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
         </div>
       </div>
 
+      <HourlyCarousel hours={place.hourly} />
+
       {/* Persona cards. One column on the phone, a grid on the laptop — the
           scoring order still reads left-to-right, top-to-bottom. */}
       {loading ? (
@@ -175,6 +180,10 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
           </AnimatePresence>
         </div>
       )}
+
+      <div className="pt-4 lg:pt-6">
+        <HourlyMetricChart hours={place.hourly} />
+      </div>
 
       {/* A suppressed persona still gets an explanation, never silence. */}
       {suppressed.length && !loading ? (

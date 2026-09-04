@@ -53,22 +53,21 @@ interface Particle {
   phase: number;
 }
 
-const FRAME_MS = 1000 / 24;
-
 /**
- * Hard cap on the canvas's internal render resolution, independent of the
- * viewport or devicePixelRatio.
+ * Runs at the display's native frame rate. The previous 480px/24fps cap made
+ * the rain visibly coarse — the fix for compositor cost is a *pixel budget*
+ * and pausing when covered, not throwing away resolution and frames.
  *
- * Confirmed on the live deployment: the canvas backing store was hitting
- * ~1900x930px (full viewport at 1.5 DPR) and being cleared + redrawn every
- * frame, directly underneath 3-4 backdrop-filter layers — every canvas frame
- * forced the browser to recompute blur for every glass surface above it. This
- * is soft, blurred, ambient weather; nobody can tell it apart from full
- * resolution once it sits behind 10-14px of blur, so the fill-rate cost is
- * pure waste. Capping the long edge keeps total pixels — and everything that
- * scales with them — bounded regardless of screen size.
+ * If a device genuinely cannot hold the frame budget, `DOWNSHIFT_MS` trips a
+ * one-time quality drop rather than letting it grind. One-way, so it can never
+ * oscillate between quality levels mid-animation.
  */
-const MAX_CANVAS_EDGE = 480;
+const DOWNSHIFT_MS = 22;
+const DOWNSHIFT_AFTER_FRAMES = 40;
+
+/** Pixel budget for the backing store — the real lever on fill cost. */
+const PIXEL_BUDGET_DESKTOP = 1_400_000;
+const PIXEL_BUDGET_MOBILE = 800_000;
 
 /** Particle budget per million device-independent pixels, by kind. */
 const DENSITY: Record<Kind, number> = {
@@ -86,10 +85,13 @@ export function AmbientLayer({
   condition,
   timeOfDay,
   mode,
+  paused = false,
 }: {
   condition: Condition;
   timeOfDay: TimeOfDay;
   mode: GlassMode;
+  /** Skip the loop entirely while something opaque covers the sky. */
+  paused?: boolean;
 }) {
   const ref = useRef<HTMLCanvasElement | null>(null);
 
@@ -101,28 +103,38 @@ export function AmbientLayer({
 
     const kind = kindFor(condition, timeOfDay);
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (paused) {
+      const c = canvas.getContext("2d");
+      c?.clearRect(0, 0, canvas.width, canvas.height);
+      return;
+    }
 
     let raf = 0;
     let particles: Particle[] = [];
     let w = 0;
     let h = 0;
+    /** 1 = full quality. Raised once, permanently, if frames run long. */
+    let quality = 1;
+    let slowFrames = 0;
 
     const seed = () => {
       w = canvas.clientWidth;
       h = canvas.clientHeight;
 
-      // Render at a capped internal resolution and let the browser upscale
-      // the canvas element via CSS — the particles are soft and sit behind a
-      // blur, so nobody can see the difference, and it bounds draw cost on a
-      // 6" phone the same as a 27" monitor.
-      const longEdge = Math.max(w, h);
-      const scale = longEdge > MAX_CANVAS_EDGE ? MAX_CANVAS_EDGE / longEdge : 1;
+      // Budget total pixels rather than clamping an edge: full device
+      // resolution where it is affordable, scaled down only once the backing
+      // store would exceed what a frame can comfortably fill.
+      const budget = w < 1024 ? PIXEL_BUDGET_MOBILE : PIXEL_BUDGET_DESKTOP;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const wanted = w * h * dpr * dpr;
+      const scale = (wanted > budget ? Math.sqrt(budget / (w * h)) : dpr) / quality;
+
       canvas.width = Math.max(1, Math.round(w * scale));
       canvas.height = Math.max(1, Math.round(h * scale));
       ctx.setTransform(scale, 0, 0, scale, 0, 0);
 
       const area = (w * h) / 1_000_000;
-      const n = Math.max(6, Math.round(DENSITY[kind] * Math.max(0.12, area) * 0.7));
+      const n = Math.max(6, Math.round((DENSITY[kind] * Math.max(0.12, area)) / quality));
 
       particles = Array.from({ length: n }, () => ({
         x: Math.random() * w,
@@ -162,10 +174,20 @@ export function AmbientLayer({
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
-      if (now - last < FRAME_MS) return;
-      const dt = last ? Math.min(0.1, (now - last) / 1000) : 0.033;
+      const gap = last ? now - last : 16.7;
+      const dt = last ? Math.min(0.1, gap / 1000) : 0.0167;
       last = now;
       t += dt;
+
+      // One-way quality downshift on hardware that cannot hold the budget.
+      if (quality === 1 && gap > DOWNSHIFT_MS) {
+        if (++slowFrames >= DOWNSHIFT_AFTER_FRAMES) {
+          quality = 2;
+          seed();
+        }
+      } else if (gap <= DOWNSHIFT_MS) {
+        slowFrames = 0;
+      }
 
       ctx.clearRect(0, 0, w, h);
 
@@ -286,7 +308,7 @@ export function AmbientLayer({
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [condition, timeOfDay, mode]);
+  }, [condition, timeOfDay, mode, paused]);
 
   // h-full/w-full, not inset-0: a <canvas> is a replaced element and will sit at
   // its intrinsic 300x150 under inset-0 alone.

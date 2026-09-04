@@ -20,13 +20,16 @@ const KIND_LABEL: Record<Alert["kind"], string> = {
  */
 export const AlertBanner = forwardRef<
   HTMLButtonElement,
-  { alert: Alert; place: string; onOpen?: () => void }
->(function AlertBanner({ alert, place, onOpen }, ref) {
+  { alert: Alert; place: string; placeId?: string; onOpen?: () => void }
+>(function AlertBanner({ alert, place, placeId, onOpen }, ref) {
   const [from, to] = WARNING_SURFACE[alert.level];
 
   return (
     <motion.button
       ref={ref}
+      // Matches DetailSheet's layoutId so the warning morphs open the same way
+      // a persona card does. Without it the sheet simply appeared.
+      layoutId={placeId ? `alert-${placeId}` : undefined}
       type="button"
       initial={{ opacity: 0, y: -12, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1, transition: springReorder }}

@@ -1,4 +1,4 @@
-import type { Persona, Place } from "./types";
+import type { HourlyPoint, Persona, Place } from "./types";
 
 /**
  * Seeded demo dataset, dated 04 Sep 2026 — the south-west monsoon withdrawal
@@ -26,7 +26,7 @@ export const PERSONA_BY_ID = Object.fromEntries(PERSONAS.map((p) => [p.id, p])) 
   Persona
 >;
 
-export const PLACES: Place[] = [
+const BASE_PLACES: Omit<Place, "hourly">[] = [
   {
     id: "mumbai",
     name: "Mumbai",
@@ -52,7 +52,6 @@ export const PLACES: Place[] = [
     pollen: "Low",
     rain24: 78,
     rainProbability: [80, 72, 58, 44, 36, 30, 42, 60, 55, 40],
-    hourlyTemp: [24, 22, 21, 20, 19, 18, 17, 16],
     runStart: "05:40",
     runEnd: "07:10",
     schoolDropRain: 72,
@@ -124,7 +123,6 @@ export const PLACES: Place[] = [
     pollen: "Moderate",
     rain24: 6,
     rainProbability: [18, 26, 40, 35, 22, 15, 12, 20, 30, 25],
-    hourlyTemp: [31, 33, 34, 35, 34, 32, 30, 28],
     runStart: "05:20",
     runEnd: "06:40",
     schoolDropRain: 14,
@@ -196,7 +194,6 @@ export const PLACES: Place[] = [
     pollen: "Low",
     rain24: 2,
     rainProbability: [12, 10, 18, 24, 20, 15, 22, 30, 26, 18],
-    hourlyTemp: [30, 32, 34, 34, 33, 31, 29, 28],
     runStart: "05:30",
     runEnd: "06:50",
     schoolDropRain: 8,
@@ -261,7 +258,6 @@ export const PLACES: Place[] = [
     pollen: "Low",
     rain24: 54,
     rainProbability: [74, 68, 60, 52, 48, 44, 56, 66, 58, 50],
-    hourlyTemp: [24, 25, 26, 26, 25, 24, 24, 23],
     runStart: "06:00",
     runEnd: "07:20",
     schoolDropRain: 64,
@@ -333,7 +329,6 @@ export const PLACES: Place[] = [
     pollen: "Low",
     rain24: 42,
     rainProbability: [66, 74, 78, 70, 58, 46, 38, 32, 28, 24],
-    hourlyTemp: [27, 28, 29, 30, 29, 28, 28, 27],
     runStart: "05:10",
     runEnd: "06:20",
     schoolDropRain: 62,
@@ -416,7 +411,6 @@ export const PLACES: Place[] = [
     pollen: "Low",
     rain24: 46,
     rainProbability: [70, 64, 56, 48, 40, 34, 42, 52, 46, 38],
-    hourlyTemp: [23, 24, 25, 26, 26, 25, 24, 23],
     runStart: "05:50",
     runEnd: "07:10",
     schoolDropRain: 58,
@@ -463,6 +457,90 @@ export const PLACES: Place[] = [
     },
   },
 ];
+
+/* ------------------------------------------------------------------ *
+ * Hourly outlook
+ *
+ * Derived from each station's own anchors rather than hand-authored: 24
+ * hand-written points x 6 cities is data nobody would keep in sync, and the
+ * shape is fully determined by values already in the record — the daily temp
+ * swing, the rain-probability curve, and the station's real sunrise/sunset.
+ *
+ * Seeded per place id so the jitter is identical on every render; a carousel
+ * that reshuffles itself between renders would be a bug, not variety.
+ * ------------------------------------------------------------------ */
+
+function seededRandom(seed: string): () => number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return () => {
+    h += 0x6d2b79f5;
+    let t = h;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+const asHours = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return h + m / 60;
+};
+
+function buildHourly(p: Omit<Place, "hourly">): HourlyPoint[] {
+  const rnd = seededRandom(p.id);
+  const start = asHours(p.clock);
+  const rise = asHours(p.sunrise);
+  const set = asHours(p.sunset);
+  const noon = (rise + set) / 2;
+  const halfDay = Math.max(1, (set - rise) / 2);
+
+  const diurnal = (hour: number) => Math.sin((((hour - 5 + 24) % 24) / 24) * Math.PI * 2);
+  // Offset the curve so hour zero lands exactly on the station's current
+  // reading — otherwise the carousel's "Now" disagrees with the hero
+  // temperature two inches above it.
+  const baseline = diurnal(start);
+
+  return Array.from({ length: 24 }, (_, i) => {
+    const abs = (start + i) % 24;
+    const isDay = abs >= rise && abs <= set;
+
+    const temp = Math.round(
+      p.temp + (diurnal(abs) - baseline) * 4.5 + (i === 0 ? 0 : (rnd() - 0.5) * 1.2),
+    );
+
+    // Rain probability interpolates the existing 10-slot outlook.
+    const slot = p.rainProbability[
+      Math.min(p.rainProbability.length - 1, Math.floor((i / 24) * p.rainProbability.length))
+    ];
+    const precipitation = Math.max(0, Math.min(100, Math.round(slot + (rnd() - 0.5) * 14)));
+
+    // UV is zero after dark and bells across daylight around solar noon.
+    const bell = isDay ? Math.max(0, 1 - Math.abs(abs - noon) / halfDay) : 0;
+    const uv = isDay ? Math.max(0, Math.round(p.uv * Math.sin((bell * Math.PI) / 2))) : 0;
+
+    // A heavy hour reads as rain even where the station's headline is drier.
+    const condition =
+      precipitation >= 70 && (p.condition === "clear" || p.condition === "partly")
+        ? "rain"
+        : p.condition;
+
+    return {
+      time: `${String(Math.floor(abs)).padStart(2, "0")}:00`,
+      temp,
+      condition,
+      precipitation,
+      wind: Math.max(2, Math.round(p.wind + (rnd() - 0.5) * 8)),
+      humidity: Math.max(20, Math.min(100, Math.round(p.humidity + (rnd() - 0.5) * 10 - (isDay ? 4 : 0)))),
+      uv,
+    };
+  });
+}
+
+export const PLACES: Place[] = BASE_PLACES.map((p) => ({ ...p, hourly: buildHourly(p) }));
 
 export const PLACE_BY_ID = Object.fromEntries(PLACES.map((p) => [p.id, p])) as Record<string, Place>;
 

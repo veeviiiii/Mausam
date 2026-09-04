@@ -82,6 +82,22 @@ export interface Moon {
   tideRegime: "spring" | "neap" | "transitional";
 }
 
+/** One hour of the rolling 24-hour outlook. */
+export interface HourlyPoint {
+  /** IST, "HH:MM". */
+  time: string;
+  temp: number;
+  condition: Condition;
+  /** Probability of precipitation, %. */
+  precipitation: number;
+  wind: number;
+  humidity: number;
+  /** UV index; 0 after dark. */
+  uv: number;
+}
+
+export type HourlyMetric = "precipitation" | "wind" | "humidity" | "uv";
+
 export interface Place {
   id: string;
   name: string;
@@ -112,7 +128,8 @@ export interface Place {
 
   rain24: number;
   rainProbability: number[];
-  hourlyTemp: number[];
+  /** 24 rolling hours from `clock`, used by the carousel and the metric chart. */
+  hourly: HourlyPoint[];
 
   runStart: string;
   runEnd: string;
