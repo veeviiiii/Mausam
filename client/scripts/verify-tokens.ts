@@ -254,11 +254,45 @@ for (const [id, seeded] of seedAlerts) {
   }
 }
 
+/* ---- 8. serverless routes must be self-contained ----
+
+   client/package.json is "type": "module", so Vercel emits each api/*.ts as
+   ESM — and ESM will not resolve an extensionless relative import. A sibling
+   module that worked under Vite dev (bundler resolution) died in production
+   with ERR_MODULE_NOT_FOUND on the first request. Node builtins only, so the
+   only way to break a route is to break the route. */
+const API_DIR = resolve(here, "../api");
+const relativeImport = /^\s*(?:import|export)[^;]*?from\s+["'](\.[^"']*)["']/gm;
+let apiRoutes = 0;
+
+for (const name of readdirSync(API_DIR)) {
+  if (!/\.tsx?$/.test(name)) continue;
+  apiRoutes++;
+  const text = readFileSync(join(API_DIR, name), "utf8");
+  for (const m of text.matchAll(relativeImport)) {
+    fail(
+      `api/${name} imports "${m[1]}". Serverless routes here must be ` +
+        `self-contained — a relative import is emitted as ESM and will not ` +
+        `resolve at runtime.`,
+    );
+  }
+}
+
+if (apiRoutes === 0) fail("no api routes found — did client/api move?");
+
 /* ---- report ---- */
 if (failures.length) {
-  console.error(`\n  ${failures.length} token drift(s) between tokens.ts and the design study:\n`);
+  console.error(`\n  ${failures.length} check(s) failed:\n`);
   for (const f of failures) console.error(`  - ${f}`);
-  console.error("\n  tokens.ts is the source of truth. Update design/mausam-home.html to match.\n");
+  // The banner used to say "update the prototype", which was only ever right
+  // for sections 1-3. This script now also guards contrast, the hour tint,
+  // both dictionaries and the serverless routes; pointing all of those at
+  // design/mausam-home.html sends the next debugging session the wrong way.
+  console.error(
+    "\n  SKY / GLASS / spring drift: tokens.ts is the source of truth —\n" +
+      "  update design/mausam-home.html to match it.\n" +
+      "  Anything else above is a real failure and needs fixing where it lives.\n",
+  );
   process.exit(1);
 }
 
@@ -270,6 +304,9 @@ console.log(
 console.log(
   `  hour tint verified — ${skyCount * (TINT_SAMPLES + 1)} tint samples, ` +
     `worst ${worstChip.toFixed(2)}:1 at ${worstChipAt}`,
+);
+console.log(
+  `  api verified — ${apiRoutes} serverless route(s), no relative imports to fail on`,
 );
 console.log(
   `  language verified — ${base.size} keys x ${LANGUAGES.length} languages in step; ` +

@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
  * exactly this reason.
  *
  * Goes through /api/aqi so the key stays server-side; the client never sees
- * data.gov.in. See api/_cpcb.ts for the sub-index computation.
+ * data.gov.in. See api/aqi.ts for the sub-index computation.
  */
 
 export interface LiveAqi {

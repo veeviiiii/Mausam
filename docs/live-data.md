@@ -28,6 +28,25 @@ the bundle. Both are enforced mechanically:
   through Vite's SSR loader. One code path, so a route that works locally is the
   route that ships.
 
+### The route is one file, deliberately
+
+The AQI computation started in a sibling `api/_cpcb.ts`. That worked under
+`vite dev` (bundler resolution) and died on Vercel's first request:
+
+```
+Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/var/task/client/api/_cpcb'
+  imported from /var/task/client/api/aqi.js
+```
+
+`client/package.json` declares `"type": "module"`, so the emitted `aqi.js` is
+ESM — and ESM will not resolve an extensionless relative import. Adding `.js`
+fixes resolution but still depends on the builder tracing and uploading the
+sibling, which is a second thing to be wrong about. A function with exactly one
+consumer does not need a module boundary, so it no longer has one.
+
+`npm run check` now fails on **any** relative import inside `api/`, and that
+guard was tested by reintroducing the bug.
+
 ### The API does not publish an AQI
 
 `data.gov.in` resource `3b01bcb8-…` publishes **one row per pollutant per
@@ -40,7 +59,7 @@ station** — concentrations, not an index:
 
 India's AQI is defined by CPCB as the **maximum of the per-pollutant
 sub-indices**, each computed by linear interpolation inside published
-breakpoints. `api/_cpcb.ts` does that computation, so the number on screen can
+breakpoints. `api/aqi.ts` does that computation, so the number on screen can
 be explained down to the pollutant that produced it — which is why the health
 detail sheet shows the station, the governing pollutant, the station count and
 CPCB's own last-update stamp.
@@ -71,10 +90,30 @@ Per CLAUDE.md, no single TTL for everything:
 
 | Layer | TTL | Why |
 |---|---|---|
-| `api/_cpcb.ts` in-memory | 60 min | CPCB publishes hourly |
+| `api/aqi.ts` in-memory, success | 60 min | CPCB publishes hourly |
+| `api/aqi.ts` in-memory, failure | 2 min | see below |
 | `/api/aqi` response header | `max-age=900, stale-while-revalidate=3600` | an edge miss never blocks a render |
 | `lib/openMeteoAqi.ts` | 30 min | AQI is an hourly product; re-asking inside it is wasted bytes |
 | `lib/useLiveAqi.ts` | session | switching places twice is one fetch |
+
+### Failures are cached separately, and the upstream has a deadline
+
+Both found by an outage during testing rather than by reasoning: data.gov.in
+started returning `504`, and sometimes simply not answering.
+
+- **A failure cached for 60 minutes** would mean one transient blip pins every
+  city to the seeded value for the rest of a demo. Failures now expire after
+  **2 minutes** — long enough to stop a retry loop, short enough to recover on
+  its own.
+- **No upstream deadline** meant the route inherited the platform's: a 40-second
+  hang, burning the function's execution budget while a perfectly good seeded
+  number was already on screen. The upstream fetch now aborts at **6 s** and
+  says so (`"data.gov.in did not answer within 6000ms"`).
+
+Verified against the live outage: the route answers in 6.0 s instead of 40 s,
+and the UI shows `CPCB · SEEDED` with `61 AQI · Satisfactory` — the correct
+degraded state, no blank card, and an `info`-level console line naming the
+upstream status rather than an error.
 
 ## Seed is the floor, never the fallback-of-last-resort
 
