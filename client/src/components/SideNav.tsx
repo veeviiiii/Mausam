@@ -6,6 +6,7 @@ import { WARNING_COLOR } from "../design/tokens";
 import { WeatherIcon } from "./WeatherIcon";
 import { NAV_ITEMS, NavIcon } from "./navItems";
 import { relativeAge } from "../lib/time";
+import { useT } from "../i18n/context";
 
 /**
  * Desktop navigation rail.
@@ -19,6 +20,7 @@ import { relativeAge } from "../lib/time";
  */
 export function SideNav() {
   const { tab, setTab, place, selectPlace, offline, dataAgeMinutes } = useApp();
+  const t = useT();
 
   return (
     <aside
@@ -35,7 +37,7 @@ export function SideNav() {
       </div>
 
       {/* Sections */}
-      <nav className="flex flex-col gap-1" role="tablist" aria-label="Mausam sections">
+      <nav className="flex flex-col gap-1" role="tablist" aria-label={t("nav.ariaSections")}>
         {NAV_ITEMS.map((item) => {
           const selected = tab === item.id;
           return (
@@ -56,7 +58,7 @@ export function SideNav() {
               }}
             >
               <NavIcon icon={item.icon} size={19} />
-              {item.label}
+              {t(item.labelKey)}
               {item.id === "alerts" && place.alert ? (
                 <span
                   className="ml-auto h-[7px] w-[7px] rounded-full"
@@ -71,7 +73,7 @@ export function SideNav() {
 
       {/* Saved locations — the chip row's desktop home */}
       <div className="flex min-h-0 flex-1 flex-col gap-2">
-        <h2 className="instrument">Saved places</h2>
+        <h2 className="instrument">{t("nav.savedPlaces")}</h2>
         <div className="no-scrollbar flex flex-col gap-1 overflow-y-auto">
           {PLACES.map((p) => {
             const active = p.id === place.id;
@@ -103,7 +105,7 @@ export function SideNav() {
                       className="mt-0.5 inline-block rounded px-1 font-mono text-[8px] font-bold uppercase tracking-[0.06em] text-white"
                       style={{ background: WARNING_COLOR[p.alert.level] }}
                     >
-                      {p.alert.level}
+                      {t(`level.${p.alert.level}`)}
                     </span>
                   ) : null}
                 </span>
@@ -117,7 +119,9 @@ export function SideNav() {
       {/* Freshness */}
       <div className="instrument flex items-center gap-2 border-t pt-4" style={{ borderColor: "var(--hair)" }}>
         {offline ? <span className="h-[6px] w-[6px] rounded-full bg-[#FFB466]" aria-hidden /> : null}
-        {offline ? "Offline · last known" : `Updated ${relativeAge(dataAgeMinutes)}`}
+        {offline
+          ? t("nav.offlineLastKnown")
+          : t("nav.updated", { age: relativeAge(dataAgeMinutes, t) })}
       </div>
     </aside>
   );

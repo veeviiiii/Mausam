@@ -1,5 +1,6 @@
 import { useApp } from "../state/AppState";
 import { relativeAge } from "../lib/time";
+import { useT } from "../i18n/context";
 
 /**
  * The app's identity line.
@@ -11,6 +12,7 @@ import { relativeAge } from "../lib/time";
  */
 export function BrandHeader() {
   const { offline, dataAgeMinutes } = useApp();
+  const t = useT();
 
   return (
     <header className="sky-txt flex items-center gap-3 px-6 pb-1 pt-1">
@@ -30,7 +32,7 @@ export function BrandHeader() {
         {offline ? (
           <span className="inline-block h-[6px] w-[6px] rounded-full bg-[#FFB466]" aria-hidden />
         ) : null}
-        {offline ? "Offline" : relativeAge(dataAgeMinutes)}
+        {offline ? t("brand.offline") : relativeAge(dataAgeMinutes, t)}
       </span>
     </header>
   );

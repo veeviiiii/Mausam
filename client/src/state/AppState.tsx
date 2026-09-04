@@ -13,6 +13,7 @@ import type { PersonaId, Place } from "../data/types";
 import { PLACES, PLACE_BY_ID } from "../data/seed";
 import { scoreCards, setPlaceUniverse, type ScoredCard } from "../personalization/rules";
 import { timeOfDayFor } from "../lib/time";
+import { useLiveAqi, type LiveAqi } from "../lib/useLiveAqi";
 
 setPlaceUniverse(PLACES);
 
@@ -50,6 +51,8 @@ interface AppActions {
 
 interface Derived {
   place: Place;
+  /** Non-null once CPCB answers for this city; null on the seeded floor. */
+  liveAqi: LiveAqi | null;
   condition: Condition;
   timeOfDay: TimeOfDay;
   isDerivedSky: boolean;
@@ -150,16 +153,39 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [withReload, scheduleLoaded],
   );
 
+  /**
+   * The one live feed wired today. CPCB needs no IP whitelisting, so it works
+   * from any host — CLAUDE.md's "fast path". It arrives through /api/aqi so the
+   * key stays server-side.
+   *
+   * Merged into the place rather than displayed beside it, deliberately: the
+   * scoring rules, the advisories and the cards then all read the real number
+   * with no further wiring, and the seeded value stays the floor for the
+   * moment before it lands (and forever, if data.gov.in is down mid-demo).
+   */
+  const seedPlace = PLACE_BY_ID[state.placeId];
+  const liveAqi = useLiveAqi(seedPlace.name);
+
   const derived = useMemo<Derived>(() => {
-    const place = PLACE_BY_ID[state.placeId];
+    const place: Place = liveAqi
+      ? { ...seedPlace, aqi: liveAqi.aqi, aqiCategory: liveAqi.category }
+      : seedPlace;
     return {
       place,
+      liveAqi,
       condition: state.condOverride ?? place.condition,
       timeOfDay: state.todOverride ?? timeOfDayFor(place),
       isDerivedSky: state.condOverride === null && state.todOverride === null,
       cards: scoreCards(place, state.personas, state.manualOrder),
     };
-  }, [state.placeId, state.condOverride, state.todOverride, state.personas, state.manualOrder]);
+  }, [
+    seedPlace,
+    liveAqi,
+    state.condOverride,
+    state.todOverride,
+    state.personas,
+    state.manualOrder,
+  ]);
 
   const value = useMemo(() => ({ ...state, ...actions, ...derived }), [state, actions, derived]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

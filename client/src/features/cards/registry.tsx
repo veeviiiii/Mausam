@@ -2,18 +2,28 @@ import { AQI_BANDS, PLACES, aqiBand } from "../../data/seed";
 import type { PersonaId, Place } from "../../data/types";
 import { WARNING_COLOR } from "../../design/tokens";
 import { WeatherIcon } from "../../components/WeatherIcon";
+import { useT } from "../../i18n/context";
 import { Band, Bars, Gauge, KeyValues, Note, Readout, WindowPair } from "./viz";
+
+export type Translate = (key: string, vars?: Record<string, string>) => string;
 
 export interface CardDetail {
   lede: string;
   rows: [string, string][];
-  /** Provenance and cache policy — one sentence, no hand-waving. */
+  /**
+   * Provenance and cache policy — one sentence, no hand-waving.
+   *
+   * Kept in English in both languages: these quote IMD endpoint names and
+   * cache TTLs, and a machine-flavoured Hindi rendering of "cached until the
+   * next issue rather than on a clock" would read worse than the original.
+   * The sheet says so on screen rather than leaving it as a gap to discover.
+   */
   source: string;
 }
 
 export interface CardPresentation {
   Body: (props: { place: Place }) => JSX.Element;
-  detail: (place: Place) => CardDetail;
+  detail: (place: Place, t: Translate) => CardDetail;
   icon: JSX.Element;
 }
 
@@ -29,34 +39,35 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       </>
     ),
     Body: ({ place }) => {
+      const t = useT();
       const band = aqiBand(place.aqi);
       return (
         <>
-          <Readout value={place.aqi} unit={`AQI · ${band.name}`} />
+          <Readout value={place.aqi} unit={t("unit.aqi", { band: band.name })} />
           <Band
             segments={AQI_BANDS.map((b) => ({ color: b.color }))}
             activeIndex={AQI_BANDS.indexOf(band)}
-            labels={["Good", "Moderate", "Severe"]}
+            labels={[t("band.good"), t("band.moderate"), t("band.severe")]}
           />
           <KeyValues
             items={[
-              ["PM2.5 µg/m³", String(place.pm25)],
-              ["Pollen", place.pollen],
-              ["Humidity", `${place.humidity}%`],
+              [t("kv.pm25"), String(place.pm25)],
+              [t("kv.pollen"), place.pollen],
+              [t("kv.humidity"), `${place.humidity}%`],
             ]}
           />
         </>
       );
     },
-    detail: (p) => ({
-      lede: "Continuous ambient monitoring from the nearest CPCB station.",
+    detail: (p, t) => ({
+      lede: t("card.health.lede"),
       rows: [
-        ["Air Quality Index", `${p.aqi} · ${p.aqiCategory}`],
-        ["PM2.5", `${p.pm25} µg/m³`],
-        ["PM10", `${Math.round(p.pm25 * 1.9)} µg/m³`],
-        ["Pollen load", p.pollen],
-        ["Relative humidity", `${p.humidity} %`],
-        ["Dew point", `${p.dewPoint} °C`],
+        [t("row.aqi"), `${p.aqi} · ${p.aqiCategory}`],
+        [t("row.pm25"), `${p.pm25} µg/m³`],
+        [t("row.pm10"), `${Math.round(p.pm25 * 1.9)} µg/m³`],
+        [t("row.pollenLoad"), p.pollen],
+        [t("row.rh"), `${p.humidity} %`],
+        [t("row.dewPoint"), `${p.dewPoint} °C`],
       ],
       source:
         "CPCB real-time AQI via data.gov.in, cached 60 minutes — the interval CPCB actually publishes on. No IP whitelisting needed, which is why this is the first live feed we wire up.",
@@ -72,36 +83,37 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       </>
     ),
     Body: ({ place }) => {
+      const t = useT();
       const temps = place.hourly.slice(0, 8).map((h) => h.temp);
       const min = Math.min(...temps);
       return (
         <>
-          <Readout value={place.runStart} unit={`to ${place.runEnd}`} />
-          <Note>Coolest stretch before the sun clears the horizon.</Note>
+          <Readout value={place.runStart} unit={t("unit.to", { v: place.runEnd })} />
+          <Note>{t("card.fitness.note")}</Note>
           <Bars
-            values={temps.map((t) => t - min + 4)}
+            values={temps.map((v) => v - min + 4)}
             highlight={temps.indexOf(min)}
             axis={["04:00", "10:00", "16:00", "22:00"]}
           />
           <KeyValues
             items={[
-              ["Peak UV", String(place.uv)],
-              ["Wind", `${place.wind} km/h`],
-              ["Feels like", `${place.feelsLike}°`],
+              [t("kv.peakUv"), String(place.uv)],
+              [t("kv.wind"), t("unit.kmh", { v: String(place.wind) })],
+              [t("kv.feelsLike"), `${place.feelsLike}°`],
             ]}
           />
         </>
       );
     },
-    detail: (p) => ({
-      lede: "Hour-by-hour heat and UV load, scored for sustained outdoor effort.",
+    detail: (p, t) => ({
+      lede: t("card.fitness.lede"),
       rows: [
-        ["Best window", `${p.runStart} – ${p.runEnd}`],
-        ["Peak UV index", String(p.uv)],
-        ["Feels like (peak)", `${p.feelsLike} °C`],
-        ["Heat index", `${p.urban.heatIndex} °C`],
-        ["Wind", `${p.wind} km/h`],
-        ["Sunrise", `${p.sunrise} IST`],
+        [t("row.bestWindow"), `${p.runStart} – ${p.runEnd}`],
+        [t("row.peakUv"), String(p.uv)],
+        [t("row.feelsPeak"), `${p.feelsLike} °C`],
+        [t("row.heatIndex"), `${p.urban.heatIndex} °C`],
+        [t("row.wind"), t("unit.kmh", { v: String(p.wind) })],
+        [t("row.sunrise"), `${p.sunrise} IST`],
       ],
       source:
         "IMD hourly city forecast plus the sunrise/sunset endpoint, cached 3 hours to match IMD's forecast refresh.",
@@ -129,39 +141,53 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       </>
     ),
     Body: ({ place }) => {
+      const t = useT();
       const wave = place.waveHeight ?? 0;
-      const advice =
-        wave >= 2 ? "Swimming not advised" : wave >= 1.2 ? "Caution near the shore" : "Calm enough to swim";
+      const advice = t(
+        wave >= 2 ? "card.beach.noSwim" : wave >= 1.2 ? "card.beach.caution" : "card.beach.calm",
+      );
+      const regime =
+        place.moon.tideRegime === "spring"
+          ? t("card.beach.spring")
+          : place.moon.tideRegime === "neap"
+            ? t("card.beach.neap")
+            : t("card.beach.transitional", {
+                phase: place.moon.phase.toLowerCase(),
+                pct: String(place.moon.illumination),
+              });
       return (
         <>
-          <Readout value={one(wave)} unit="m swell" />
+          <Readout value={one(wave)} unit={t("unit.mSwell")} />
           <Note>
-            {advice} — {wave >= 2 ? "above" : "below"} the 2 m advisory line. {place.moon.tideRegime === "spring"
-              ? "Spring tides this week, so the range is at its widest."
-              : place.moon.tideRegime === "neap"
-                ? "Neap tides this week, so the range is unusually narrow."
-                : `Moon is ${place.moon.phase.toLowerCase()} at ${place.moon.illumination}%, so the range is moderate.`}
+            {t("card.beach.line", {
+              advice,
+              side: t(wave >= 2 ? "card.beach.above" : "card.beach.below"),
+            })}{" "}
+            {regime}
           </Note>
           <KeyValues
             items={[
-              [`Next high · ${one(place.tideHighM ?? 0)} m`, place.tideHigh ?? "—"],
-              ["Low tide", place.tideLow ?? "—"],
-              ["Sea temp", `${one(place.seaTemp ?? 0)}°`],
+              [
+                t("kv.nextHigh", { m: one(place.tideHighM ?? 0) }),
+                place.tideHigh ?? "—",
+              ],
+              [t("kv.lowTide"), place.tideLow ?? "—"],
+              [t("kv.seaTemp"), `${one(place.seaTemp ?? 0)}°`],
             ]}
           />
         </>
       );
     },
-    detail: (p) => ({
-      lede: "Sea state and tide timings for the nearest coastal station.",
+    detail: (p, t) => ({
+      lede: t("card.beach.lede"),
       rows: [
-        ["Significant wave height", `${one(p.waveHeight ?? 0)} m`],
-        ["Next high tide", `${p.tideHigh} · ${one(p.tideHighM ?? 0)} m`],
-        ["Next low tide", p.tideLow ?? "—"],
-        ["Sea surface temp", `${one(p.seaTemp ?? 0)} °C`],
-        ["Moon phase", `${p.moon.phase} · ${p.moon.illumination}%`],
-        ["Tide regime", p.moon.tideRegime],
-        ["Onshore wind", `${p.wind} km/h`],
+        [t("row.waveHeight"), `${one(p.waveHeight ?? 0)} m`],
+        [t("row.nextHigh"), `${p.tideHigh} · ${one(p.tideHighM ?? 0)} m`],
+        [t("row.nextLow"), p.tideLow ?? "—"],
+        [t("row.seaTemp"), `${one(p.seaTemp ?? 0)} °C`],
+        [t("row.moonPhase"), `${p.moon.phase} · ${p.moon.illumination}%`],
+        [t("row.tideRegime"), p.moon.tideRegime],
+        [t("row.onshoreWind"), t("unit.kmh", { v: String(p.wind) })],
       ],
       source:
         "INCOIS sea-state bulletin joined to the IMD coastal station list, cached 6 hours. Moon phase is carried only because it explains the tide range — moonrise and moonset themselves are out of scope.",
@@ -179,6 +205,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       />
     ),
     Body: ({ place }) => {
+      const t = useT();
       const others = PLACES.filter((x) => x.id !== place.id).slice(0, 3);
       const warned = others.filter((d) => d.alert).length;
       return (
@@ -197,7 +224,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
                     className="rounded-[5px] px-1.5 py-0.5 font-mono text-[8.5px] font-bold uppercase tracking-[0.06em] text-white"
                     style={{ background: WARNING_COLOR[d.alert.level] }}
                   >
-                    {d.alert.level}
+                    {t(`level.${d.alert.level}`)}
                   </span>
                 ) : null}
                 <span className="tnum font-mono text-[13.5px] font-semibold">{d.temp}°</span>
@@ -205,24 +232,35 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
             ))}
           </div>
           <Note>
-            Pack for {warned ? "rain and delays" : "warm, dry days"} — {warned} of {others.length} saved
-            cities are under a warning.
+            {t("card.travel.note", {
+              pack: t(warned ? "card.travel.packWet" : "card.travel.packDry"),
+              warned: String(warned),
+              total: String(others.length),
+            })}
           </Note>
         </>
       );
     },
-    detail: (p) => ({
-      lede: "Your saved destinations, checked against every active district, cyclone and flash-flood warning.",
+    detail: (p, t) => ({
+      lede: t("card.travel.lede"),
       rows: [
         ...PLACES.filter((x) => x.id !== p.id).map(
-          (d) => [d.name, `${d.temp}° · ${d.alert ? `${d.alert.level} ${d.alert.kind}` : "no warning"}`] as [string, string],
+          (d) =>
+            [
+              d.name,
+              `${d.temp}° · ${
+                d.alert
+                  ? `${t(`level.${d.alert.level}`)} ${t(`alert.kind.${d.alert.kind}`)}`
+                  : t("val.noWarningShort")
+              }`,
+            ] as [string, string],
         ),
         ...(p.aviation
           ? ([
-              ["Departure airport", p.aviation.airport],
-              ["Runway visibility", `${p.aviation.visibilityM} m`],
-              ["Crosswind", `${p.aviation.crosswindKt} kt`],
-              ["Terminal status", p.aviation.terminalStatus],
+              [t("row.airport"), p.aviation.airport],
+              [t("row.runwayVis"), `${p.aviation.visibilityM} m`],
+              [t("row.crosswind"), `${p.aviation.crosswindKt} kt`],
+              [t("row.terminal"), p.aviation.terminalStatus],
             ] as [string, string][])
           : []),
       ],
@@ -246,30 +284,43 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       </>
     ),
     Body: ({ place }) => {
+      const t = useT();
       const worst = Math.max(place.schoolDropRain, place.schoolPickupRain);
       return (
         <>
           <WindowPair
             items={[
-              { label: "Drop 07:30", value: `${place.schoolDropRain}%`, caption: "rain chance" },
-              { label: "Pick-up 14:45", value: `${place.schoolPickupRain}%`, caption: "rain chance" },
+              {
+                label: t("kv.drop"),
+                value: `${place.schoolDropRain}%`,
+                caption: t("kv.rainChance"),
+              },
+              {
+                label: t("kv.pickup"),
+                value: `${place.schoolPickupRain}%`,
+                caption: t("kv.rainChance"),
+              },
             ]}
           />
           <Note>
-            {worst >= 60 ? "Send an umbrella." : "No umbrella needed."} Nowcast refreshes for your
-            district every 15 minutes.
+            {t("card.family.note", {
+              advice: t(worst >= 60 ? "card.family.umbrella" : "card.family.noUmbrella"),
+            })}
           </Note>
         </>
       );
     },
-    detail: (p) => ({
-      lede: "The two windows that matter, taken from the district nowcast.",
+    detail: (p, t) => ({
+      lede: t("card.family.lede"),
       rows: [
-        ["Morning drop 07:30", `${p.schoolDropRain}% rain`],
-        ["Afternoon pick-up 14:45", `${p.schoolPickupRain}% rain`],
-        ["Wind at pick-up", `${p.wind} km/h`],
-        ["Visibility", `${one(p.visibility)} km`],
-        ["Lightning risk", p.condition === "thunderstorm" ? "Present" : "None reported"],
+        [t("row.morningDrop"), `${p.schoolDropRain}%`],
+        [t("row.afternoonPickup"), `${p.schoolPickupRain}%`],
+        [t("row.windAtPickup"), t("unit.kmh", { v: String(p.wind) })],
+        [t("row.visibility"), `${one(p.visibility)} km`],
+        [
+          t("row.lightning"),
+          p.condition === "thunderstorm" ? t("val.present") : t("val.noneReported"),
+        ],
       ],
       source:
         "IMD district nowcast, refreshed every 15 minutes — the shortest TTL in the cache, because this is the data most likely to change between the school run and the pick-up.",
@@ -289,28 +340,41 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         />
       </>
     ),
-    Body: ({ place }) => (
-      <>
-        <Readout value={place.rain24} unit="mm next 24 h" />
-        <Bars values={place.rainProbability.slice(0, 6)} highlight={0} axis={["Now", "+12 h", "+24 h"]} />
-        <Gauge percent={place.agromet.soilMoisture * 100} />
-        <Note>{place.agromet.advisory}</Note>
-        <KeyValues
-          items={[
-            [`Soil m³/m³ · ${place.agromet.soilCategory}`, place.agromet.soilMoisture.toFixed(2)],
-            ["Humidity", `${place.humidity}%`],
-          ]}
-        />
-      </>
-    ),
-    detail: (p) => ({
-      lede: "Field-scale rainfall, soil moisture and the current Agromet advisory.",
+    Body: ({ place }) => {
+      const t = useT();
+      return (
+        <>
+          <Readout value={place.rain24} unit={t("unit.mmNext24")} />
+          <Bars
+            values={place.rainProbability.slice(0, 6)}
+            highlight={0}
+            axis={[t("home.now"), "+12 h", "+24 h"]}
+          />
+          <Gauge percent={place.agromet.soilMoisture * 100} />
+          <Note>{place.agromet.advisory}</Note>
+          <KeyValues
+            items={[
+              [
+                t("kv.soil", { cat: place.agromet.soilCategory }),
+                place.agromet.soilMoisture.toFixed(2),
+              ],
+              [t("kv.humidity"), `${place.humidity}%`],
+            ]}
+          />
+        </>
+      );
+    },
+    detail: (p, t) => ({
+      lede: t("card.farm.lede"),
       rows: [
-        ["Rainfall next 24 h", `${p.rain24} mm`],
-        ["Soil moisture", `${p.agromet.soilMoisture.toFixed(2)} m³/m³ · ${p.agromet.soilCategory}`],
-        ["Advisory issued", p.agromet.issued],
-        ["Relative humidity", `${p.humidity} %`],
-        ["Frost risk", p.temp < 6 ? "Watch" : "None"],
+        [t("row.rain24"), `${p.rain24} mm`],
+        [
+          t("row.soilMoisture"),
+          `${p.agromet.soilMoisture.toFixed(2)} m³/m³ · ${p.agromet.soilCategory}`,
+        ],
+        [t("row.advisoryIssued"), p.agromet.issued],
+        [t("row.rh"), `${p.humidity} %`],
+        [t("row.frostRisk"), p.temp < 6 ? t("val.watch") : t("val.none")],
       ],
       source:
         "IMD subdivision rainfall forecast cached 6 hours, plus the district Agromet Advisory Service bulletin — issued Tuesdays and Fridays, so it is cached until the next issue rather than on a clock.",
@@ -333,38 +397,38 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       </>
     ),
     Body: ({ place }) => {
-      const risk =
+      const t = useT();
+      const risk = t(
         place.visibility < 3
-          ? "High spray and low visibility"
+          ? "card.commute.spray"
           : place.visibility < 5
-            ? "Reduced visibility"
-            : "Clear roads";
+            ? "card.commute.reduced"
+            : "card.commute.clear",
+      );
       return (
         <>
-          <Readout value={one(place.visibility)} unit="km visibility" />
+          <Readout value={one(place.visibility)} unit={t("unit.kmVisibility")} />
           <Gauge percent={(place.visibility / 10) * 100} />
-          <Note>
-            {risk} on the 18:30 run home. {place.urban.advisory}
-          </Note>
+          <Note>{t("card.commute.note", { risk, advisory: place.urban.advisory })}</Note>
           <KeyValues
             items={[
-              ["Wind", `${place.wind} km/h`],
-              ["Gusting", `${place.gust} km/h`],
-              ["Waterlogging", place.urban.waterloggingRisk],
+              [t("kv.wind"), t("unit.kmh", { v: String(place.wind) })],
+              [t("kv.gusting"), t("unit.kmh", { v: String(place.gust) })],
+              [t("kv.waterlogging"), place.urban.waterloggingRisk],
             ]}
           />
         </>
       );
     },
-    detail: (p) => ({
-      lede: "Road-relevant conditions for the evening run home.",
+    detail: (p, t) => ({
+      lede: t("card.commute.lede"),
       rows: [
-        ["Visibility", `${one(p.visibility)} km`],
-        ["Waterlogging risk", p.urban.waterloggingRisk],
-        ["Urban advisory", p.urban.advisory],
-        ["Wind", `${p.wind} km/h`],
-        ["Gusting to", `${p.gust} km/h`],
-        ["Rain in next 3 h", `${p.rainProbability[0]} %`],
+        [t("row.visibility"), `${one(p.visibility)} km`],
+        [t("row.waterlogging"), p.urban.waterloggingRisk],
+        [t("row.urbanAdvisory"), p.urban.advisory],
+        [t("row.wind"), t("unit.kmh", { v: String(p.wind) })],
+        [t("row.gustingTo"), t("unit.kmh", { v: String(p.gust) })],
+        [t("row.rain3h"), `${p.rainProbability[0]} %`],
       ],
       source:
         "IMD district nowcast for visibility and precipitation, cached 15 minutes, joined to IMD's Urban Meteorological Services bulletin for the city-scale waterlogging call.",
@@ -380,30 +444,30 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       </>
     ),
     Body: ({ place }) => {
+      const t = useT();
       const min = Math.min(...place.rainProbability);
       return (
         <>
-          <Readout value={place.comfortIndex} unit="/ 100 comfort" />
+          <Readout value={place.comfortIndex} unit={t("unit.comfort")} />
           <Bars
             values={place.rainProbability}
             highlight={place.rainProbability.indexOf(min)}
             axis={["Today", "+5 d", "+10 d"]}
           />
           <Note>
-            Driest day in the outlook is <b className="font-semibold">{place.tourism.bestDay}</b> at {min}%
-            rain probability.
+            {t("card.event.note", { day: place.tourism.bestDay, pct: String(min) })}
           </Note>
         </>
       );
     },
-    detail: (p) => ({
-      lede: "Ten days of rain probability, scored into one comfort number.",
+    detail: (p, t) => ({
+      lede: t("card.event.lede"),
       rows: [
-        ["Comfort index today", `${p.comfortIndex} / 100`],
-        ["Driest day ahead", p.tourism.bestDay],
-        ["Lowest rain probability", `${Math.min(...p.rainProbability)} %`],
-        ["Tourism outlook", p.tourism.outlook],
-        ["Humidity", `${p.humidity} %`],
+        [t("row.comfortToday"), `${p.comfortIndex} / 100`],
+        [t("row.driestDay"), p.tourism.bestDay],
+        [t("row.lowestRain"), `${Math.min(...p.rainProbability)} %`],
+        [t("row.tourismOutlook"), p.tourism.outlook],
+        [t("row.rh"), `${p.humidity} %`],
       ],
       source:
         "IMD extended-range outlook cached 12 hours and re-scored on every screen load, with the narrative line taken from IMD's Tourism Forecast for the station.",

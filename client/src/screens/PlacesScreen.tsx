@@ -4,9 +4,10 @@ import { PLACES } from "../data/seed";
 import { useApp } from "../state/AppState";
 import { ScreenHeading } from "../components/ScreenHeading";
 import { WeatherIcon } from "../components/WeatherIcon";
-import { CONDITION_LABEL, RADIUS, WARNING_COLOR } from "../design/tokens";
+import { RADIUS, WARNING_COLOR } from "../design/tokens";
 import { springCard } from "../animations/variants";
 import { timeOfDayFor } from "../lib/time";
+import { useT } from "../i18n/context";
 
 /**
  * MapLibre is ~800 kB of the bundle on its own. Splitting it out keeps the
@@ -23,6 +24,7 @@ const RadarMap = lazy(() =>
 );
 
 export function PlacesScreen() {
+  const t = useT();
   const { place, selectPlace } = useApp();
   const [radarOpen, setRadarOpen] = useState(false);
   const [radarClosing, setRadarClosing] = useState(false);
@@ -39,11 +41,11 @@ export function PlacesScreen() {
   return (
     <>
       <ScreenHeading
-        title="Places"
-        blurb="Current location plus saved favourites. Each row shows that city's own local sky, derived from its sunrise — not yours."
+        title={t("screen.places.title")}
+        blurb={t("screen.places.blurb")}
       />
 
-      <Suspense fallback={<MapSkeleton />}>
+      <Suspense fallback={<MapSkeleton label={t("map.loading")} />}>
         <LocationMap
           places={PLACES}
           activeId={place.id}
@@ -75,7 +77,7 @@ export function PlacesScreen() {
               <span className="min-w-0 flex-1">
                 <b className="block text-[15px] font-semibold">{p.name}</b>
                 <small className="mt-px block text-[11.5px]" style={{ color: "var(--txt-2)" }}>
-                  {CONDITION_LABEL[p.condition]} · {timeOfDayFor(p)} · {p.station}
+                  {t(`cond.${p.condition}`)} · {t(`tod.${timeOfDayFor(p)}`)} · {p.station}
                 </small>
               </span>
               <span className="tnum ml-auto text-[25px] font-light tracking-[-0.03em]">{p.temp}°</span>
@@ -90,14 +92,14 @@ export function PlacesScreen() {
                   className="rounded-[5px] px-1.5 py-0.5 font-mono text-[8.5px] font-bold uppercase tracking-[0.06em] text-white"
                   style={{ background: WARNING_COLOR[p.alert.level] }}
                 >
-                  {p.alert.level} · {p.alert.kind.replace("-", " ")}
+                  {t(`level.${p.alert.level}`)} · {t(`alert.kind.${p.alert.kind}`)}
                 </span>
               ) : (
                 <span
                   className="chip-on rounded-[5px] px-1.5 py-0.5 font-mono text-[8.5px] font-bold uppercase tracking-[0.06em]"
                   style={{ color: "var(--txt-2)" }}
                 >
-                  No warning
+                  {t("alert.noWarning")}
                 </span>
               )}
             </span>
@@ -108,12 +110,12 @@ export function PlacesScreen() {
   );
 }
 
-function MapSkeleton() {
+function MapSkeleton({ label }: { label: string }) {
   return (
     <div
       className="skeleton mx-4 mb-3 h-[188px] rounded-[20px] lg:mx-0 lg:mb-5 lg:h-[340px]"
       role="status"
-      aria-label="Loading map"
+      aria-label={label}
     />
   );
 }

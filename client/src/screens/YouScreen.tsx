@@ -2,11 +2,14 @@ import { motion } from "framer-motion";
 import { PERSONAS } from "../data/seed";
 import { useApp } from "../state/AppState";
 import { ScreenHeading } from "../components/ScreenHeading";
-import { CONDITIONS, CONDITION_LABEL, TIMES_OF_DAY, RADIUS } from "../design/tokens";
+import { CONDITIONS, TIMES_OF_DAY, RADIUS } from "../design/tokens";
 import { springCard } from "../animations/variants";
 import { timeOfDayFor, timeOfDayReason } from "../lib/time";
+import { useT } from "../i18n/context";
+import { LanguagePicker } from "../components/LanguagePicker";
 
 export function YouScreen() {
+  const t = useT();
   const {
     personas,
     togglePersona,
@@ -27,10 +30,7 @@ export function YouScreen() {
 
   return (
     <>
-      <ScreenHeading
-        title="Your personas"
-        blurb="Pick one to three. The homepage re-scores instantly — nothing here needs a save button. The order you pick them in sets each card's base score."
-      />
+      <ScreenHeading title={t("screen.you.title")} blurb={t("screen.you.blurb")} />
 
       <div className="flex flex-wrap gap-2 px-4 pb-4 lg:px-0 lg:pb-5">
         {PERSONAS.map((p) => {
@@ -57,62 +57,70 @@ export function YouScreen() {
                 style={{ opacity: on ? 1 : 0.3 }}
                 aria-hidden
               />
-              {p.label}
+              {t(`persona.${p.id}`)}
               {on ? <span className="instrument !text-[9px]">{personas.indexOf(p.id) + 1}</span> : null}
             </motion.button>
           );
         })}
       </div>
 
-      <p className="instrument on-sky px-6 pb-5 lg:px-0 lg:pb-7">{personas.length} of 3 selected</p>
+      <p className="instrument on-sky px-6 pb-5 lg:px-0 lg:pb-7">
+        {t("screen.you.selected", { n: String(personas.length) })}
+      </p>
 
-      <SectionLabel>Display</SectionLabel>
+      <SectionLabel>{t("you.language")}</SectionLabel>
+      <LanguagePicker />
+
+      <SectionLabel>{t("you.display")}</SectionLabel>
       <div className="flex flex-col gap-1.5 px-4 pb-5 lg:grid lg:max-w-[860px] lg:grid-cols-2 lg:gap-3 lg:px-0 lg:pb-8">
         <Toggle
           on={arrange}
           onChange={setArrange}
-          title="Arrange cards"
-          note="Reorder by hand. A manual order overrides the score until you clear it."
+          title={t("you.arrange")}
+          note={t("you.arrangeNote")}
         />
         <Toggle
           on={flatGlass}
           onChange={setFlatGlass}
-          title="Reduce transparency"
-          note="Drops the backdrop blur and raises fill opacity instead. Contrast is held; frame cost falls on low-end hardware."
+          title={t("you.flat")}
+          note={t("you.flatNote")}
         />
       </div>
 
-      <SectionLabel>Demo controls</SectionLabel>
+      <SectionLabel>{t("you.demo")}</SectionLabel>
       <p className="sky-txt-2 max-w-[70ch] px-6 pb-2.5 text-[11.5px] leading-[1.45] lg:px-0">
-        Not shipped UI. In the app the sky is derived from IMD data and the location's own sunrise —
-        these exist so the whole system can be reviewed without waiting for weather.
+        {t("you.demoNote")}
       </p>
 
       <div className="flex flex-col gap-1.5 px-4 pb-4 lg:max-w-[420px] lg:px-0 lg:pb-6">
         <Toggle
           on={offline}
           onChange={setOffline}
-          title="Simulate offline"
-          note="Shows last-known data with its age, which is the required offline behaviour."
+          title={t("you.offline")}
+          note={t("you.offlineNote")}
         />
       </div>
 
       <div className="px-4 pb-3 lg:px-0">
         <p className="instrument on-sky pb-2">
-          {isDerivedSky ? timeOfDayReason(place, timeOfDayFor(place)) : "Sky overridden"}
+          {isDerivedSky
+            ? timeOfDayReason(place, timeOfDayFor(place), t)
+            : t("you.skyOverridden")}
         </p>
         <ChipRow
-          items={CONDITIONS.map((c) => ({ id: c, label: CONDITION_LABEL[c] }))}
+          items={CONDITIONS.map((c) => ({ id: c, label: t(`cond.${c}`) }))}
           active={condOverride}
           onPick={(id) => setCondOverride(condOverride === id ? null : (id as never))}
         />
         <div className="h-2" />
         <ChipRow
-          items={TIMES_OF_DAY.map((t) => ({ id: t, label: t[0].toUpperCase() + t.slice(1) }))}
+          items={TIMES_OF_DAY.map((tod) => ({ id: tod, label: t(`tod.${tod}`) }))}
           active={todOverride}
           onPick={(id) => setTodOverride(todOverride === id ? null : (id as never))}
         />
-        <p className="instrument on-sky pt-3">Now showing {timeOfDay}</p>
+        <p className="instrument on-sky pt-3">
+          {t("you.nowShowing", { tod: t(`tod.${timeOfDay}`) })}
+        </p>
       </div>
     </>
   );

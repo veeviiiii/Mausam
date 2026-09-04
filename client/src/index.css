@@ -72,8 +72,11 @@
     color: var(--txt);
     box-shadow: 0 20px 60px rgba(4, 10, 20, 0.4);
   }
+  /* Same surface as .glass minus the blur. The scrim used to be missing here,
+     which left muted chip text at 4.02:1 against rain/dusk — under AA. Chips
+     are audited at CHIP_BAND now, alongside the cards. */
   .glass-chip {
-    background: var(--glass-fill);
+    background: linear-gradient(var(--glass-scrim), var(--glass-scrim)), var(--glass-fill);
     border: 1px solid var(--hair);
     color: var(--txt);
   }

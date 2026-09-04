@@ -11,13 +11,15 @@ import { HourlyMetricChart } from "../components/HourlyMetricChart";
 import { SkeletonStack } from "../components/SkeletonCard";
 import { PersonaCard } from "../features/cards/PersonaCard";
 import { suppressedPersonas } from "../personalization/rules";
-import { CONDITION_LABEL } from "../design/tokens";
+
 import { springCard, fade } from "../animations/variants";
 import { relativeAge } from "../lib/time";
 import { useMotionWindow } from "../lib/useMotionWindow";
 import type { SheetTarget } from "../components/DetailSheet";
+import { useT } from "../i18n/context";
 
 export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
+  const tr = useT();
   const {
     place,
     condition,
@@ -30,6 +32,8 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
     dataAgeMinutes,
     selectPlace,
     moveCard,
+    timeOfDay,
+    liveAqi,
   } = useApp();
 
   const suppressed = suppressedPersonas(place, personas);
@@ -97,7 +101,11 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
             onOpen={() => onOpen({ kind: "alert", placeId: place.id })}
           />
         ) : (
-          <NoAlerts key={`${place.id}-none`} place={place.name} checked={relativeAge(dataAgeMinutes)} />
+          <NoAlerts
+            key={`${place.id}-none`}
+            place={place.name}
+            checked={relativeAge(dataAgeMinutes, tr)}
+          />
         )}
       </div>
 
@@ -114,7 +122,7 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
           }}
         >
           <span className="h-[6px] w-[6px] shrink-0 rounded-full bg-[#FFB466]" aria-hidden />
-          Showing last known data, updated {relativeAge(dataAgeMinutes)}
+          {tr("home.offline", { age: relativeAge(dataAgeMinutes, tr) })}
         </motion.div>
       ) : null}
 
@@ -135,29 +143,29 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
                   </sup>
                 </div>
                 <div className="mt-1 text-[15px] font-medium lg:text-[18px]">
-                  {CONDITION_LABEL[condition]}
+                  {tr(`cond.${condition}`)}
                 </div>
                 <div className="sky-txt-2 mt-0.5 text-[12.5px] lg:text-[14px]">
-                  {place.station} · feels like {place.feelsLike}°
+                  {place.station} · {tr("home.feelsLike", { v: String(place.feelsLike) })}
                 </div>
               </div>
               <div className="lg:hidden">
-                <WeatherIcon condition={condition} size={62} title={CONDITION_LABEL[condition]} />
+                <WeatherIcon condition={condition} size={62} title={tr(`cond.${condition}`)} />
               </div>
             </div>
           </div>
 
           <div className="hidden lg:block lg:pb-6">
-            <WeatherIcon condition={condition} size={104} title={CONDITION_LABEL[condition]} />
+            <WeatherIcon condition={condition} size={104} title={tr(`cond.${condition}`)} />
           </div>
         </div>
 
         <div className="mt-4 flex gap-5 lg:mt-0 lg:gap-9 lg:pb-4">
           {[
-            ["Humidity", `${place.humidity}%`],
-            ["Wind", `${place.wind} km/h`],
-            ["Visibility", `${place.visibility.toFixed(1)} km`],
-            ["Sunset", place.sunset],
+            [tr("home.humidity"), `${place.humidity}%`],
+            [tr("home.wind"), tr("unit.kmh", { v: String(place.wind) })],
+            [tr("home.visibility"), `${place.visibility.toFixed(1)} km`],
+            [tr("home.sunset"), place.sunset],
           ].map(([label, value]) => (
             <div key={label} className="flex flex-col gap-px">
               <b className="tnum text-[14px] font-semibold lg:text-[19px]">{value}</b>
@@ -167,7 +175,12 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
         </div>
       </div>
 
-      <HourlyCarousel hours={place.hourly} />
+      <HourlyCarousel
+        place={place}
+        hours={place.hourly}
+        condition={condition}
+        timeOfDay={timeOfDay}
+      />
 
       {/* Persona cards. One column on the phone, a grid on the laptop — the
           scoring order still reads left-to-right, top-to-bottom. */}
@@ -192,6 +205,7 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
                 onOpen={() => onOpen({ kind: "card", id: card.id })}
                 onMove={(dir) => moveCard(card.id, dir)}
                 onPressStart={beginMotion}
+                liveAqi={liveAqi !== null}
               />
             ))}
           </AnimatePresence>
@@ -205,9 +219,10 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
       {/* A suppressed persona still gets an explanation, never silence. */}
       {suppressed.length && !loading ? (
         <p className="sky-txt-2 mt-3 px-6 text-[11.5px] leading-[1.45] lg:mt-5 lg:px-0 lg:text-[12.5px]">
-          {suppressed.map((s) => s.label).join(" and ")}{" "}
-          {suppressed.length > 1 ? "cards are" : "card is"} hidden here — {place.name} is inland, so
-          there is no tide station in range.
+          {tr(suppressed.length > 1 ? "home.suppressedMany" : "home.suppressedOne", {
+            names: suppressed.map((s) => tr(`persona.${s.id}`)).join(", "),
+            place: place.name,
+          })}
         </p>
       ) : null}
     </>

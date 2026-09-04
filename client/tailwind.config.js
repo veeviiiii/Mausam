@@ -5,7 +5,15 @@ export default {
     extend: {
       fontFamily: {
         // Mirrors FONT_STACKS in src/design/tokens.ts — see CLAUDE.md typography rules.
-        ui: ['"Google Sans Flex"', "Figtree", "-apple-system", "Roboto", "system-ui", "sans-serif"],
+        ui: [
+          '"Google Sans Flex"',
+          "Figtree",
+          '"Noto Sans Devanagari"',
+          "-apple-system",
+          "Roboto",
+          "system-ui",
+          "sans-serif",
+        ],
         mono: ['"Google Sans Code"', "ui-monospace", '"Cascadia Mono"', "Menlo", "monospace"],
       },
       colors: {

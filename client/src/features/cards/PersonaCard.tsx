@@ -11,9 +11,9 @@ import {
   explain,
   type ScoredCard,
 } from "../../personalization/rules";
-import { PERSONA_BY_ID } from "../../data/seed";
 import type { Place } from "../../data/types";
 import { CARD_UI } from "./registry";
+import { useT } from "../../i18n/context";
 
 interface Props {
   card: ScoredCard;
@@ -27,6 +27,8 @@ interface Props {
   onMove: (dir: "up" | "down") => void;
   /** Opens the stack's motion window so the press-scale is not blurred. */
   onPressStart?: () => void;
+  /** True once CPCB has answered — the health card's label says which it is. */
+  liveAqi?: boolean;
 }
 
 export function PersonaCard({
@@ -40,12 +42,14 @@ export function PersonaCard({
   onOpen,
   onMove,
   onPressStart,
+  liveAqi = false,
 }: Props) {
+  const t = useT();
   const [whyOpen, setWhyOpen] = useState(false);
   const rule = CARD_RULES[card.id];
   const ui = CARD_UI[card.id];
-  const persona = PERSONA_BY_ID[card.id];
-  const segments = explain(card, place, personaCount, manualOrder as never);
+  const title = t(rule.titleKey);
+  const segments = explain(card, place, personaCount, manualOrder as never, t);
 
   return (
     <motion.article
@@ -106,35 +110,30 @@ export function PersonaCard({
           </svg>
         ) : null}
 
+        {/* The air card is the only one with a live feed today, so it is the
+            only one whose label can be wrong. It says which number it holds. */}
         <span className="instrument min-w-0 flex-1 truncate">
-          {rule.source}
+          {t(card.id === "health" && !liveAqi ? "source.health.fallback" : rule.sourceKey)}
         </span>
 
         {arrange ? (
           <span className="ml-auto flex shrink-0 gap-1.5">
-            <MoveButton
-              dir="up"
-              disabled={index === 0}
-              label={rule.title}
-              onClick={() => onMove("up")}
-            />
+            <MoveButton dir="up" disabled={index === 0} label={title} onClick={() => onMove("up")} />
             <MoveButton
               dir="down"
               disabled={index === total - 1}
-              label={rule.title}
+              label={title}
               onClick={() => onMove("down")}
             />
           </span>
         ) : (
           <span className="chip-on shrink-0 whitespace-nowrap rounded-md px-1.5 py-0.5 text-[9.5px] font-semibold">
-            {persona.short}
+            {t(`persona.${card.id}`)}
           </span>
         )}
       </div>
 
-      <h3 className="mb-1 text-[16px] font-semibold tracking-[-0.015em]">
-        {rule.title}
-      </h3>
+      <h3 className="mb-1 text-[16px] font-semibold tracking-[-0.015em]">{title}</h3>
 
       <ui.Body place={place} />
 
@@ -153,7 +152,7 @@ export function PersonaCard({
               }}
               className="instrument inline-flex items-center gap-1.5 !text-[9.5px]"
             >
-              Why this card
+              {t("why.heading")}
               <motion.svg
                 viewBox="0 0 12 12"
                 width={11}
@@ -220,11 +219,12 @@ function MoveButton({
   label: string;
   onClick: () => void;
 }) {
+  const t = useT();
   return (
     <button
       type="button"
       disabled={disabled}
-      aria-label={`Move ${label} ${dir}`}
+      aria-label={t(dir === "up" ? "card.moveUp" : "card.moveDown", { label })}
       onClick={(e) => {
         e.stopPropagation();
         onClick();

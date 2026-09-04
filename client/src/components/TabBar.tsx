@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useApp } from "../state/AppState";
 import { springReorder } from "../animations/variants";
 import { NAV_ITEMS, NavIcon } from "./navItems";
+import { useT } from "../i18n/context";
 
 /**
  * Mobile navigation. Hidden from `lg` up, where SideNav takes over — a bottom
@@ -9,6 +10,7 @@ import { NAV_ITEMS, NavIcon } from "./navItems";
  */
 export function TabBar() {
   const { tab, setTab, place } = useApp();
+  const tr = useT();
   const hasAlert = Boolean(place.alert);
 
   return (
@@ -21,7 +23,7 @@ export function TabBar() {
         WebkitBackdropFilter: "blur(var(--glass-blur))",
       }}
       role="tablist"
-      aria-label="Mausam sections"
+      aria-label={tr("nav.ariaSections")}
     >
       {NAV_ITEMS.map((t) => {
         const selected = tab === t.id;
@@ -49,7 +51,7 @@ export function TabBar() {
                 aria-hidden
               />
             ) : null}
-            {t.label}
+            {tr(t.labelKey)}
           </button>
         );
       })}

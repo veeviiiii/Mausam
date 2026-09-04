@@ -552,7 +552,7 @@ export const TIMING = {
  * ------------------------------------------------------------------ */
 
 export const FONT_STACKS = {
-  ui: '"Google Sans Flex", Figtree, -apple-system, Roboto, system-ui, sans-serif',
+  ui: '"Google Sans Flex", Figtree, "Noto Sans Devanagari", -apple-system, Roboto, system-ui, sans-serif',
   mono: '"Google Sans Code", ui-monospace, "Cascadia Mono", Menlo, monospace',
 } as const;
 
@@ -622,15 +622,15 @@ export const MAP = {
 /* ------------------------------------------------------------------ *
  * 9. Radar overlays.
  *
- * Provider terms verified before wiring, not assumed:
+ * Provider terms verified by probing each endpoint, not read off a docs page:
  *   - RainViewer  : keyless, global radar, ~5 min refresh. Attribution is a
  *                   condition of use, so RADAR_ATTRIBUTION is not optional
  *                   chrome — it ships whenever the layer is shown.
- *   - WAQI        : works on the documented public demo token, upgradeable to
- *                   your own via VITE_WAQI_TOKEN.
- *   - OpenWeather : free tier, but needs its own key (VITE_OWM_KEY). Verified
- *                   401 without one, so the layer declares itself unavailable
- *                   rather than rendering an empty overlay.
+ *   - OpenWeather : free tier, own key (VITE_OWM_KEY). Verified 401 without
+ *                   one and 200 with, so the layer either works or declares
+ *                   itself unavailable — never an empty overlay.
+ *   - Air quality : Open-Meteo, keyless, CORS-open, US AQI per point. NOT a
+ *                   raster: see the note on AQI_ZOOM below.
  *   - Humidity    : deliberately absent. OWM's free Weather Maps 1.0 set has
  *                   no humidity layer, and Open-Meteo's map-layer project is
  *                   still beta with breaking changes expected. Per CLAUDE.md,
@@ -646,16 +646,138 @@ export const RADAR = {
   rainviewerIndex: "https://api.rainviewer.com/public/weather-maps.json",
   owmTemplate: (key: string) =>
     `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${key}`,
-  waqiTemplate: (token: string) =>
-    `https://tiles.aqicn.org/tiles/usepa-aqi/{z}/{x}/{y}.png?token=${token}`,
-  /** WAQI's documented public token, so the layer works with no setup. */
-  waqiDemoToken: "_openaq_",
+  /**
+   * Open-Meteo takes comma-separated coordinate lists, so a whole tier of
+   * cities is one request rather than one per pin. Verified 200 for 70 points.
+   */
+  openMeteoAqi: "https://air-quality-api.open-meteo.com/v1/air-quality",
+  /** Points per request. Well inside what the endpoint accepts; keeps URLs sane. */
+  aqiBatchSize: 50,
   /** Crossfade between overlays; never a hard pop. */
   fadeMs: 350,
+} as const;
+
+/**
+ * Air quality is drawn as labels, not as a raster overlay.
+ *
+ * The tiled version of this (WAQI's station badges) rendered every monitor in
+ * the country as a chunky pill, which at country zoom is an unreadable pile —
+ * and it was the provider's own art, so there was no way to restyle it. Here
+ * the app owns the label, which means it can look like the basemap's own place
+ * labels and it can thin out with zoom.
+ *
+ * Density is the whole trick: at country zoom only capitals and metros are
+ * legible, so only those are drawn. Zoom in and each threshold releases the
+ * next tier. Clutter is prevented by never drawing the clutter.
+ */
+export const AQI_ZOOM = {
+  /** Tier 0 (state capitals, metros, UT capitals) — always drawn. */
+  tier1From: 5.0,
+  /** Tier 1 (large cities) appears at this zoom. */
+  tier2From: 6.4,
+  /** Tier 2 (everything else in the list) appears at this zoom. */
 } as const;
 
 export const RADAR_ATTRIBUTION: Record<RadarLayerId, { text: string; href: string }> = {
   precipitation: { text: "Weather data by RainViewer", href: "https://www.rainviewer.com/" },
   wind: { text: "Wind data by OpenWeather", href: "https://openweathermap.org/" },
-  aqi: { text: "Air quality by WAQI", href: "https://waqi.info/" },
+  aqi: { text: "Air quality by Open-Meteo", href: "https://open-meteo.com/" },
 };
+
+/* ------------------------------------------------------------------ *
+ * 10. The hourly tint ramp.
+ *
+ * Each hour chip in the carousel is tinted by how much sun that hour actually
+ * gets: near-black navy at 03:00, bright azure at 13:00. The point is that you
+ * can read night off the strip without reading a single clock label.
+ *
+ * The input is a solar factor (0 = fully dark, 1 = solar noon) derived from the
+ * LOCATION's own sunrise and sunset, not the device clock and not a fixed
+ * "06:00 is dawn" assumption — same rule as the rest of the time-of-day system.
+ *
+ * Two ramps, because glass polarity flips between skies. On a dark surface the
+ * tint has to stay dark enough for near-white text; on a light one it has to
+ * stay light enough for near-black text. One shared ramp would have to be so
+ * timid on both that the whole effect disappears. Alpha ramps with the factor
+ * too — night wants the tint to dominate, noon wants it to glow.
+ *
+ * ONE TEXT ROLE ON THESE CHIPS. Measured, not assumed: over the full ramp the
+ * worst primary-text reading is 5.02:1, but a muted role at even 0.82 alpha
+ * falls to 3.96:1 — below AA. So the hour chip carries no muted text at all;
+ * its hierarchy is size and weight. Every tint is composited over all 28 skies
+ * and checked in scripts/verify-tokens.ts.
+ * ------------------------------------------------------------------ */
+
+export const HOUR_TINT: Record<GlassMode, [number, RGB][]> = {
+  onDark: [
+    [0.0, [4, 10, 30]],    // deep night
+    [0.25, [12, 30, 72]],  // last dark hour
+    [0.55, [24, 80, 140]], // early light / late dusk
+    [1.0, [40, 140, 206]], // solar noon
+  ],
+  onLight: [
+    [0.0, [64, 92, 158]],
+    [0.25, [92, 132, 188]],
+    [0.55, [124, 180, 222]],
+    [1.0, [150, 214, 250]],
+  ],
+};
+
+/** [night, noon] tint alpha. Interpolated with the same factor as the colour. */
+export const HOUR_TINT_ALPHA: Record<GlassMode, [number, number]> = {
+  onDark: [0.7, 0.6],
+  onLight: [0.4, 0.62],
+};
+
+/** Where the hourly strip actually sits on screen — the band we audit. */
+export const CHIP_BAND: [number, number] = [0.36, 0.7];
+
+/** Interpolate a ramp at a solar factor 0..1. */
+export function hourTint(factor: number, mode: GlassMode): { rgb: RGB; alpha: number } {
+  const f = Math.min(1, Math.max(0, factor));
+  const stops = HOUR_TINT[mode];
+  const [a0, a1] = HOUR_TINT_ALPHA[mode];
+  const alpha = a0 + (a1 - a0) * f;
+
+  for (let i = 0; i < stops.length - 1; i++) {
+    const [p0, c0] = stops[i];
+    const [p1, c1] = stops[i + 1];
+    if (f <= p1 || i === stops.length - 2) {
+      const k = Math.min(1, Math.max(0, (f - p0) / (p1 - p0)));
+      return {
+        rgb: [c0[0] + (c1[0] - c0[0]) * k, c0[1] + (c1[1] - c0[1]) * k, c0[2] + (c1[2] - c0[2]) * k],
+        alpha,
+      };
+    }
+  }
+  return { rgb: stops[stops.length - 1][1], alpha };
+}
+
+/**
+ * The chip background as CSS: the tint as a flat layer over the same
+ * scrim + fill the cards use, so the tint only colours a surface the audit
+ * already knows about.
+ */
+export function hourTintCss(factor: number, mode: GlassMode): string {
+  const { rgb, alpha } = hourTint(factor, mode);
+  const c = `rgba(${rgb.map(Math.round).join(",")},${alpha.toFixed(3)})`;
+  return `linear-gradient(${c},${c}), linear-gradient(var(--glass-scrim), var(--glass-scrim)), var(--glass-fill)`;
+}
+
+/**
+ * Contrast for a tinted hour chip, measured the way the chip is actually
+ * built: scrim and fill over the sky, then the tint over that. Primary text
+ * only — see the note above on why these chips have no muted role.
+ */
+export function measureHourChip(stops: Stop[], mode: GlassMode, factor: number): number {
+  const g = GLASS[mode];
+  const { rgb, alpha } = hourTint(factor, mode);
+
+  let worst = Infinity;
+  for (const t of CHIP_BAND) {
+    const base = composite(g.fill, g.fillA, composite(g.scrim, g.scrimA, sampleGradient(stops, t)));
+    const surface = composite(rgb, alpha, base);
+    worst = Math.min(worst, contrastRatio(composite(g.text, g.textA, surface), surface));
+  }
+  return worst;
+}

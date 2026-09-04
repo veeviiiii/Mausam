@@ -14,14 +14,19 @@ import { PERSONA_BY_ID } from "../data/seed";
 
 export interface Boost {
   points: number;
-  /** Reads as a clause: "AQI is 168, above the 100 watch line". */
-  reason: string;
+  /**
+   * Dictionary key for the clause, plus the readings that fill it. Reads as
+   * "AQI is 168, above the 100 watch line" in whichever language is on. The
+   * threshold and the number stay here in the rule; only the wording moves.
+   */
+  reasonKey: string;
+  vars?: Record<string, string>;
 }
 
 export interface CardRule {
-  title: string;
+  titleKey: string;
   /** Attribution shown on the card's instrument label. */
-  source: string;
+  sourceKey: string;
   boost: (place: Place) => Boost | null;
   /** Human-readable threshold, for the rules table and docs. */
   firesWhen: string;
@@ -42,13 +47,17 @@ export function setPlaceUniverse(places: Place[]) {
 
 export const CARD_RULES: Record<PersonaId, CardRule> = {
   health: {
-    title: "Air & allergens",
-    source: "CPCB · live",
-    boost: (p) =>
+    titleKey: "card.health.title",
+    sourceKey: "source.health",
+    boost: (p): Boost | null =>
       p.aqi > 150
-        ? { points: 40, reason: `AQI is ${p.aqi} (${p.aqiCategory}), past the 150 threshold` }
+        ? {
+            points: 40,
+            reasonKey: "boost.health.severe",
+            vars: { aqi: String(p.aqi), cat: p.aqiCategory },
+          }
         : p.aqi > 100
-          ? { points: 18, reason: `AQI is ${p.aqi}, above the 100 watch line` }
+          ? { points: 18, reasonKey: "boost.health.watch", vars: { aqi: String(p.aqi) } }
           : null,
     firesWhen: "AQI > 100 (+18) or > 150 (+40)",
     suppressedWhen: "never — every station reports air quality",
@@ -56,13 +65,13 @@ export const CARD_RULES: Record<PersonaId, CardRule> = {
   },
 
   fitness: {
-    title: "Best run window",
-    source: "IMD hourly · UV index",
-    boost: (p) =>
+    titleKey: "card.fitness.title",
+    sourceKey: "source.fitness",
+    boost: (p): Boost | null =>
       p.feelsLike >= 40
-        ? { points: 26, reason: `feels-like hits ${p.feelsLike}°C` }
+        ? { points: 26, reasonKey: "boost.fitness.heat", vars: { v: String(p.feelsLike) } }
         : p.uv >= 8
-          ? { points: 22, reason: `UV index peaks at ${p.uv}, so the safe window narrows` }
+          ? { points: 22, reasonKey: "boost.fitness.uv", vars: { uv: String(p.uv) } }
           : null,
     firesWhen: "feels-like ≥ 40 °C (+26) or UV ≥ 8 (+22)",
     suppressedWhen: "never",
@@ -70,14 +79,11 @@ export const CARD_RULES: Record<PersonaId, CardRule> = {
   },
 
   beach: {
-    title: "Sea & tide",
-    source: "INCOIS · IMD coastal",
-    boost: (p) =>
+    titleKey: "card.beach.title",
+    sourceKey: "source.beach",
+    boost: (p): Boost | null =>
       p.waveHeight != null && p.waveHeight >= 2
-        ? {
-            points: 34,
-            reason: `wave height is ${p.waveHeight} m, above the 2 m swim-advisory line`,
-          }
+        ? { points: 34, reasonKey: "boost.beach.wave", vars: { m: String(p.waveHeight) } }
         : null,
     firesWhen: "wave height ≥ 2 m (+34)",
     suppressedWhen: "the location is inland — no tide station in range",
@@ -85,14 +91,15 @@ export const CARD_RULES: Record<PersonaId, CardRule> = {
   },
 
   travel: {
-    title: "Saved destinations",
-    source: "IMD city forecast · CAP",
-    boost: (p) => {
+    titleKey: "card.travel.title",
+    sourceKey: "source.travel",
+    boost: (p): Boost | null => {
       const n = placeUniverse.filter((x) => x.id !== p.id && x.alert).length;
       return n
         ? {
             points: 14 * n,
-            reason: `${n} saved destination${n > 1 ? "s have" : " has"} an active warning`,
+            reasonKey: n > 1 ? "boost.travel.many" : "boost.travel.one",
+            vars: { n: String(n) },
           }
         : null;
     },
@@ -102,12 +109,12 @@ export const CARD_RULES: Record<PersonaId, CardRule> = {
   },
 
   family: {
-    title: "School run",
-    source: "IMD nowcast · district",
-    boost: (p) => {
+    titleKey: "card.family.title",
+    sourceKey: "source.family",
+    boost: (p): Boost | null => {
       const worst = Math.max(p.schoolDropRain, p.schoolPickupRain);
       return worst >= 60
-        ? { points: 30, reason: `rain probability reaches ${worst}% inside a school window` }
+        ? { points: 30, reasonKey: "boost.family.rain", vars: { pct: String(worst) } }
         : null;
     },
     firesWhen: "rain probability ≥ 60% in the 07:30 or 14:45 window (+30)",
@@ -116,13 +123,17 @@ export const CARD_RULES: Record<PersonaId, CardRule> = {
   },
 
   farm: {
-    title: "Field conditions",
-    source: "IMD subdivision · Agromet AAS",
-    boost: (p) =>
+    titleKey: "card.farm.title",
+    sourceKey: "source.farm",
+    boost: (p): Boost | null =>
       p.rain24 >= 50
-        ? { points: 28, reason: `${p.rain24} mm expected in 24 h, enough to change field work` }
+        ? { points: 28, reasonKey: "boost.farm.rain", vars: { mm: String(p.rain24) } }
         : p.agromet.soilMoisture < 0.2
-          ? { points: 20, reason: `soil moisture is down to ${p.agromet.soilMoisture} m³/m³` }
+          ? {
+              points: 20,
+              reasonKey: "boost.farm.soil",
+              vars: { v: String(p.agromet.soilMoisture) },
+            }
           : null,
     firesWhen: "24 h rainfall ≥ 50 mm (+28) or soil moisture < 0.20 (+20)",
     suppressedWhen: "never",
@@ -130,15 +141,15 @@ export const CARD_RULES: Record<PersonaId, CardRule> = {
   },
 
   commute: {
-    title: "Commute watch",
-    source: "IMD nowcast · urban met",
-    boost: (p) =>
+    titleKey: "card.commute.title",
+    sourceKey: "source.commute",
+    boost: (p): Boost | null =>
       p.visibility < 3
-        ? { points: 36, reason: `visibility is down to ${p.visibility} km, under the 3 km fog line` }
+        ? { points: 36, reasonKey: "boost.commute.fog", vars: { v: String(p.visibility) } }
         : p.urban.waterloggingRisk === "high"
-          ? { points: 24, reason: `urban waterlogging risk is high for ${p.name}` }
+          ? { points: 24, reasonKey: "boost.commute.water", vars: { place: p.name } }
           : p.visibility < 5
-            ? { points: 16, reason: `visibility is ${p.visibility} km` }
+            ? { points: 16, reasonKey: "boost.commute.vis", vars: { v: String(p.visibility) } }
             : null,
     firesWhen: "visibility < 3 km (+36), high waterlogging risk (+24), or visibility < 5 km (+16)",
     suppressedWhen: "never",
@@ -146,11 +157,11 @@ export const CARD_RULES: Record<PersonaId, CardRule> = {
   },
 
   event: {
-    title: "Comfort index",
-    source: "IMD extended range · tourism",
-    boost: (p) =>
+    titleKey: "card.event.title",
+    sourceKey: "source.event",
+    boost: (p): Boost | null =>
       p.comfortIndex < 45
-        ? { points: 12, reason: `comfort index is only ${p.comfortIndex}/100 today` }
+        ? { points: 12, reasonKey: "boost.event.comfort", vars: { v: String(p.comfortIndex) } }
         : null,
     firesWhen: "comfort index < 45 (+12)",
     suppressedWhen: "never",
@@ -162,7 +173,8 @@ export interface ScoredCard {
   id: PersonaId;
   base: number;
   boost: number;
-  boostReason: string | null;
+  boostKey: string | null;
+  boostVars?: Record<string, string>;
   score: number;
   /** 1-based position in the user's persona list. */
   rank: number;
@@ -183,7 +195,8 @@ export function scoreCards(
         id,
         base,
         boost: b ? b.points : 0,
-        boostReason: b ? b.reason : null,
+        boostKey: b ? b.reasonKey : null,
+        boostVars: b?.vars,
         score: base + (b ? b.points : 0),
         rank: i + 1,
       };
@@ -212,44 +225,64 @@ export function suppressedPersonas(place: Place, personas: PersonaId[]): Persona
 
 export type ExplainSegment = { kind: "text" | "value"; text: string };
 
-/** The sentence shown under "Why this card", and in docs/the rules table. */
+export type Translate = (key: string, vars?: Record<string, string>) => string;
+
+/**
+ * The sentence shown under "Why this card".
+ *
+ * Assembled from parts rather than formatted from one template, because the
+ * numbers render as chips and because Hindi does not put the clauses where
+ * English does. Each segment is either a translated fragment or a raw value;
+ * values never go through the dictionary.
+ */
 export function explain(
   card: ScoredCard,
   place: Place,
   personaCount: number,
-  manualOrder: PersonaId[] = [],
+  manualOrder: PersonaId[],
+  tr: Translate,
 ): ExplainSegment[] {
-  const persona = PERSONA_BY_ID[card.id];
+  const personaLabel = tr(`persona.${card.id}`);
   const t = (text: string): ExplainSegment => ({ kind: "text", text });
   const v = (text: string): ExplainSegment => ({ kind: "value", text });
 
   if (manualOrder.includes(card.id)) {
     return [
-      t("You moved "),
-      v(persona.short),
-      t(` to position ${manualOrder.indexOf(card.id) + 1} by hand, so the manual order wins over the score.`),
+      t(
+        tr("explain.manual", {
+          persona: personaLabel,
+          n: String(manualOrder.indexOf(card.id) + 1),
+        }),
+      ),
     ];
   }
 
   const head = [
-    t(`${persona.label} is persona ${card.rank} of ${personaCount}, worth `),
+    t(
+      tr("explain.head", {
+        persona: personaLabel,
+        rank: String(card.rank),
+        count: String(personaCount),
+      }),
+    ),
     v(String(card.base)),
   ];
 
-  if (card.boostReason) {
+  if (card.boostKey) {
     return [
       ...head,
-      t(`. In ${place.name} right now, ${card.boostReason} — that adds `),
+      t(tr("explain.boost", { place: place.name, reason: tr(card.boostKey, card.boostVars) })),
       v(`+${card.boost}`),
-      t(", for "),
+      t(tr("explain.for")),
       v(String(card.score)),
-      t("."),
+      t(tr("explain.end")),
     ];
   }
+
   return [
     ...head,
-    t(`. Nothing in ${place.name}'s current readings trips an urgency threshold, so it stays at `),
+    t(tr("explain.none", { place: place.name })),
     v(String(card.score)),
-    t("."),
+    t(tr("explain.end")),
   ];
 }

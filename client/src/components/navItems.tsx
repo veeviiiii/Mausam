@@ -4,10 +4,10 @@ import type { TabId } from "../state/AppState";
  * The four sections, shared by the mobile tab bar and the desktop side rail so
  * the two navigations can never drift apart.
  */
-export const NAV_ITEMS: { id: TabId; label: string; icon: JSX.Element }[] = [
+export const NAV_ITEMS: { id: TabId; labelKey: string; icon: JSX.Element }[] = [
   {
     id: "home",
-    label: "Home",
+    labelKey: "nav.home",
     icon: (
       <path
         d="M3.6 10.6 12 4l8.4 6.6V19a1.6 1.6 0 0 1-1.6 1.6H5.2A1.6 1.6 0 0 1 3.6 19v-8.4Z"
@@ -19,7 +19,7 @@ export const NAV_ITEMS: { id: TabId; label: string; icon: JSX.Element }[] = [
   },
   {
     id: "alerts",
-    label: "Warnings",
+    labelKey: "nav.alerts",
     icon: (
       <>
         <path d="M12 4.2 21.4 20H2.6L12 4.2Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
@@ -30,7 +30,7 @@ export const NAV_ITEMS: { id: TabId; label: string; icon: JSX.Element }[] = [
   },
   {
     id: "places",
-    label: "Places",
+    labelKey: "nav.places",
     icon: (
       <>
         <path
@@ -45,7 +45,7 @@ export const NAV_ITEMS: { id: TabId; label: string; icon: JSX.Element }[] = [
   },
   {
     id: "you",
-    label: "You",
+    labelKey: "nav.you",
     icon: (
       <>
         <circle cx="12" cy="8.4" r="3.8" stroke="currentColor" strokeWidth="1.7" />

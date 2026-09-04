@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { RADIUS } from "../design/tokens";
 import { springCard } from "../animations/variants";
 import type { HourlyMetric, HourlyPoint } from "../data/types";
+import { useT } from "../i18n/context";
 
 /**
  * One chart, four metrics, a switcher instead of four stacked charts — which
@@ -13,24 +14,26 @@ import type { HourlyMetric, HourlyPoint } from "../data/types";
  * composited and can. Same reason the detail sheet defers its blur.
  */
 
+type Translate = (key: string, vars?: Record<string, string>) => string;
+
 const METRICS: {
   id: HourlyMetric;
-  label: string;
-  unit: string;
+  labelKey: string;
   /** Fixed ceilings where the scale is meaningful; null = scale to the data. */
   max: number | null;
-  format: (v: number) => string;
+  format: (v: number, t: Translate) => string;
 }[] = [
-  { id: "precipitation", label: "Rain", unit: "%", max: 100, format: (v) => `${v}%` },
-  { id: "wind", label: "Wind", unit: "km/h", max: null, format: (v) => `${v} km/h` },
-  { id: "humidity", label: "Humidity", unit: "%", max: 100, format: (v) => `${v}%` },
-  { id: "uv", label: "UV", unit: "index", max: 11, format: (v) => `${v}` },
+  { id: "precipitation", labelKey: "chart.rain", max: 100, format: (v) => `${v}%` },
+  { id: "wind", labelKey: "chart.wind", max: null, format: (v, t) => t("unit.kmh", { v: String(v) }) },
+  { id: "humidity", labelKey: "chart.humidity", max: 100, format: (v) => `${v}%` },
+  { id: "uv", labelKey: "chart.uv", max: 11, format: (v) => `${v}` },
 ];
 
 /** Every third hour — 24 bars is noise at phone width. */
 const STEP = 3;
 
 export function HourlyMetricChart({ hours }: { hours: HourlyPoint[] }) {
+  const t = useT();
   const [metric, setMetric] = useState<HourlyMetric>("precipitation");
   if (!hours.length) return null;
 
@@ -45,7 +48,7 @@ export function HourlyMetricChart({ hours }: { hours: HourlyPoint[] }) {
     <section className="px-4 pb-2 lg:px-0">
       <div className="glass p-4" style={{ borderRadius: RADIUS.card }}>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="instrument">Next 24 hours · {active.label}</h2>
+          <h2 className="instrument">{t("chart.title", { metric: t(active.labelKey) })}</h2>
 
           <div className="flex flex-wrap gap-1">
             {METRICS.map((m) => {
@@ -63,7 +66,7 @@ export function HourlyMetricChart({ hours }: { hours: HourlyPoint[] }) {
                     border: `1px solid ${on ? "var(--hair)" : "transparent"}`,
                   }}
                 >
-                  {m.label}
+                  {t(m.labelKey)}
                 </button>
               );
             })}
@@ -94,14 +97,19 @@ export function HourlyMetricChart({ hours }: { hours: HourlyPoint[] }) {
           style={{ color: "var(--txt-2)" }}
         >
           {points.map((h, i) => (
-            <span key={`${h.time}-${i}`}>{i === 0 ? "Now" : h.time}</span>
+            <span key={`${h.time}-${i}`}>{i === 0 ? t("home.now") : h.time}</span>
           ))}
         </div>
 
         <p className="mt-2.5 text-[12.5px] leading-[1.42]" style={{ color: "var(--txt-2)" }}>
-          Peaks at <b className="font-semibold">{active.format(peak)}</b>{" "}
-          {peakIndex === 0 ? "right now" : `around ${points[peakIndex]?.time ?? "—"}`}
-          {metric === "uv" && peak === 0 ? " — no UV after dark." : "."}
+          {metric === "uv" && peak === 0
+            ? t("chart.noUv", { v: active.format(peak, t) })
+            : peakIndex === 0
+              ? t("chart.peakNow", { v: active.format(peak, t) })
+              : t("chart.peakAt", {
+                  v: active.format(peak, t),
+                  time: points[peakIndex]?.time ?? "—",
+                })}
         </p>
       </div>
     </section>

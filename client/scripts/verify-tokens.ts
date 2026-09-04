@@ -10,9 +10,9 @@
  * If this fails, tokens.ts is the source of truth — update the HTML, not the TS.
  */
 
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { dirname, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import {
   GLASS,
   GLASS_FLAT,
@@ -22,7 +22,9 @@ import {
   CONDITIONS,
   TIMES_OF_DAY,
   AA_THRESHOLD,
+  measureHourChip,
 } from "../src/design/tokens";
+import { DICT, LANGUAGES } from "../src/i18n/dictionary";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PROTOTYPE = resolve(here, "../../design/mausam-home.html");
@@ -133,6 +135,125 @@ for (const c of CONDITIONS) {
   }
 }
 
+/* ---- 5. contrast: the tinted hourly chips ----
+
+   The hour strip paints a solar-factor tint over the glass, so it needs its own
+   measurement: the card audit above never sees that layer. Sampled across the
+   whole ramp, not just at its ends, because the ramp is piecewise and the worst
+   reading is not guaranteed to sit at 0 or 1.
+
+   Primary text only, and that is the finding rather than an omission: a muted
+   role at 0.82 alpha measured 3.96:1 over this ramp, so the chips carry one
+   text role and differentiate by size and weight instead. */
+const TINT_SAMPLES = 24;
+let worstChip = Infinity;
+let worstChipAt = "";
+
+for (const c of CONDITIONS) {
+  for (const t of TIMES_OF_DAY) {
+    const mode = SKY_TOKENS[c][t].mode;
+    for (let i = 0; i <= TINT_SAMPLES; i++) {
+      const factor = i / TINT_SAMPLES;
+      const ratio = measureHourChip(SKY[c][t], mode, factor);
+      if (ratio < worstChip) {
+        worstChip = ratio;
+        worstChipAt = `${c}/${t} ${mode} at solar factor ${factor.toFixed(2)}`;
+      }
+    }
+  }
+}
+
+if (worstChip < AA_THRESHOLD) {
+  fail(
+    `tinted hour chip below AA — ${worstChip.toFixed(2)}:1 at ${worstChipAt} ` +
+      `(need ${AA_THRESHOLD}). Pull HOUR_TINT_ALPHA down or move the ramp.`,
+  );
+}
+
+/* ---- 6. the two dictionaries have to stay in step ----
+
+   A missing Hindi key falls back to English at runtime, which is the right
+   behaviour and the wrong thing to discover in a demo. This makes drift a build
+   failure instead. It also checks that every literal `t("...")` in the source
+   resolves — dynamic keys (`cond.${c}`) are template literals and are skipped,
+   so this catches typos, not coverage. */
+const dictKeys = Object.fromEntries(
+  LANGUAGES.map((l) => [l.id, new Set(Object.keys(DICT[l.id]))]),
+) as Record<string, Set<string>>;
+
+const base = dictKeys.en;
+for (const l of LANGUAGES) {
+  if (l.id === "en") continue;
+  for (const k of base) {
+    if (!dictKeys[l.id].has(k)) fail(`dictionary: "${k}" missing from ${l.english}`);
+  }
+  for (const k of dictKeys[l.id]) {
+    if (!base.has(k)) fail(`dictionary: "${k}" is in ${l.english} but not English`);
+  }
+}
+
+function walk(dir: string): string[] {
+  return readdirSync(dir).flatMap((name) => {
+    const full = join(dir, name);
+    if (statSync(full).isDirectory()) return walk(full);
+    return /\.tsx?$/.test(name) ? [full] : [];
+  });
+}
+
+const SRC = resolve(here, "../src");
+const literalKey = /\bt\(\s*"([a-z][\w.-]*)"/gi;
+const referenced = new Set<string>();
+
+for (const file of walk(SRC)) {
+  if (file.includes("i18n")) continue;
+  const text = readFileSync(file, "utf8");
+  for (const m of text.matchAll(literalKey)) referenced.add(m[1]);
+}
+
+for (const k of referenced) {
+  if (!base.has(k)) fail(`dictionary: source calls t("${k}") but no such key exists`);
+}
+
+/* ---- 7. the CAP English in the dictionary must match seed.ts ----
+
+   The dictionary carries an English copy of each warning so the two languages
+   stay key-for-key. A copy is a drift risk, so it is diffed rather than
+   trusted: reword a bulletin in seed.ts and this fails until the dictionary
+   (and therefore the Hindi beside it) is updated too. */
+const seedSrc = readFileSync(resolve(here, "../src/data/seed.ts"), "utf8");
+const seedAlerts = new Map<string, { headline: string; body: string }>();
+{
+  const placeRe = /id: "(\w+)",/g;
+  const marks: { id: string; at: number }[] = [];
+  for (const m of seedSrc.matchAll(placeRe)) marks.push({ id: m[1], at: m.index ?? 0 });
+  for (let i = 0; i < marks.length; i++) {
+    const slice = seedSrc.slice(marks[i].at, marks[i + 1]?.at ?? seedSrc.length);
+    const headline = /headline: "([^"]+)"/.exec(slice)?.[1];
+    const body = /body:\s*\n?\s*"([^"]+)"/.exec(slice)?.[1];
+    if (headline && body) seedAlerts.set(marks[i].id, { headline, body });
+  }
+}
+
+if (seedAlerts.size === 0) fail("could not read any alert text out of data/seed.ts");
+
+let capChecked = 0;
+for (const [id, seeded] of seedAlerts) {
+  for (const field of ["headline", "body"] as const) {
+    const key = `capText.${id}.${field}`;
+    const inDict = DICT.en[key];
+    if (inDict === undefined) {
+      fail(`CAP text: seed.ts has ${id}.${field} but the dictionary has no "${key}"`);
+      continue;
+    }
+    if (inDict !== seeded[field]) {
+      fail(
+        `CAP text drift on "${key}"\n    seed.ts    : ${seeded[field]}\n    dictionary : ${inDict}`,
+      );
+    }
+    capChecked++;
+  }
+}
+
 /* ---- report ---- */
 if (failures.length) {
   console.error(`\n  ${failures.length} token drift(s) between tokens.ts and the design study:\n`);
@@ -145,6 +266,15 @@ const skyCount = CONDITIONS.length * TIMES_OF_DAY.length;
 console.log(
   `  tokens verified — ${skyCount} skies, ${Object.keys(GLASS).length} glass tiers, ` +
     `${protoSprings.size} springs match design/mausam-home.html`,
+);
+console.log(
+  `  hour tint verified — ${skyCount * (TINT_SAMPLES + 1)} tint samples, ` +
+    `worst ${worstChip.toFixed(2)}:1 at ${worstChipAt}`,
+);
+console.log(
+  `  language verified — ${base.size} keys x ${LANGUAGES.length} languages in step; ` +
+    `${referenced.size} literal keys referenced in src resolve; ` +
+    `${capChecked} CAP strings match seed.ts`,
 );
 console.log(
   `  contrast verified — ${skyCount}/${skyCount} skies clear AA ${AA_THRESHOLD}:1 on glass and bare; ` +

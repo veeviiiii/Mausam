@@ -32,7 +32,7 @@ import { screenVariants } from "./animations/variants";
 const SHEET_EXIT_MS = 210;
 
 export default function App() {
-  const { tab, condition, timeOfDay, flatGlass, place, refresh } = useApp();
+  const { tab, condition, timeOfDay, flatGlass, place, refresh, liveAqi } = useApp();
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
 
   /**
@@ -144,6 +144,7 @@ export default function App() {
             target={sheet}
             place={place}
             places={PLACES}
+            liveAqi={liveAqi}
             onClose={closeSheet}
             closing={closing}
           />

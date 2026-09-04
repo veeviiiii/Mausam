@@ -3,12 +3,8 @@ import { motion } from "framer-motion";
 import { WARNING_SURFACE, RADIUS } from "../design/tokens";
 import { fade, springReorder } from "../animations/variants";
 import type { Alert } from "../data/types";
-
-const KIND_LABEL: Record<Alert["kind"], string> = {
-  district: "District warning",
-  cyclone: "Cyclone warning",
-  "flash-flood": "Flash flood bulletin",
-};
+import { useT } from "../i18n/context";
+import { capText } from "../i18n/capText";
 
 /**
  * The pinned severe-weather banner.
@@ -21,8 +17,10 @@ const KIND_LABEL: Record<Alert["kind"], string> = {
 export const AlertBanner = forwardRef<
   HTMLButtonElement,
   { alert: Alert; place: string; placeId?: string; onOpen?: () => void }
->(function AlertBanner({ alert, place, onOpen }, ref) {
+>(function AlertBanner({ alert, place, placeId, onOpen }, ref) {
+  const t = useT();
   const [from, to] = WARNING_SURFACE[alert.level];
+  const text = capText(placeId ?? "", alert, t);
 
   return (
     <motion.button
@@ -42,13 +40,13 @@ export const AlertBanner = forwardRef<
       <WarnGlyph />
       <span className="min-w-0 flex-1">
         <span className="instrument block !text-white/90">
-          {place} · {alert.level} · {KIND_LABEL[alert.kind]}
+          {place} · {t(`level.${alert.level}`)} · {t(`alert.kind.${alert.kind}`)}
         </span>
         <span className="mt-1 block text-[12.8px] font-medium leading-[1.38]">
-          {alert.body}
+          {text.body}
         </span>
         <span className="mt-1.5 block font-mono text-[10.5px] text-white/85">
-          Valid till {alert.validUntil} · {alert.issuingOffice}
+          {t("alert.validTill", { until: alert.validUntil, office: alert.issuingOffice })}
         </span>
       </span>
     </motion.button>
@@ -60,6 +58,7 @@ export const NoAlerts = forwardRef<
   HTMLDivElement,
   { place: string; checked: string }
 >(function NoAlerts({ place, checked }, ref) {
+  const t = useT();
   return (
     <motion.div
       ref={ref}
@@ -73,7 +72,7 @@ export const NoAlerts = forwardRef<
         className="h-[7px] w-[7px] shrink-0 rounded-full bg-[#37C57D] shadow-[0_0_0_3px_rgba(55,197,125,.26)]"
         aria-hidden
       />
-      No active IMD warnings for {place}. Checked {checked}.
+      {t("alert.none", { place, age: checked })}
     </motion.div>
   );
 });
