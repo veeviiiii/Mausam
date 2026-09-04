@@ -1,0 +1,1661 @@
+<title>Mausam Personalized Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@300..800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@300..900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:wght@400..700&display=swap">
+<style>
+/* ============ tokens ============ */
+:root{
+  --paper:#E9EEF4; --paper-2:#F6F9FC; --paper-3:#FFFFFF;
+  --ink:#0A1420; --ink-2:#3D4E60; --ink-3:#6B7C8F;
+  --line:rgba(10,20,32,.13); --line-2:rgba(10,20,32,.07);
+  --accent:#0B8698; --accent-ink:#06616F; --accent-wash:rgba(11,134,152,.10);
+  --shadow-1:0 1px 2px rgba(10,20,32,.05);
+  --shadow-2:0 2px 6px rgba(10,20,32,.06), 0 18px 50px rgba(10,20,32,.12);
+  --w-green:#188A4C; --w-yellow:#C9990C; --w-orange:#DE6C10; --w-red:#C92E22;
+  --font-ui:"Google Sans Flex","Figtree",-apple-system,Roboto,system-ui,sans-serif;
+  --font-mono:"Google Sans Code",ui-monospace,"Cascadia Mono",Menlo,monospace;
+  --pass:#188A4C; --fail:#C92E22;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#070C13; --paper-2:#0D141D; --paper-3:#121A25;
+  --ink:#E4ECF4; --ink-2:#A2B3C6; --ink-3:#6C7E92;
+  --line:rgba(228,236,244,.13); --line-2:rgba(228,236,244,.07);
+  --accent:#3FD0E6; --accent-ink:#7FE4F2; --accent-wash:rgba(63,208,230,.11);
+  --shadow-1:0 1px 2px rgba(0,0,0,.4);
+  --shadow-2:0 2px 6px rgba(0,0,0,.35), 0 18px 50px rgba(0,0,0,.5);
+  --w-green:#3DBB74; --w-yellow:#E7BE33; --w-orange:#F5893A; --w-red:#EF564A;
+  --pass:#3DBB74; --fail:#EF564A;
+}}
+:root[data-theme="dark"]{
+  --paper:#070C13; --paper-2:#0D141D; --paper-3:#121A25;
+  --ink:#E4ECF4; --ink-2:#A2B3C6; --ink-3:#6C7E92;
+  --line:rgba(228,236,244,.13); --line-2:rgba(228,236,244,.07);
+  --accent:#3FD0E6; --accent-ink:#7FE4F2; --accent-wash:rgba(63,208,230,.11);
+  --shadow-1:0 1px 2px rgba(0,0,0,.4);
+  --shadow-2:0 2px 6px rgba(0,0,0,.35), 0 18px 50px rgba(0,0,0,.5);
+  --w-green:#3DBB74; --w-yellow:#E7BE33; --w-orange:#F5893A; --w-red:#EF564A;
+  --pass:#3DBB74; --fail:#EF564A;
+}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--font-ui);
+  font-weight:400;line-height:1.55;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{text-wrap:balance;margin:0;font-weight:600;letter-spacing:-.018em;line-height:1.15}
+p{margin:0}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px}
+.eyebrow{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--accent);}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+/* ============ masthead ============ */
+.masthead{padding:52px 0 30px}
+.mast-grid{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-end;justify-content:space-between}
+.mast-grid h1{font-size:clamp(34px,5vw,52px);font-weight:500;letter-spacing:-.032em;max-width:12ch;
+  margin-top:10px}
+.mast-lede{max-width:44ch;color:var(--ink-2);font-size:15.5px}
+.mast-meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:20px}
+.mast-meta div{display:flex;flex-direction:column;gap:2px}
+.mast-meta dt{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--ink-3)}
+.mast-meta dd{margin:0;font-size:14px;font-weight:500}
+
+/* ============ sections ============ */
+section{padding:46px 0;border-top:1px solid var(--line-2)}
+.sec-head{display:flex;flex-wrap:wrap;gap:14px 40px;align-items:baseline;
+  justify-content:space-between;margin-bottom:26px}
+.sec-head h2{font-size:25px;font-weight:500;letter-spacing:-.024em}
+.sec-head p{color:var(--ink-2);font-size:14.5px;max-width:58ch}
+
+/* ============ stage: phone + rail ============ */
+.stage{display:grid;grid-template-columns:348px minmax(300px,1fr);
+  gap:48px;align-items:start}
+@media(max-width:920px){.stage{grid-template-columns:1fr;justify-items:center}}
+
+.phone{width:348px;height:744px;border-radius:52px;padding:11px;position:relative;
+  background:linear-gradient(160deg,#3a4350,#161c25 40%,#0a0e14);
+  box-shadow:0 2px 3px rgba(255,255,255,.12) inset,0 40px 80px -20px rgba(4,10,20,.55),
+    0 0 0 1px rgba(0,0,0,.5);}
+.screen{position:relative;width:100%;height:100%;border-radius:42px;overflow:hidden;
+  isolation:isolate;font-size:14px;color:var(--txt);
+  --glass-blur:20px;--r-card:22px;}
+.bg-layer{position:absolute;inset:0;z-index:0;transition:background-image 0ms}
+.bg-fade{position:absolute;inset:0;z-index:0;opacity:0;
+  transition:opacity 900ms cubic-bezier(.4,0,.2,1)}
+#amb{position:absolute;inset:0;z-index:1;pointer-events:none}
+.notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:104px;height:26px;
+  border-radius:14px;background:#05080d;z-index:9}
+
+/* status bar */
+.statusbar{position:relative;z-index:5;display:flex;justify-content:space-between;align-items:center;
+  padding:16px 26px 2px;font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--txt)}
+.sb-right{display:flex;gap:6px;align-items:center;opacity:.85}
+
+/* scroll area */
+.scroller{position:relative;z-index:4;height:calc(100% - 40px);overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:none;padding:0 0 100px}
+.scroller::-webkit-scrollbar{display:none}
+.pullhost{transition:transform 560ms cubic-bezier(.22,1.16,.36,1)}
+.pullhost.dragging{transition:none}
+
+/* pull to refresh */
+.ptr{position:absolute;top:6px;left:0;right:0;display:flex;align-items:center;
+  justify-content:center;z-index:6;pointer-events:none}
+.ptr-dial{width:36px;height:36px;opacity:0;transition:opacity 200ms}
+.ptr-dial circle.track{fill:none;stroke:var(--hair-strong);stroke-width:2.5}
+.ptr-dial circle.arc{fill:none;stroke:var(--txt);stroke-width:2.5;stroke-linecap:round;
+  transform:rotate(-90deg);transform-origin:50% 50%}
+.ptr-dial .drop{fill:var(--txt)}
+.spin{animation:spin 900ms linear infinite;transform-origin:50% 50%}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* header block */
+.loc-row{display:flex;gap:8px;padding:10px 16px 12px;overflow-x:auto;scrollbar-width:none;
+  position:relative;z-index:5}
+.loc-row::-webkit-scrollbar{display:none}
+.locchip{flex:none;display:flex;align-items:center;gap:6px;padding:7px 13px;border-radius:999px;
+  border:1px solid var(--hair);background:var(--glass-fill);color:var(--txt);
+  font-size:12.5px;font-weight:500;cursor:pointer;white-space:nowrap;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  transition:background 260ms,border-color 260ms,transform 260ms cubic-bezier(.22,1.2,.36,1)}
+.locchip[aria-pressed="true"]{background:var(--chip-on);border-color:var(--hair-strong);font-weight:600}
+.locchip:active{transform:scale(.95)}
+.locchip svg{width:13px;height:13px}
+
+.hero{padding:6px 24px 20px;position:relative;z-index:2;color:var(--txt)}
+.hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.hero-temp{font-size:74px;font-weight:250;letter-spacing:-.05em;line-height:.94;
+  font-variant-numeric:tabular-nums}
+.hero-temp sup{font-size:25px;font-weight:300;vertical-align:top;top:.85em;position:relative;left:2px}
+.hero-cond{font-size:15px;font-weight:500;margin-top:4px}
+.hero-sub{font-size:12.5px;color:var(--txt-2);margin-top:3px}
+.hero-stats{display:flex;gap:20px;margin-top:16px}
+.hero-stats div{display:flex;flex-direction:column;gap:1px}
+.hero-stats b{font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.hero-stats span{font-family:var(--font-mono);font-size:9px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--txt-2)}
+.stale{display:flex;align-items:center;gap:8px;margin:0 16px 10px;padding:8px 12px;border-radius:14px;
+  background:rgba(222,108,16,.24);border:1px solid rgba(255,186,102,.44);color:var(--txt);
+  font-size:12px;font-weight:500;position:relative;z-index:2}
+.stale i{width:6px;height:6px;border-radius:50%;background:#FFB466;flex:none}
+
+/* alert */
+.alertwrap{padding:0 16px 12px;position:relative;z-index:2}
+.alert{display:flex;gap:11px;padding:13px 14px;border-radius:18px;color:#fff;align-items:flex-start;
+  box-shadow:0 8px 24px rgba(4,10,20,.3);border:1px solid rgba(255,255,255,.24);cursor:pointer;
+  text-align:left;width:100%;
+  transition:transform 300ms cubic-bezier(.22,1.2,.36,1)}
+.alert:active{transform:scale(.98)}
+.alert.orange{background:linear-gradient(135deg,#C55F0C,#9C4207)}
+.alert.yellow{background:linear-gradient(135deg,#A87E05,#7F5D04)}
+.alert.red{background:linear-gradient(135deg,#B3271C,#851912)}
+.alert-ico{width:25px;height:25px;flex:none;margin-top:1px}
+.alert b{display:block;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+  font-family:var(--font-mono);opacity:.92;margin-bottom:3px}
+.alert p{font-size:12.8px;line-height:1.38;font-weight:500}
+.alert small{display:block;margin-top:5px;font-size:10.5px;opacity:.88;font-family:var(--font-mono)}
+.noalert{display:flex;align-items:center;gap:9px;padding:11px 14px;border-radius:16px;
+  background:var(--glass-fill);border:1px solid var(--hair);color:var(--txt-2);font-size:12.3px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.noalert i{width:7px;height:7px;border-radius:50%;background:#37C57D;flex:none;
+  box-shadow:0 0 0 3px rgba(55,197,125,.26)}
+
+/* cards */
+.cards{display:flex;flex-direction:column;gap:12px;padding:0 16px;position:relative;z-index:2}
+.card{position:relative;border-radius:var(--r-card);padding:15px 16px 14px;color:var(--txt);
+  background:linear-gradient(var(--glass-scrim),var(--glass-scrim)),var(--glass-fill);
+  backdrop-filter:blur(var(--glass-blur)) saturate(1.45);
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(1.45);
+  border:1px solid var(--hair);box-shadow:0 10px 30px rgba(4,10,20,.2);
+  cursor:pointer;text-align:left;font-size:14px;width:100%;display:block;
+  transition:transform 520ms cubic-bezier(.28,1.18,.4,1),opacity 320ms ease}
+.card.enter{animation:cardin 560ms cubic-bezier(.28,1.18,.4,1) both}
+@keyframes cardin{from{opacity:0;transform:translateY(18px) scale(.955)}to{opacity:1;transform:none}}
+.card.morphing{opacity:0}
+.c-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.c-ico{width:22px;height:22px;flex:none}
+.c-label{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--txt-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.c-tag{font-size:9.5px;font-weight:600;padding:3px 7px;border-radius:6px;flex:none;
+  background:var(--chip-on);letter-spacing:.02em;white-space:nowrap}
+.c-title{font-size:16px;font-weight:600;letter-spacing:-.015em;margin-bottom:3px}
+.big{font-size:33px;font-weight:300;letter-spacing:-.038em;line-height:1.05;
+  font-variant-numeric:tabular-nums}
+.big u{text-decoration:none;font-size:13px;font-weight:500;letter-spacing:0;margin-left:4px;
+  color:var(--txt-2)}
+.c-note{font-size:12.5px;color:var(--txt-2);line-height:1.42;margin-top:9px}
+.kv{display:flex;gap:16px;margin-top:11px;flex-wrap:wrap}
+.kv div{display:flex;flex-direction:column;gap:1px}
+.kv b{font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums}
+.kv span{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--txt-2)}
+.why{margin-top:11px;padding-top:10px;border-top:1px solid var(--hair)}
+.why-btn{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:9.5px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--txt-2);background:none;border:0;padding:0;
+  cursor:pointer;font-weight:600}
+.why-btn svg{width:11px;height:11px;transition:transform 300ms cubic-bezier(.22,1.2,.36,1)}
+.why[data-open="true"] .why-btn svg{transform:rotate(180deg)}
+.why-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows 440ms cubic-bezier(.4,0,.2,1)}
+.why[data-open="true"] .why-body{grid-template-rows:1fr}
+.why-body>div{overflow:hidden}
+.why-body p{font-size:12px;line-height:1.48;color:var(--txt-2);padding-top:8px}
+.why-body code{font-family:var(--font-mono);font-size:11px;color:var(--txt);
+  background:var(--chip-on);padding:1px 5px;border-radius:4px}
+
+/* arrange mode */
+.arr{display:none;gap:5px;margin-left:auto}
+[data-arrange="on"] .arr{display:flex}
+[data-arrange="on"] .card{cursor:default}
+[data-arrange="on"] .why{display:none}
+.arr button{width:26px;height:26px;border-radius:8px;border:1px solid var(--hair);
+  background:var(--chip-on);color:var(--txt);cursor:pointer;display:grid;place-items:center;padding:0}
+.arr button:disabled{opacity:.3;cursor:default}
+.arr svg{width:12px;height:12px}
+.grip{width:13px;height:13px;opacity:.5;flex:none;display:none}
+[data-arrange="on"] .grip{display:block}
+
+/* skeleton */
+.skel{border-radius:var(--r-card);background:var(--glass-fill);
+  border:1px solid var(--hair);position:relative;overflow:hidden;
+  backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur))}
+.skel::after{content:"";position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,var(--chip-on),transparent);
+  animation:shimmer 1250ms infinite}
+@keyframes shimmer{to{transform:translateX(100%)}}
+.skel-in{padding:16px;display:flex;flex-direction:column;gap:10px}
+.sk-bar{height:9px;border-radius:5px;background:var(--chip-on)}
+
+/* mini viz */
+.band{display:flex;height:7px;border-radius:4px;overflow:hidden;margin-top:13px;gap:2px}
+.band i{flex:1;border-radius:2px;opacity:.28;transition:opacity 500ms}
+.band i.on{opacity:1}
+.bandlabels{display:flex;justify-content:space-between;margin-top:5px;font-family:var(--font-mono);
+  font-size:8px;letter-spacing:.06em;color:var(--txt-2);text-transform:uppercase}
+.bars{display:flex;align-items:flex-end;gap:4px;height:44px;margin-top:13px}
+.bars i{flex:1;border-radius:3px 3px 1px 1px;background:var(--txt);opacity:.3;
+  transition:height 680ms cubic-bezier(.28,1.18,.4,1),opacity 400ms;min-height:2px}
+.bars i.hi{opacity:.85}
+.axis{display:flex;justify-content:space-between;margin-top:5px;font-family:var(--font-mono);
+  font-size:8px;color:var(--txt-2)}
+.strip{display:flex;gap:3px;margin-top:13px;height:32px;align-items:stretch}
+.strip i{flex:1;border-radius:4px;transition:opacity 400ms}
+.destrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--hair)}
+.destrow.first{border-top:0;padding-top:2px}
+.destrow svg{width:22px;height:22px;flex:none}
+.destrow b{font-size:13.5px;font-weight:600;flex:1}
+.destrow em{font-style:normal;font-family:var(--font-mono);font-size:13.5px;font-weight:600}
+.pill{font-size:8.5px;font-weight:700;padding:2px 6px;border-radius:5px;color:#fff;
+  letter-spacing:.06em;text-transform:uppercase;font-family:var(--font-mono)}
+.windows{display:flex;gap:9px;margin-top:13px}
+.windows>div{flex:1;padding:9px 11px;border-radius:14px;background:var(--chip-on);
+  border:1px solid var(--hair)}
+.windows span{font-family:var(--font-mono);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--txt-2);display:block}
+.windows b{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;display:block;margin-top:2px}
+.windows u{text-decoration:none;font-size:11px;color:var(--txt-2);display:block;margin-top:1px}
+.gauge{margin-top:13px}
+.gauge-bar{height:9px;border-radius:5px;background:var(--chip-on);position:relative;overflow:hidden}
+.gauge-fill{position:absolute;inset:0 auto 0 0;border-radius:5px;background:var(--txt);opacity:.75;
+  transition:width 700ms cubic-bezier(.28,1.18,.4,1)}
+
+/* detail sheet (shared-element expand) */
+.sheet{position:absolute;z-index:20;overflow:hidden;color:var(--txt);
+  background:linear-gradient(var(--glass-scrim),var(--glass-scrim)),var(--glass-fill);
+  backdrop-filter:blur(26px) saturate(1.5);-webkit-backdrop-filter:blur(26px) saturate(1.5);
+  border:1px solid var(--hair);box-shadow:0 20px 60px rgba(4,10,20,.4);
+  transition:top 540ms cubic-bezier(.32,1.1,.4,1),left 540ms cubic-bezier(.32,1.1,.4,1),
+    width 540ms cubic-bezier(.32,1.1,.4,1),height 540ms cubic-bezier(.32,1.1,.4,1),
+    border-radius 540ms cubic-bezier(.32,1.1,.4,1)}
+.sheet-in{padding:54px 22px 30px;opacity:0;transition:opacity 300ms ease 200ms;height:100%;
+  overflow-y:auto;scrollbar-width:none}
+.sheet-in::-webkit-scrollbar{display:none}
+.sheet[data-open="true"] .sheet-in{opacity:1}
+.sheet-close{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:50%;
+  background:var(--chip-on);border:1px solid var(--hair);color:var(--txt);cursor:pointer;
+  display:grid;place-items:center;z-index:2;padding:0}
+.sheet-close svg{width:15px;height:15px}
+.sheet .s-eyebrow{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;
+  text-transform:uppercase;color:var(--txt-2)}
+.sheet h3{font-size:24px;font-weight:500;letter-spacing:-.028em;margin:8px 0 6px}
+.sheet .lede{font-size:13.5px;color:var(--txt-2);line-height:1.5}
+.dl{margin-top:20px;display:flex;flex-direction:column;gap:0}
+.dl>div{display:flex;justify-content:space-between;gap:14px;padding:11px 0;
+  border-top:1px solid var(--hair);font-size:13.5px;align-items:baseline}
+.dl dt{color:var(--txt-2);font-size:12.5px}
+.dl dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;
+  font-family:var(--font-mono);font-size:13px}
+.srcbox{margin-top:20px;padding:13px 14px;border-radius:14px;background:var(--chip-on);
+  border:1px solid var(--hair)}
+.srcbox b{font-family:var(--font-mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--txt-2);display:block;margin-bottom:6px}
+.srcbox p{font-size:12.5px;line-height:1.5}
+
+/* tabbar */
+.tabbar{position:absolute;bottom:0;left:0;right:0;z-index:15;display:flex;padding:9px 12px 22px;
+  background:linear-gradient(to top,var(--tab-scrim) 58%,transparent);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-top:1px solid var(--hair)}
+.tab{flex:1;background:none;border:0;padding:5px 0;color:var(--txt-2);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:9px;font-weight:600;letter-spacing:.03em;transition:color 260ms}
+.tab svg{width:21px;height:21px;transition:transform 440ms cubic-bezier(.28,1.3,.4,1)}
+.tab[aria-selected="true"]{color:var(--txt)}
+.tab[aria-selected="true"] svg{transform:translateY(-2px) scale(1.12)}
+.homebar{position:absolute;bottom:7px;left:50%;transform:translateX(-50%);width:116px;height:4px;
+  border-radius:3px;background:var(--txt);opacity:.35;z-index:16}
+
+/* list screens */
+.listhead{padding:14px 24px 12px;position:relative;z-index:2}
+.listhead h2{font-size:27px;font-weight:500;letter-spacing:-.03em;color:var(--txt)}
+.listhead p{font-size:12.5px;color:var(--txt-2);margin-top:4px;line-height:1.45}
+.plate{margin:0 16px 10px;padding:14px 15px;border-radius:20px;color:var(--txt);position:relative;
+  background:linear-gradient(var(--glass-scrim),var(--glass-scrim)),var(--glass-fill);
+  backdrop-filter:blur(var(--glass-blur));-webkit-backdrop-filter:blur(var(--glass-blur));
+  border:1px solid var(--hair);z-index:2;display:block;width:calc(100% - 32px);text-align:left;
+  cursor:pointer;transition:transform 400ms cubic-bezier(.28,1.18,.4,1)}
+.plate:active{transform:scale(.98)}
+.plate-row{display:flex;align-items:center;gap:12px}
+.plate-row>svg{width:30px;height:30px;flex:none}
+.plate b{font-size:15px;font-weight:600;display:block}
+.plate small{font-size:11.5px;color:var(--txt-2);display:block;margin-top:1px}
+.plate em{font-style:normal;font-size:25px;font-weight:300;letter-spacing:-.03em;
+  font-variant-numeric:tabular-nums;margin-left:auto}
+.psel{display:flex;flex-wrap:wrap;gap:8px;padding:2px 16px 18px;position:relative;z-index:2}
+.pchip{padding:9px 13px;border-radius:14px;border:1px solid var(--hair);background:var(--glass-fill);
+  color:var(--txt);font-size:12.5px;font-weight:500;cursor:pointer;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);display:flex;align-items:center;gap:7px;
+  transition:background 260ms,transform 300ms cubic-bezier(.28,1.18,.4,1)}
+.pchip[aria-pressed="true"]{background:var(--chip-on);font-weight:600}
+.pchip:active{transform:scale(.95)}
+.pchip .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.3}
+.pchip[aria-pressed="true"] .dot{opacity:1}
+.pchip:disabled{opacity:.4;cursor:not-allowed}
+.hint{padding:0 24px 14px;font-size:11.5px;color:var(--txt-2);position:relative;z-index:2;
+  font-family:var(--font-mono)}
+
+/* ============ rail ============ */
+.rail{display:flex;flex-direction:column;gap:24px;width:100%;max-width:540px}
+.rail-note{font-size:13.5px;color:var(--ink-2);max-width:54ch}
+.grp{display:flex;flex-direction:column;gap:10px}
+.grp>h3{font-family:var(--font-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600;display:flex;justify-content:space-between;align-items:baseline;
+  gap:12px}
+.grp>h3 em{text-transform:none;letter-spacing:0;font-family:var(--font-ui);font-size:11.5px;
+  font-style:normal;color:var(--ink-3)}
+.opts{display:flex;flex-wrap:wrap;gap:7px}
+.opt{padding:7px 12px;border-radius:10px;border:1px solid var(--line);background:var(--paper-2);
+  color:var(--ink-2);font-size:12.5px;font-weight:500;cursor:pointer;
+  transition:background 200ms,color 200ms,border-color 200ms,transform 260ms cubic-bezier(.28,1.18,.4,1)}
+.opt:hover{border-color:var(--ink-3)}
+.opt[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--paper-2);
+  font-weight:600}
+.opt:active{transform:scale(.95)}
+.opt:disabled{opacity:.4;cursor:not-allowed}
+.opt:disabled:hover{border-color:var(--line)}
+.switches{display:flex;flex-direction:column;gap:6px}
+.sw{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid var(--line);
+  border-radius:12px;background:var(--paper-2);cursor:pointer;text-align:left;
+  color:var(--ink);width:100%;transition:border-color 200ms}
+.sw:hover{border-color:var(--ink-3)}
+.sw b{font-size:13.5px;font-weight:600;display:block}
+.sw small{font-size:11.5px;color:var(--ink-3);display:block;line-height:1.4}
+.sw-knob{width:38px;height:22px;border-radius:12px;background:var(--line);flex:none;
+  position:relative;margin-left:auto;transition:background 260ms}
+.sw-knob::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;
+  background:var(--paper-3);box-shadow:var(--shadow-1);
+  transition:transform 380ms cubic-bezier(.32,1.3,.4,1)}
+.sw[aria-pressed="true"] .sw-knob{background:var(--accent)}
+.sw[aria-pressed="true"] .sw-knob::after{transform:translateX(16px)}
+
+/* ============ gradient matrix ============ */
+.matrix{overflow-x:auto;padding-bottom:8px}
+.mgrid{display:grid;grid-template-columns:96px repeat(4,minmax(100px,1fr));gap:7px;min-width:600px}
+.mhead{font-family:var(--font-mono);font-size:10px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-3);display:flex;align-items:flex-end;padding-bottom:6px}
+.mrow{font-family:var(--font-mono);font-size:11px;color:var(--ink-2);display:flex;align-items:center;
+  text-transform:capitalize;line-height:1.2}
+.sw-cell{position:relative;aspect-ratio:5/4;border-radius:11px;border:1px solid var(--line);
+  cursor:pointer;padding:0;overflow:hidden;display:block;width:100%;
+  transition:transform 320ms cubic-bezier(.28,1.18,.4,1),box-shadow 260ms}
+.sw-cell:hover{transform:translateY(-3px);box-shadow:var(--shadow-2)}
+.sw-cell[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent),var(--shadow-2)}
+.chipglass{position:absolute;left:7px;right:7px;bottom:7px;height:25px;border-radius:8px;
+  display:flex;align-items:center;padding:0 7px;font-family:var(--font-mono);font-size:8.5px;
+  font-weight:600;letter-spacing:.05em;border:1px solid;backdrop-filter:blur(6px)}
+.legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:18px;font-size:12.5px;color:var(--ink-2)}
+.legend span{display:flex;align-items:center;gap:8px}
+.legend i{width:24px;height:15px;border-radius:4px;border:1px solid var(--line);display:block;flex:none}
+
+/* ============ tables ============ */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--paper-2)}
+table{border-collapse:collapse;width:100%;min-width:600px;font-size:13.5px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line-2);vertical-align:top}
+thead th{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-3);font-weight:600;background:var(--paper-3)}
+tbody tr:last-child td{border-bottom:0}
+td.n{font-family:var(--font-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td b{font-weight:600}
+td small{color:var(--ink-3);font-size:12px;display:block;margin-top:2px;line-height:1.4}
+.verdict{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:11px;
+  font-weight:600;letter-spacing:.05em}
+.verdict.p{color:var(--pass)}
+.verdict.f{color:var(--fail)}
+.polchip{font-family:var(--font-mono);font-size:10px;padding:2px 7px;border-radius:5px;
+  background:var(--accent-wash);color:var(--accent-ink);letter-spacing:.04em;white-space:nowrap}
+
+/* ============ surfaces + type + motion ============ */
+.threeup{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.demo{border-radius:16px;overflow:hidden;border:1px solid var(--line);background:var(--paper-2);
+  display:flex;flex-direction:column}
+.demo-sky{height:168px;position:relative;display:grid;place-items:center;padding:18px}
+.demo-card{width:100%;border-radius:16px;padding:13px 14px;border:1px solid}
+.demo-card b{font-size:15px;font-weight:600;display:block;letter-spacing:-.01em}
+.demo-card small{font-size:11.5px;display:block;margin-top:3px}
+.demo-meta{padding:14px 15px;border-top:1px solid var(--line);flex:1}
+.demo-meta h4{font-size:13.5px;font-weight:600;margin-bottom:6px}
+.demo-meta p{font-size:12px;color:var(--ink-2);line-height:1.5}
+.demo-meta code{font-family:var(--font-mono);font-size:10.5px;color:var(--ink);
+  background:var(--accent-wash);padding:2px 6px;border-radius:4px;display:inline-block;margin-top:8px;
+  line-height:1.6}
+
+.typeblock{display:flex;flex-direction:column;gap:4px;border-top:1px solid var(--line-2);padding:15px 0}
+.typeblock:first-child{border-top:0;padding-top:0}
+.type-spec{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.09em;color:var(--ink-3);
+  text-transform:uppercase}
+.type-samp{color:var(--ink)}
+
+.springrow{display:flex;align-items:center;gap:18px;padding:15px 0;border-top:1px solid var(--line-2);
+  flex-wrap:wrap}
+.springrow:first-child{border-top:0;padding-top:0}
+.spring-id{width:142px;flex:none}
+.spring-id b{font-family:var(--font-mono);font-size:12.5px;font-weight:600;display:block}
+.spring-id small{font-size:11.5px;color:var(--ink-3);line-height:1.4;display:block;margin-top:2px}
+.spring-cfg{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-2);
+  font-variant-numeric:tabular-nums;flex:1;min-width:210px;line-height:1.6}
+.track{position:relative;height:34px;width:152px;border-radius:9px;background:var(--paper-3);
+  border:1px solid var(--line);overflow:hidden;flex:none}
+.puck{position:absolute;top:5px;left:5px;width:22px;height:22px;border-radius:7px;background:var(--accent)}
+.playbtn{padding:7px 13px;border-radius:9px;border:1px solid var(--line);background:var(--paper-3);
+  color:var(--ink);font-size:12px;font-weight:600;cursor:pointer;flex:none}
+.playbtn:hover{border-color:var(--accent)}
+
+footer{padding:40px 0 68px;border-top:1px solid var(--line-2);color:var(--ink-3);font-size:12.5px}
+footer p{max-width:74ch;line-height:1.65}
+footer b{color:var(--ink-2);font-weight:600}
+footer .fnote{margin-top:12px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::after,*::before{animation-duration:.01ms!important;animation-iteration-count:1!important;
+    transition-duration:.01ms!important}
+}
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="mast-grid">
+      <div>
+        <div class="eyebrow">SIH26076 &nbsp;·&nbsp; Ministry of Earth Sciences</div>
+        <h1>Mausam, rebuilt around one person.</h1>
+      </div>
+      <div>
+        <p class="mast-lede">Today every Mausam user opens the same homepage. This design reflows it
+          around the one to three personas a user actually picks &mdash; and proves the two things a
+          weather app for severe warnings cannot get wrong: legibility on every sky, and a reason for
+          every card.</p>
+        <div class="mast-meta">
+          <div><dt>Surface</dt><dd>Installable PWA</dd></div>
+          <div><dt>Motion</dt><dd>Framer Motion springs</dd></div>
+          <div><dt>Sources</dt><dd>IMD · CPCB · CAP</dd></div>
+          <div><dt>Status</dt><dd>Design, 04 Sep 2026</dd></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section id="proto">
+    <div class="sec-head">
+      <h2>The prototype</h2>
+      <p>Everything on the right drives the phone on the left for real &mdash; personas re-score the
+        stack, locations re-derive the sky from that city&rsquo;s own sunrise. Drag down inside the
+        screen to refresh, tap a card to expand it, tap <b>Why</b> to see the rule that placed it.</p>
+    </div>
+
+    <div class="stage">
+      <div class="phone">
+        <div class="screen" id="screen" data-arrange="off">
+          <div class="bg-layer" id="bgA"></div>
+          <div class="bg-fade" id="bgB"></div>
+          <canvas id="amb"></canvas>
+          <div class="notch"></div>
+
+          <div class="statusbar">
+            <span id="clock">14:20</span>
+            <span class="sb-right">
+              <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor" aria-hidden="true"><rect x="0" y="7" width="2.6" height="4" rx=".8"/><rect x="4" y="5" width="2.6" height="6" rx=".8"/><rect x="8" y="2.5" width="2.6" height="8.5" rx=".8"/><rect x="12" y="0" width="2.6" height="11" rx=".8" opacity=".4"/></svg>
+              <svg width="20" height="11" viewBox="0 0 20 11" fill="none" aria-hidden="true"><rect x=".6" y=".6" width="16" height="9.8" rx="2.6" stroke="currentColor" stroke-width="1.1" opacity=".5"/><rect x="2.1" y="2.1" width="10.5" height="6.8" rx="1.5" fill="currentColor"/><path d="M18.2 4v3a2 2 0 0 0 0-3Z" fill="currentColor" opacity=".5"/></svg>
+            </span>
+          </div>
+
+          <div class="ptr"><svg class="ptr-dial" id="ptrDial" viewBox="0 0 36 36" aria-hidden="true"><circle class="track" cx="18" cy="18" r="14"/><circle class="arc" id="ptrArc" cx="18" cy="18" r="14" stroke-dasharray="88" stroke-dashoffset="88"/><path class="drop" id="ptrDrop" d="M18 8.5c2.4 3 4 5 4 6.6a4 4 0 0 1-8 0c0-1.6 1.6-3.6 4-6.6Z" opacity="0"/></svg></div>
+
+          <div class="scroller" id="scroller">
+            <div class="pullhost" id="pullhost">
+              <div id="view"></div>
+            </div>
+          </div>
+
+          <nav class="tabbar" id="tabbar" role="tablist" aria-label="Mausam sections"></nav>
+          <div class="homebar"></div>
+        </div>
+      </div>
+
+      <div class="rail">
+        <p class="rail-note">The rail is a design-review console, not app UI. In the shipped app the
+          sky is derived, never chosen &mdash; but a reviewer needs to see all 28 states without
+          waiting for the weather.</p>
+
+        <div class="grp">
+          <h3>Active personas <em id="pcount">2 of 3</em></h3>
+          <div class="opts" id="railPersonas"></div>
+        </div>
+
+        <div class="grp">
+          <h3>Location <em>sets sky &amp; data</em></h3>
+          <div class="opts" id="railPlaces"></div>
+        </div>
+
+        <div class="grp">
+          <h3>Sky override <em id="skyDeriv">derived from Mumbai sunrise 06:26</em></h3>
+          <div class="opts" id="railCond"></div>
+          <div class="opts" id="railTod"></div>
+        </div>
+
+        <div class="grp">
+          <h3>State</h3>
+          <div class="switches">
+            <button class="sw" id="swOffline" aria-pressed="false">
+              <span><b>Offline</b><small>Last-known data with an age stamp &mdash; never a blank screen.</small></span>
+              <span class="sw-knob"></span>
+            </button>
+            <button class="sw" id="swBlur" aria-pressed="false">
+              <span><b>Low-end GPU fallback</b><small>Drops <code class="mono">backdrop-filter</code>, raises fill opacity to hold contrast.</small></span>
+              <span class="sw-knob"></span>
+            </button>
+            <button class="sw" id="swArrange" aria-pressed="false">
+              <span><b>Arrange cards</b><small>Manual order overrides the score and persists per persona set.</small></span>
+              <span class="sw-knob"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="atmos">
+    <div class="sec-head">
+      <h2>The sky table</h2>
+      <p>Seven conditions &times; four times of day, defined once as gradient stops and read by both
+        the personalization layer and the UI. Time of day comes from the location&rsquo;s own
+        sunrise/sunset, so a saved destination shows <em>its</em> night, not yours. Tap any cell to
+        load it into the phone.</p>
+    </div>
+    <div class="matrix"><div class="mgrid" id="mgrid"></div></div>
+    <div class="legend">
+      <span><i style="background:linear-gradient(180deg,#3C86C4,#C2D8E8)"></i> Sampled at the card band (55&ndash;90% down the screen)</span>
+      <span><i style="background:linear-gradient(180deg,#0A1018,#1A2A50)"></i> Glass polarity chosen by measured contrast, not by eye</span>
+    </div>
+  </section>
+
+  <section id="contrast">
+    <div class="sec-head">
+      <h2>Contrast audit</h2>
+      <p>Computed live in this page, not asserted. Each gradient is sampled at the card band, both
+        glass treatments are composited over it, and the treatment with the higher measured ratio
+        wins. Primary and secondary text are both checked against WCAG AA (4.5:1).</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Sky</th><th>Sampled ground</th><th>Glass polarity</th><th>Primary text</th><th>Secondary text</th><th>Verdict</th></tr></thead>
+        <tbody id="contrastBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="surfaces">
+    <div class="sec-head">
+      <h2>Glass, and what happens when it costs too much</h2>
+      <p>One surface recipe, two polarities, one fallback. The fallback isn&rsquo;t a downgrade path
+        to argue about later &mdash; it&rsquo;s specified now, because a blurred backdrop on a
+        low-end Android GPU is exactly where the current app already loses frames.</p>
+    </div>
+    <div class="threeup" id="surfaceDemos"></div>
+  </section>
+
+  <section id="type">
+    <div class="sec-head">
+      <h2>Type</h2>
+      <p>Google Sans Flex carries the interface at a single variable weight axis; Google Sans Code
+        handles anything that reads as an instrument &mdash; station names, units, IST timestamps,
+        warning validity. Numerals are tabular everywhere they stack.</p>
+    </div>
+    <div id="typeScale"></div>
+  </section>
+
+  <section id="motion">
+    <div class="sec-head">
+      <h2>Motion</h2>
+      <p>Four named springs, each with a job. Nothing eases linearly, nothing cuts. Tap a track to
+        play the curve; every value below is the Framer Motion config, not an approximation of one.</p>
+    </div>
+    <div id="springs"></div>
+  </section>
+
+  <section id="rules">
+    <div class="sec-head">
+      <h2>Why each card is there</h2>
+      <p>Score = persona weight (order picked) + urgency boost from the live reading. No model, no
+        embedding &mdash; a judge asking &ldquo;why is this card here&rdquo; gets the sentence in the
+        last column, and the app shows the same sentence under <b>Why</b>.</p>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Persona</th><th>Signature card</th><th>Urgency boost fires when</th><th>Suppressed when</th></tr></thead>
+        <tbody id="rulesBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <p><b>Data shown is seeded demo data</b> matching <span class="mono">seed-fallback.json</span>,
+      dated 04 Sep 2026 &mdash; realistic for the southwest-monsoon withdrawal window, but not a live
+      IMD reading. The shipped client never calls IMD or CPCB directly; every value here would arrive
+      through one aggregated backend request per screen load, cached at that data type&rsquo;s own TTL.</p>
+    <p class="fnote">Warning colour codes follow IMD&rsquo;s green / yellow / orange / red convention.
+      Sunrise and sunset times are the real IST values for each city on this date.</p>
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* ========================================================================
+   1. COLOUR MATH  — the contrast audit runs on this, live.
+   ===================================================================== */
+const hex2rgb = h => [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const rgb2hex = c => "#"+c.map(v=>Math.round(v).toString(16).padStart(2,"0")).join("");
+const lin = c => { c/=255; return c<=0.04045 ? c/12.92 : Math.pow((c+0.055)/1.055,2.4); };
+const lum = c => 0.2126*lin(c[0])+0.7152*lin(c[1])+0.0722*lin(c[2]);
+const contrast = (a,b) => { const l1=lum(a), l2=lum(b), hi=Math.max(l1,l2), lo=Math.min(l1,l2);
+  return (hi+0.05)/(lo+0.05); };
+/* composite src at alpha over dst */
+const over = (src,alpha,dst) => dst.map((d,i)=>src[i]*alpha + d*(1-alpha));
+/* sample a stop list [[pos,hex],...] at t in 0..1 */
+function sample(stops,t){
+  const p = t*100;
+  for(let i=0;i<stops.length-1;i++){
+    const [p0,c0]=stops[i], [p1,c1]=stops[i+1];
+    if(p<=p1 || i===stops.length-2){
+      const k = Math.min(1,Math.max(0,(p-p0)/(p1-p0)));
+      const a=hex2rgb(c0), b=hex2rgb(c1);
+      return a.map((v,j)=>v+(b[j]-a[j])*k);
+    }
+  }
+  return hex2rgb(stops[stops.length-1][1]);
+}
+const css = stops => "linear-gradient(180deg,"+stops.map(([p,c])=>c+" "+p+"%").join(",")+")";
+
+/* ========================================================================
+   2. THE SKY TABLE — single source of truth, condition x time-of-day.
+   ===================================================================== */
+const CONDITIONS = ["clear","partly","overcast","rain","thunderstorm","fog","snow"];
+const COND_LABEL = {clear:"Clear",partly:"Partly cloudy",overcast:"Overcast",rain:"Rain",
+  thunderstorm:"Thunderstorm",fog:"Fog",snow:"Snow"};
+const TODS = ["dawn","day","dusk","night"];
+
+const SKY = {
+  clear:{
+    dawn:[[0,"#26356A"],[52,"#7E6A9E"],[100,"#F2AE7C"]],
+    day:[[0,"#2680CF"],[55,"#6FBFEE"],[100,"#BCE3F7"]],
+    dusk:[[0,"#1B3568"],[50,"#B4557A"],[100,"#F6A45C"]],
+    night:[[0,"#050A16"],[55,"#0E1B3A"],[100,"#1B2C54"]]},
+  partly:{
+    dawn:[[0,"#333E6E"],[52,"#8C7BA0"],[100,"#E6AD8C"]],
+    day:[[0,"#3781C2"],[55,"#79B4DE"],[100,"#C4DAEA"]],
+    dusk:[[0,"#26385E"],[50,"#9E5D7A"],[100,"#E0955F"]],
+    night:[[0,"#060B18"],[55,"#131E3C"],[100,"#243254"]]},
+  overcast:{
+    dawn:[[0,"#454C5F"],[55,"#7B818F"],[100,"#ADAEB6"]],
+    day:[[0,"#78859A"],[55,"#9BA6B4"],[100,"#C6CED8"]],
+    dusk:[[0,"#3A4055"],[50,"#6B6577"],[100,"#98777F"]],
+    night:[[0,"#0A0E16"],[55,"#171C26"],[100,"#252B38"]]},
+  rain:{
+    dawn:[[0,"#28364A"],[55,"#4A5A70"],[100,"#727F92"]],
+    day:[[0,"#445A72"],[55,"#6B819A"],[100,"#96ABBF"]],
+    dusk:[[0,"#1F2A3E"],[50,"#43506A"],[100,"#6D6D86"]],
+    night:[[0,"#04080F"],[55,"#0A121C"],[100,"#182231"]]},
+  thunderstorm:{
+    dawn:[[0,"#1E1830"],[55,"#3D3350"],[100,"#5E4E6A"]],
+    day:[[0,"#273044"],[55,"#414A63"],[100,"#60647A"]],
+    dusk:[[0,"#141226"],[50,"#33263F"],[100,"#583850"]],
+    night:[[0,"#03050C"],[55,"#0C0F1C"],[100,"#181C2E"]]},
+  fog:{
+    dawn:[[0,"#6A707C"],[55,"#979CA6"],[100,"#C3C6CC"]],
+    day:[[0,"#96A0AA"],[55,"#B9BEC5"],[100,"#DADDE1"]],
+    dusk:[[0,"#565866"],[50,"#7E7B84"],[100,"#A79A9E"]],
+    night:[[0,"#0E1119"],[55,"#1C2029"],[100,"#2C303A"]]},
+  snow:{
+    dawn:[[0,"#4E5B86"],[55,"#8792B5"],[100,"#C7CFE2"]],
+    day:[[0,"#89A3C4"],[55,"#B6C8DE"],[100,"#E6EDF5"]],
+    dusk:[[0,"#3A4570"],[50,"#7A7395"],[100,"#B892A4"]],
+    night:[[0,"#070C18"],[55,"#141C32"],[100,"#26314E"]]}
+};
+
+/* two candidate glass treatments; the audit picks the winner per sky */
+const GLASS = {
+  onDark:{ scrim:[9,15,26], scrimA:.40, fill:[255,255,255], fillA:.10,
+    txt:[255,255,255], txtA:1, txt2:[255,255,255], txt2A:.80,
+    hair:"rgba(255,255,255,.20)", hairStrong:"rgba(255,255,255,.34)",
+    chip:"rgba(255,255,255,.14)", tab:"rgba(8,13,22,.72)" },
+  onLight:{ scrim:[255,255,255], scrimA:0, fill:[255,255,255], fillA:.66,
+    txt:[10,20,32], txtA:1, txt2:[10,20,32], txt2A:.68,
+    hair:"rgba(10,20,32,.14)", hairStrong:"rgba(10,20,32,.26)",
+    chip:"rgba(10,20,32,.08)", tab:"rgba(246,249,252,.74)" }
+};
+/* low-end fallback: no blur, so the fill has to carry the separation itself */
+const GLASS_FLAT = {
+  onDark:{ scrimA:.52, fillA:.16 },
+  onLight:{ scrimA:0, fillA:.80 }
+};
+
+/* resolve: composite glass over the sampled ground, measure both text roles */
+function measure(stops,mode,flat){
+  const g = GLASS[mode];
+  const sA = flat ? GLASS_FLAT[mode].scrimA : g.scrimA;
+  const fA = flat ? GLASS_FLAT[mode].fillA  : g.fillA;
+  let worst = {primary:99, secondary:99};
+  [0.55,0.9].forEach(t=>{
+    const ground = sample(stops,t);
+    const surface = over(g.fill, fA, over(g.scrim, sA, ground));
+    const p = contrast(over(g.txt, g.txtA, surface), surface);
+    const s = contrast(over(g.txt2, g.txt2A, surface), surface);
+    worst.primary = Math.min(worst.primary,p);
+    worst.secondary = Math.min(worst.secondary,s);
+  });
+  return worst;
+}
+/* build the resolved token set for all 28 skies */
+const RESOLVED = {};
+CONDITIONS.forEach(c=>{ RESOLVED[c]={}; TODS.forEach(t=>{
+  const stops = SKY[c][t];
+  const dark = measure(stops,"onDark",false), light = measure(stops,"onLight",false);
+  const dScore = Math.min(dark.primary,dark.secondary*1.0);
+  const lScore = Math.min(light.primary,light.secondary*1.0);
+  const mode = lScore > dScore ? "onLight" : "onDark";
+  RESOLVED[c][t] = { mode, css:css(stops), stops,
+    ground:sample(stops,0.72), m:mode==="onLight"?light:dark,
+    flat:measure(stops,mode,true) };
+});});
+
+function applySky(cond,tod,el,flat){
+  const r = RESOLVED[cond][tod], g = GLASS[r.mode];
+  const sA = flat ? GLASS_FLAT[r.mode].scrimA : g.scrimA;
+  const fA = flat ? GLASS_FLAT[r.mode].fillA  : g.fillA;
+  el.style.setProperty("--glass-scrim",`rgba(${g.scrim.join(",")},${sA})`);
+  el.style.setProperty("--glass-fill",`rgba(${g.fill.join(",")},${fA})`);
+  el.style.setProperty("--txt",`rgba(${g.txt.join(",")},1)`);
+  el.style.setProperty("--txt-2",`rgba(${g.txt2.join(",")},${g.txt2A})`);
+  el.style.setProperty("--hair",g.hair);
+  el.style.setProperty("--hair-strong",g.hairStrong);
+  el.style.setProperty("--chip-on",g.chip);
+  el.style.setProperty("--tab-scrim",g.tab);
+  el.style.setProperty("--glass-blur",flat?"0px":"20px");
+  return r;
+}
+
+/* ========================================================================
+   3. SEEDED DATA  — mirrors /server/data/seed-fallback.json
+   ===================================================================== */
+const PLACES = [
+  { id:"mumbai", name:"Mumbai", station:"Santacruz · MH", coastal:true,
+    cond:"rain", sunrise:"06:26", sunset:"18:47", clock:"14:20",
+    temp:27, feels:31, hum:88, wind:24, gust:41, vis:2.4, uv:3, dew:25,
+    aqi:61, aqiCat:"Satisfactory", pm25:34, pollen:"Low",
+    rain24:78, soil:0.46, soilCat:"Saturated",
+    tideHigh:"19:12", tideHighM:3.4, tideLow:"12:48", wave:2.3, sst:28.4,
+    runStart:"05:40", runEnd:"07:10",
+    dropRain:72, pickRain:58, comfort:38, bestDay:"Sun 07 Sep",
+    rainProb:[80,72,58,44,36,30,42,60,55,40],
+    hours:[24,22,21,20,19,18,17,16],
+    alert:{ level:"orange", head:"Orange warning · heavy to very heavy rainfall",
+      body:"Heavy to very heavy rainfall very likely at isolated places over Mumbai, Thane and Raigad districts.",
+      valid:"Valid till 08:30 IST, 05 Sep · IMD Mumbai RMC" } },
+
+  { id:"delhi", name:"New Delhi", station:"Safdarjung · DL", coastal:false,
+    cond:"partly", sunrise:"06:00", sunset:"18:31", clock:"14:20",
+    temp:34, feels:41, hum:62, wind:12, gust:26, vis:4.5, uv:8, dew:25,
+    aqi:168, aqiCat:"Moderate", pm25:84, pollen:"Moderate",
+    rain24:6, soil:0.21, soilCat:"Adequate",
+    tideHigh:null, tideHighM:null, tideLow:null, wave:null, sst:null,
+    runStart:"05:20", runEnd:"06:40",
+    dropRain:14, pickRain:38, comfort:52, bestDay:"Tue 09 Sep",
+    rainProb:[18,26,40,35,22,15,12,20,30,25],
+    hours:[31,33,34,35,34,32,30,28],
+    alert:{ level:"yellow", head:"Yellow warning · thunderstorm with lightning",
+      body:"Thunderstorm accompanied by lightning and gusty winds reaching 40 km/h likely at isolated places.",
+      valid:"Valid till 23:30 IST, 04 Sep · IMD Delhi RMC" } },
+
+  { id:"chennai", name:"Chennai", station:"Nungambakkam · TN", coastal:true,
+    cond:"partly", sunrise:"06:00", sunset:"18:16", clock:"14:20",
+    temp:34, feels:40, hum:70, wind:16, gust:24, vis:8.0, uv:9, dew:27,
+    aqi:96, aqiCat:"Satisfactory", pm25:52, pollen:"Low",
+    rain24:2, soil:0.18, soilCat:"Dry",
+    tideHigh:"20:44", tideHighM:1.1, tideLow:"14:02", wave:0.9, sst:29.6,
+    runStart:"05:30", runEnd:"06:50",
+    dropRain:8, pickRain:16, comfort:61, bestDay:"Sat 06 Sep",
+    rainProb:[12,10,18,24,20,15,22,30,26,18],
+    hours:[30,32,34,34,33,31,29,28],
+    alert:null },
+
+  { id:"kochi", name:"Kochi", station:"Ernakulam · KL", coastal:true,
+    cond:"thunderstorm", sunrise:"06:16", sunset:"18:29", clock:"14:20",
+    temp:26, feels:30, hum:91, wind:18, gust:34, vis:3.2, uv:4, dew:24,
+    aqi:42, aqiCat:"Good", pm25:22, pollen:"Low",
+    rain24:54, soil:0.51, soilCat:"Saturated",
+    tideHigh:"18:05", tideHighM:0.9, tideLow:"11:50", wave:1.6, sst:29.1,
+    runStart:"06:00", runEnd:"07:20",
+    dropRain:64, pickRain:70, comfort:34, bestDay:"Mon 08 Sep",
+    rainProb:[74,68,60,52,48,44,56,66,58,50],
+    hours:[24,25,26,26,25,24,24,23],
+    alert:{ level:"yellow", head:"Yellow warning · heavy rainfall",
+      body:"Heavy rainfall with thunderstorm and lightning likely at isolated places over Ernakulam and Idukki.",
+      valid:"Valid till 20:30 IST, 04 Sep · IMD Thiruvananthapuram RMC" } }
+];
+
+const PERSONAS = [
+  { id:"health",  label:"Health-conscious", short:"Health" },
+  { id:"fitness", label:"Outdoor fitness",  short:"Fitness" },
+  { id:"beach",   label:"Beach & surf",     short:"Beach" },
+  { id:"travel",  label:"Travellers",       short:"Travel" },
+  { id:"family",  label:"Parents & families", short:"Family" },
+  { id:"farm",    label:"Farmers & gardeners", short:"Farming" },
+  { id:"commute", label:"Commuters",        short:"Commute" },
+  { id:"event",   label:"Event planners",   short:"Events" }
+];
+const P_BY_ID = Object.fromEntries(PERSONAS.map(p=>[p.id,p]));
+
+/* AQI category ramp — CPCB's six bands, with their real breakpoints */
+const AQI_BANDS = [
+  {max:50,  name:"Good",         c:"#2E9E5B"},
+  {max:100, name:"Satisfactory", c:"#8DBE2E"},
+  {max:200, name:"Moderate",     c:"#E0B321"},
+  {max:300, name:"Poor",         c:"#EE7B1E"},
+  {max:400, name:"Very poor",    c:"#D8382C"},
+  {max:500, name:"Severe",       c:"#8C2118"}
+];
+const aqiBand = v => AQI_BANDS.find(b=>v<=b.max) || AQI_BANDS[5];
+
+/* ========================================================================
+   4. ICONS
+   ===================================================================== */
+const I = {
+  clear:`<svg viewBox="0 0 48 48" fill="none"><g class="sunpulse"><circle cx="24" cy="24" r="9" fill="#FFD466"/><g stroke="#FFD466" stroke-width="2.6" stroke-linecap="round"><path d="M24 5v5"/><path d="M24 38v5"/><path d="M5 24h5"/><path d="M38 24h5"/><path d="M10.6 10.6l3.5 3.5"/><path d="M33.9 33.9l3.5 3.5"/><path d="M37.4 10.6l-3.5 3.5"/><path d="M14.1 33.9l-3.5 3.5"/></g></g></svg>`,
+  partly:`<svg viewBox="0 0 48 48" fill="none"><circle cx="18" cy="17" r="7.5" fill="#FFD466"/><g class="drift"><path d="M14 34a7 7 0 0 1 1-13.9 9.5 9.5 0 0 1 18 2.2A6.4 6.4 0 0 1 32 34H14Z" fill="#EEF4FA"/></g></svg>`,
+  overcast:`<svg viewBox="0 0 48 48" fill="none"><g class="drift2"><path d="M10 26a6 6 0 0 1 6-6 8 8 0 0 1 15 1.4A5.4 5.4 0 0 1 30 32H16a6 6 0 0 1-6-6Z" fill="#C6CFD8"/></g><g class="drift"><path d="M16 36a6.4 6.4 0 0 1 1-12.7 8.7 8.7 0 0 1 16.4 2A5.8 5.8 0 0 1 32.5 36H16Z" fill="#EEF4FA"/></g></svg>`,
+  rain:`<svg viewBox="0 0 48 48" fill="none"><g class="drift"><path d="M14 28a6.4 6.4 0 0 1 1-12.7 8.7 8.7 0 0 1 16.4 2A5.8 5.8 0 0 1 30.5 28H14Z" fill="#DDE6EF"/></g><g stroke="#7FC4E8" stroke-width="2.6" stroke-linecap="round"><path d="M17 33v5" class="rd1"/><path d="M24 33v6" class="rd2"/><path d="M31 33v5" class="rd3"/></g></svg>`,
+  thunderstorm:`<svg viewBox="0 0 48 48" fill="none"><g class="drift"><path d="M13 26a6.4 6.4 0 0 1 1-12.7 8.7 8.7 0 0 1 16.4 2A5.8 5.8 0 0 1 29.5 26H13Z" fill="#C9D3DE"/></g><path class="bolt" d="M25 27l-8 10h6l-2 8 9-11h-6l3-7h-2Z" fill="#FFD466"/><g stroke="#8FB0CC" stroke-width="2.4" stroke-linecap="round"><path d="M16 30v4" class="rd2"/><path d="M33 30v4" class="rd3"/></g></svg>`,
+  fog:`<svg viewBox="0 0 48 48" fill="none"><g class="drift"><path d="M14 24a6.4 6.4 0 0 1 1-12.7 8.7 8.7 0 0 1 16.4 2A5.8 5.8 0 0 1 30.5 24H14Z" fill="#D8DDE3" opacity=".8"/></g><g stroke="#E3E8ED" stroke-width="2.8" stroke-linecap="round"><path d="M11 30h26" class="fg1"/><path d="M14 36h22" class="fg2"/><path d="M12 42h20" class="fg3"/></g></svg>`,
+  snow:`<svg viewBox="0 0 48 48" fill="none"><g class="drift"><path d="M14 26a6.4 6.4 0 0 1 1-12.7 8.7 8.7 0 0 1 16.4 2A5.8 5.8 0 0 1 30.5 26H14Z" fill="#E6EDF5"/></g><g fill="#FFFFFF" class="drift2"><circle cx="17" cy="33" r="2.4"/><circle cx="25" cy="38" r="2.4"/><circle cx="32" cy="32" r="2.4"/></g></svg>`,
+  warn:`<svg viewBox="0 0 24 24" fill="none"><path d="M12 3.2 22 20H2L12 3.2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="rgba(255,255,255,.16)"/><path d="M12 9.5v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.4" r="1.15" fill="currentColor"/></svg>`,
+  chev:`<svg viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  up:`<svg viewBox="0 0 12 12" fill="none"><path d="M2.5 7.5 6 4l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  down:`<svg viewBox="0 0 12 12" fill="none"><path d="M2.5 4.5 6 8l3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  grip:`<svg viewBox="0 0 12 12" fill="currentColor"><circle cx="4" cy="2.5" r="1.1"/><circle cx="8" cy="2.5" r="1.1"/><circle cx="4" cy="6" r="1.1"/><circle cx="8" cy="6" r="1.1"/><circle cx="4" cy="9.5" r="1.1"/><circle cx="8" cy="9.5" r="1.1"/></svg>`,
+  close:`<svg viewBox="0 0 16 16" fill="none"><path d="M3.5 3.5l9 9M12.5 3.5l-9 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+  pin:`<svg viewBox="0 0 14 14" fill="none"><path d="M7 1.6c2.2 0 4 1.8 4 4 0 2.9-4 6.8-4 6.8s-4-3.9-4-6.8c0-2.2 1.8-4 4-4Z" stroke="currentColor" stroke-width="1.4"/><circle cx="7" cy="5.6" r="1.5" fill="currentColor"/></svg>`,
+  cIco:{
+    health:`<svg viewBox="0 0 24 24" fill="none"><path d="M3 15c3.5 0 3.5-6 7-6s3.5 6 7 6 4-2 4-2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="18" cy="7" r="2.4" fill="currentColor" opacity=".55"/></svg>`,
+    fitness:`<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.4" stroke="currentColor" stroke-width="1.7"/><path d="M12 7.2V12l3.2 2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+    beach:`<svg viewBox="0 0 24 24" fill="none"><path d="M2 15c2 0 2-1.6 4-1.6S8 15 10 15s2-1.6 4-1.6 2 1.6 4 1.6 2-1.6 4-1.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M2 20c2 0 2-1.6 4-1.6S8 20 10 20s2-1.6 4-1.6 2 1.6 4 1.6 2-1.6 4-1.6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity=".5"/><circle cx="17" cy="6.6" r="2.8" fill="currentColor" opacity=".55"/></svg>`,
+    travel:`<svg viewBox="0 0 24 24" fill="none"><path d="M3 13.4 21 6l-4.4 8.6L12 15.4l-1.6 4.2-1.8-4.4L3 13.4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`,
+    family:`<svg viewBox="0 0 24 24" fill="none"><circle cx="8.4" cy="7.6" r="2.8" stroke="currentColor" stroke-width="1.7"/><circle cx="16.4" cy="9.6" r="2.1" stroke="currentColor" stroke-width="1.7"/><path d="M3.4 20c0-3.1 2.2-5.4 5-5.4s5 2.3 5 5.4M14.2 20c0-2.3 1.4-4 3.2-4s3.2 1.7 3.2 4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+    farm:`<svg viewBox="0 0 24 24" fill="none"><path d="M12 21v-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M12 13c0-3.3 2.4-6 5.4-6 0 3.3-2.4 6-5.4 6ZM12 15c0-2.8-2-5-4.6-5 0 2.8 2 5 4.6 5Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`,
+    commute:`<svg viewBox="0 0 24 24" fill="none"><path d="M4 16.4V11l1.9-4.4A2 2 0 0 1 7.7 5.4h8.6a2 2 0 0 1 1.8 1.2L20 11v5.4" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M4 11h16" stroke="currentColor" stroke-width="1.7"/><circle cx="7.6" cy="16.4" r="1.6" fill="currentColor"/><circle cx="16.4" cy="16.4" r="1.6" fill="currentColor"/></svg>`,
+    event:`<svg viewBox="0 0 24 24" fill="none"><rect x="3.4" y="5.4" width="17.2" height="15.2" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M3.4 10.4h17.2M8.4 3.4v4M15.6 3.4v4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`
+  },
+  tabs:{
+    home:`<svg viewBox="0 0 24 24" fill="none"><path d="M3.6 10.6 12 4l8.4 6.6V19a1.6 1.6 0 0 1-1.6 1.6H5.2A1.6 1.6 0 0 1 3.6 19v-8.4Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`,
+    alerts:`<svg viewBox="0 0 24 24" fill="none"><path d="M12 4.2 21.4 20H2.6L12 4.2Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M12 10v4.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="17.1" r="1.1" fill="currentColor"/></svg>`,
+    places:`<svg viewBox="0 0 24 24" fill="none"><path d="M12 2.8c3.6 0 6.6 3 6.6 6.6 0 4.8-6.6 11.8-6.6 11.8S5.4 14.2 5.4 9.4c0-3.6 3-6.6 6.6-6.6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><circle cx="12" cy="9.4" r="2.4" stroke="currentColor" stroke-width="1.7"/></svg>`,
+    you:`<svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8.4" r="3.8" stroke="currentColor" stroke-width="1.7"/><path d="M4.4 20.4c0-4 3.4-7 7.6-7s7.6 3 7.6 7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`
+  }
+};
+/* icon animation styles injected once */
+const iconCSS = document.createElement("style");
+iconCSS.textContent = `
+.sunpulse{transform-origin:50% 50%;animation:sunp 4.2s ease-in-out infinite}
+@keyframes sunp{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.drift{animation:drift 7s ease-in-out infinite}
+.drift2{animation:drift 9s ease-in-out infinite reverse}
+@keyframes drift{0%,100%{transform:translateX(-1.4px)}50%{transform:translateX(1.8px)}}
+.rd1{animation:fall 1.15s linear infinite}
+.rd2{animation:fall 1.15s linear .38s infinite}
+.rd3{animation:fall 1.15s linear .76s infinite}
+@keyframes fall{0%{opacity:0;transform:translateY(-4px)}25%{opacity:1}100%{opacity:0;transform:translateY(6px)}}
+.bolt{animation:flick 3.4s steps(1) infinite}
+@keyframes flick{0%,88%{opacity:.35}90%{opacity:1}92%{opacity:.4}94%{opacity:1}100%{opacity:.35}}
+.fg1{animation:fogx 5s ease-in-out infinite}
+.fg2{animation:fogx 5s ease-in-out .9s infinite reverse}
+.fg3{animation:fogx 5s ease-in-out 1.8s infinite}
+@keyframes fogx{0%,100%{transform:translateX(-2.5px);opacity:.55}50%{transform:translateX(2.5px);opacity:1}}
+@media (prefers-reduced-motion:reduce){.sunpulse,.drift,.drift2,.rd1,.rd2,.rd3,.bolt,.fg1,.fg2,.fg3{animation:none}}
+`;
+document.head.appendChild(iconCSS);
+
+/* ========================================================================
+   5. PERSONALIZATION — transparent, rule-based scoring.
+   ===================================================================== */
+const CARD_RULES = {
+  health:{ title:"Air & allergens", source:"CPCB · live",
+    boost:p => p.aqi>150 ? {n:40,why:`AQI is ${p.aqi} (${p.aqiCat}), past the 150 threshold`} :
+               p.aqi>100 ? {n:18,why:`AQI is ${p.aqi}, above the 100 watch line`} : null,
+    fires:"AQI > 100 (+18) or > 150 (+40)", suppress:"never — health data exists for every station" },
+  fitness:{ title:"Best run window", source:"IMD hourly · UV index",
+    boost:p => p.uv>=8 ? {n:22,why:`UV index peaks at ${p.uv}, so the safe window narrows`} :
+               p.feels>=40 ? {n:26,why:`feels-like hits ${p.feels}°C`} : null,
+    fires:"UV ≥ 8 (+22) or feels-like ≥ 40 °C (+26)", suppress:"never" },
+  beach:{ title:"Sea & tide", source:"INCOIS · IMD coastal",
+    boost:p => p.wave>=2 ? {n:34,why:`wave height is ${p.wave} m, above the 2 m swim-advisory line`} : null,
+    fires:"wave height ≥ 2 m (+34)", suppress:"location is inland — no tide station in range" },
+  travel:{ title:"Saved destinations", source:"IMD city forecast",
+    boost:p => {const n=PLACES.filter(x=>x.id!==p.id&&x.alert).length;
+      return n ? {n:14*n,why:`${n} saved destination${n>1?"s have":" has"} an active warning`} : null;},
+    fires:"+14 per saved destination under warning", suppress:"no saved destinations yet" },
+  family:{ title:"School run", source:"IMD nowcast · district",
+    boost:p => p.dropRain>=60||p.pickRain>=60 ? {n:30,why:`rain probability reaches ${Math.max(p.dropRain,p.pickRain)}% inside a school window`} : null,
+    fires:"rain probability ≥ 60% in the 07:30 or 14:45 window (+30)", suppress:"weekends and IMD-listed holidays" },
+  farm:{ title:"Field conditions", source:"IMD subdivision rainfall",
+    boost:p => p.rain24>=50 ? {n:28,why:`${p.rain24} mm expected in 24 h, enough to change field work`} :
+               p.soil<0.2 ? {n:20,why:`soil moisture is down to ${p.soil} m³/m³`} : null,
+    fires:"24 h rainfall ≥ 50 mm (+28) or soil moisture < 0.20 (+20)", suppress:"never" },
+  commute:{ title:"Commute watch", source:"IMD nowcast · visibility",
+    boost:p => p.vis<3 ? {n:36,why:`visibility is down to ${p.vis} km, under the 3 km fog line`} :
+               p.vis<5 ? {n:16,why:`visibility is ${p.vis} km`} : null,
+    fires:"visibility < 5 km (+16) or < 3 km (+36)", suppress:"never" },
+  event:{ title:"Comfort index", source:"IMD 10-day outlook",
+    boost:p => p.comfort<45 ? {n:12,why:`comfort index is only ${p.comfort}/100 today`} : null,
+    fires:"comfort index < 45 (+12)", suppress:"never" }
+};
+
+function scoreCards(place, personas, manualOrder){
+  const list = personas.map((id,i)=>{
+    if(id==="beach" && !place.coastal) return null;
+    const rule = CARD_RULES[id];
+    const b = rule.boost(place);
+    return { id, base:100-i*10, boost:b?b.n:0, boostWhy:b?b.why:null,
+      score:(100-i*10)+(b?b.n:0), rank:i+1 };
+  }).filter(Boolean);
+  if(manualOrder && manualOrder.length){
+    list.sort((a,b)=>{
+      const ia=manualOrder.indexOf(a.id), ib=manualOrder.indexOf(b.id);
+      if(ia<0&&ib<0) return b.score-a.score;
+      if(ia<0) return 1; if(ib<0) return -1; return ia-ib;
+    });
+  } else list.sort((a,b)=>b.score-a.score);
+  return list;
+}
+function whySentence(c, place, personas, manual){
+  const p = P_BY_ID[c.id];
+  if(manual && manual.includes(c.id))
+    return `You moved <code>${p.short}</code> to position ${manual.indexOf(c.id)+1} by hand, so the manual order wins over the score.`;
+  const pos = `${p.label} is persona ${c.rank} of ${personas.length}, worth <code>${c.base}</code>`;
+  if(c.boost) return `${pos}. In ${place.name} right now, ${c.boostWhy} &mdash; that adds <code>+${c.boost}</code>, for <code>${c.score}</code>.`;
+  return `${pos}. Nothing in ${place.name}&rsquo;s current readings triggers an urgency boost, so it stays at <code>${c.score}</code>.`;
+}
+
+/* ========================================================================
+   6. CARD BODIES
+   ===================================================================== */
+const nf = (v,d=0)=>Number(v).toFixed(d);
+function barsHTML(vals, hiIdx){
+  const max = Math.max(...vals);
+  return `<div class="bars">${vals.map((v,i)=>
+    `<i style="height:${Math.max(6,(v/max)*100)}%" class="${i===hiIdx?"hi":""}"></i>`).join("")}</div>`;
+}
+const CARD_BODY = {
+  health(p){ const b=aqiBand(p.aqi), idx=AQI_BANDS.indexOf(b);
+    return `<div class="big">${p.aqi}<u>AQI · ${b.name}</u></div>
+      <div class="band">${AQI_BANDS.map((x,i)=>
+        `<i style="background:${x.c}" class="${i===idx?"on":""}"></i>`).join("")}</div>
+      <div class="bandlabels"><span>Good</span><span>Moderate</span><span>Severe</span></div>
+      <div class="kv">
+        <div><b>${p.pm25}</b><span>PM2.5 µg/m³</span></div>
+        <div><b>${p.pollen}</b><span>Pollen</span></div>
+        <div><b>${p.hum}%</b><span>Humidity</span></div>
+      </div>`; },
+  fitness(p){ const hi=p.hours.indexOf(Math.min(...p.hours));
+    return `<div class="big">${p.runStart}<u>to ${p.runEnd}</u></div>
+      <div class="c-note">Coolest stretch before the sun clears the horizon.</div>
+      ${barsHTML(p.hours.map(h=>h-Math.min(...p.hours)+4), hi)}
+      <div class="axis"><span>04:00</span><span>10:00</span><span>16:00</span><span>22:00</span></div>
+      <div class="kv">
+        <div><b>${p.uv}</b><span>Peak UV</span></div>
+        <div><b>${p.wind} km/h</b><span>Wind</span></div>
+        <div><b>${p.feels}°</b><span>Feels like</span></div>
+      </div>`; },
+  beach(p){ const adv = p.wave>=2 ? "Swimming not advised" : p.wave>=1.2 ? "Caution near the shore" : "Calm enough to swim";
+    return `<div class="big">${nf(p.wave,1)}<u>m swell</u></div>
+      <div class="c-note">${adv} &mdash; ${p.wave>=2?"above":"below"} the 2 m advisory line.</div>
+      <div class="kv">
+        <div><b>${p.tideHigh}</b><span>Next high · ${nf(p.tideHighM,1)} m</span></div>
+        <div><b>${p.tideLow}</b><span>Low tide</span></div>
+        <div><b>${nf(p.sst,1)}°</b><span>Sea temp</span></div>
+      </div>`; },
+  travel(p){ const others = PLACES.filter(x=>x.id!==p.id).slice(0,3);
+    return `${others.map((d,i)=>`<div class="destrow ${i===0?"first":""}">
+      ${I[d.cond].replace("<svg","<svg aria-hidden='true'")}
+      <b>${d.name}</b>
+      ${d.alert?`<span class="pill" style="background:var(--w-${d.alert.level==="yellow"?"yellow":d.alert.level})">${d.alert.level}</span>`:""}
+      <em>${d.temp}°</em></div>`).join("")}
+      <div class="c-note">Pack for ${others.some(d=>d.alert)?"rain and delays":"warm, dry days"} &mdash; ${others.filter(d=>d.alert).length} of ${others.length} saved cities are under a warning.</div>`; },
+  family(p){ const v = Math.max(p.dropRain,p.pickRain)>=60 ? "Send an umbrella." : "No umbrella needed.";
+    return `<div class="windows">
+        <div><span>Drop 07:30</span><b>${p.dropRain}%</b><u>rain chance</u></div>
+        <div><span>Pick-up 14:45</span><b>${p.pickRain}%</b><u>rain chance</u></div>
+      </div>
+      <div class="c-note">${v} Nowcast is refreshed for your district every 15 minutes.</div>`; },
+  farm(p){ const pct = Math.round(p.soil*100);
+    return `<div class="big">${p.rain24}<u>mm next 24 h</u></div>
+      ${barsHTML(p.rainProb.slice(0,6), 0)}
+      <div class="axis"><span>Now</span><span>+12 h</span><span>+24 h</span></div>
+      <div class="gauge">
+        <div class="gauge-bar"><div class="gauge-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="kv">
+        <div><b>${nf(p.soil,2)}</b><span>Soil m³/m³ · ${p.soilCat}</span></div>
+        <div><b>${p.hum}%</b><span>Humidity</span></div>
+      </div>`; },
+  commute(p){ const risk = p.vis<3?"High spray and low visibility":p.vis<5?"Reduced visibility":"Clear roads";
+    const pct = Math.min(100, (p.vis/10)*100);
+    return `<div class="big">${nf(p.vis,1)}<u>km visibility</u></div>
+      <div class="gauge"><div class="gauge-bar"><div class="gauge-fill" style="width:${pct}%"></div></div></div>
+      <div class="c-note">${risk} on the 18:30 run home. ${p.gust>35?`Gusts to ${p.gust} km/h &mdash; expect two-wheeler wobble.`:""}</div>
+      <div class="kv">
+        <div><b>${p.wind} km/h</b><span>Wind</span></div>
+        <div><b>${p.gust} km/h</b><span>Gusting</span></div>
+      </div>`; },
+  event(p){ const hi = p.rainProb.indexOf(Math.min(...p.rainProb));
+    return `<div class="big">${p.comfort}<u>/ 100 comfort</u></div>
+      ${barsHTML(p.rainProb, hi)}
+      <div class="axis"><span>Today</span><span>+5 d</span><span>+10 d</span></div>
+      <div class="c-note">Driest day in the outlook is <b>${p.bestDay}</b> at ${Math.min(...p.rainProb)}% rain probability.</div>`; }
+};
+const CARD_DETAIL = {
+  health:p=>({ lede:`Continuous ambient monitoring from the nearest CPCB station, refreshed hourly.`,
+    rows:[["Air Quality Index",`${p.aqi} · ${p.aqiCat}`],["PM2.5",`${p.pm25} µg/m³`],
+      ["PM10",`${Math.round(p.pm25*1.9)} µg/m³`],["Pollen load",p.pollen],
+      ["Relative humidity",`${p.hum} %`],["Dew point",`${p.dew} °C`]],
+    src:`CPCB real-time AQI via data.gov.in, cached for 60 minutes — the interval CPCB actually publishes on.` }),
+  fitness:p=>({ lede:`Hour-by-hour heat and UV load, scored for sustained outdoor effort.`,
+    rows:[["Best window",`${p.runStart} – ${p.runEnd}`],["Peak UV index",String(p.uv)],
+      ["Feels like (peak)",`${p.feels} °C`],["Wind",`${p.wind} km/h`],["Sunrise",`${p.sunrise} IST`]],
+    src:`IMD hourly city forecast plus the sunrise/sunset endpoint, cached for 3 hours.` }),
+  beach:p=>({ lede:`Sea state and tide timings for the nearest coastal station.`,
+    rows:[["Significant wave height",`${nf(p.wave,1)} m`],["Next high tide",`${p.tideHigh} · ${nf(p.tideHighM,1)} m`],
+      ["Next low tide",p.tideLow],["Sea surface temp",`${nf(p.sst,1)} °C`],["Onshore wind",`${p.wind} km/h`]],
+    src:`INCOIS sea-state bulletin joined to the IMD coastal station list, cached for 6 hours.` }),
+  travel:p=>({ lede:`Your saved destinations, checked against every active district warning.`,
+    rows:PLACES.filter(x=>x.id!==p.id).map(d=>[d.name, `${d.temp}° · ${d.alert?d.alert.level+" warning":"no warning"}`]),
+    src:`IMD 7-day city forecast plus the CAP warning feed, re-checked whenever a new CAP alert is issued.` }),
+  family:p=>({ lede:`The two windows that matter, taken from the district nowcast.`,
+    rows:[["Morning drop 07:30",`${p.dropRain}% rain`],["Afternoon pick-up 14:45",`${p.pickRain}% rain`],
+      ["Wind at pick-up",`${p.wind} km/h`],["Visibility",`${nf(p.vis,1)} km`]],
+    src:`IMD district nowcast, refreshed every 15 minutes — the shortest TTL in the cache.` }),
+  farm:p=>({ lede:`Field-scale rainfall and soil readings for the subdivision.`,
+    rows:[["Rainfall next 24 h",`${p.rain24} mm`],["Soil moisture",`${nf(p.soil,2)} m³/m³ · ${p.soilCat}`],
+      ["Relative humidity",`${p.hum} %`],["Frost risk",p.temp<6?"Watch":"None"]],
+    src:`IMD subdivision rainfall forecast, cached for 6 hours; soil moisture from the district agromet bulletin.` }),
+  commute:p=>({ lede:`Road-relevant conditions for the evening run home.`,
+    rows:[["Visibility",`${nf(p.vis,1)} km`],["Wind",`${p.wind} km/h`],["Gusting to",`${p.gust} km/h`],
+      ["Rain in next 3 h",`${p.rainProb[0]} %`]],
+    src:`IMD district nowcast for visibility and precipitation, cached for 15 minutes.` }),
+  event:p=>({ lede:`Ten days of rain probability, scored into one comfort number.`,
+    rows:[["Comfort index today",`${p.comfort} / 100`],["Driest day ahead",p.bestDay],
+      ["Lowest rain probability",`${Math.min(...p.rainProb)} %`],["Humidity",`${p.hum} %`]],
+    src:`IMD extended-range outlook, cached for 12 hours and re-scored on every screen load.` })
+};
+
+/* ========================================================================
+   7. APP STATE + RENDER
+   ===================================================================== */
+const S = {
+  personas:["health","commute"],
+  placeId:"mumbai",
+  cond:null, tod:null,          /* null = derived from the place */
+  offline:false, flat:false, arrange:false,
+  tab:"home", manual:[], loading:false, openWhy:new Set(),
+  lastSky:null
+};
+const $ = s => document.querySelector(s);
+const place = () => PLACES.find(p=>p.id===S.placeId);
+function todFor(p){
+  const [sh,sm]=p.sunrise.split(":").map(Number), [eh,em]=p.sunset.split(":").map(Number);
+  const [ch,cm]=p.clock.split(":").map(Number);
+  const now=ch*60+cm, rise=sh*60+sm, set=eh*60+em;
+  if(now<rise-30 || now>set+40) return "night";
+  if(now<rise+50) return "dawn";
+  if(now>set-50) return "dusk";
+  return "day";
+}
+const curCond = () => S.cond || place().cond;
+const curTod  = () => S.tod  || todFor(place());
+
+/* ---- background with a real cross-fade ---- */
+function paintSky(){
+  const cond=curCond(), tod=curTod(), key=cond+"/"+tod;
+  const r = applySky(cond,tod,$("#screen"),S.flat);
+  const A=$("#bgA"), B=$("#bgB");
+  if(S.lastSky===null){ A.style.background=r.css; }
+  else if(S.lastSky!==key){
+    B.style.background=r.css; B.style.opacity="1";
+    setTimeout(()=>{ A.style.background=r.css; B.style.opacity="0"; },920);
+  }
+  S.lastSky=key;
+  $("#skyDeriv").textContent = S.cond||S.tod
+    ? "overridden — tap a lit chip to clear"
+    : `derived from ${place().name} sunrise ${place().sunrise}`;
+  startAmbient(cond,tod);
+}
+
+/* ---- ambient particle layer ---- */
+let ambRAF=null;
+function startAmbient(cond,tod){
+  const cv=$("#amb"), ctx=cv.getContext("2d");
+  const dpr=Math.min(2,window.devicePixelRatio||1);
+  const w=cv.clientWidth, h=cv.clientHeight;
+  cv.width=w*dpr; cv.height=h*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+  if(ambRAF) cancelAnimationFrame(ambRAF);
+  ctx.clearRect(0,0,w,h);
+  if(window.matchMedia("(prefers-reduced-motion:reduce)").matches) return;
+
+  const dark = RESOLVED[cond][tod].mode==="onDark";
+  let kind = "none";
+  if(cond==="rain"||cond==="thunderstorm") kind="rain";
+  else if(cond==="snow") kind="snow";
+  else if(cond==="fog") kind="fog";
+  else if(tod==="night") kind="stars";
+  if(kind==="none") return;
+
+  const N = kind==="rain"?58 : kind==="snow"?38 : kind==="stars"?46 : 5;
+  const P = Array.from({length:N},()=>({
+    x:Math.random()*w, y:Math.random()*h,
+    v:kind==="rain"?4+Math.random()*4 : kind==="snow"?0.5+Math.random()*0.7 : 0.12+Math.random()*0.2,
+    l:kind==="rain"?9+Math.random()*11 : 1+Math.random()*2,
+    o:0.25+Math.random()*0.5, ph:Math.random()*Math.PI*2
+  }));
+  const heavy = cond==="thunderstorm";
+  let t=0;
+  (function loop(){
+    t+=0.016; ctx.clearRect(0,0,w,h);
+    if(kind==="rain"){
+      ctx.strokeStyle=dark?"rgba(190,220,245,.5)":"rgba(255,255,255,.62)";
+      ctx.lineWidth=1.1;
+      P.forEach(p=>{ ctx.globalAlpha=p.o; ctx.beginPath();
+        ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-1.6,p.y+p.l); ctx.stroke();
+        p.y+=p.v*(heavy?1.35:1); p.x-=0.35;
+        if(p.y>h){p.y=-14;p.x=Math.random()*w;} });
+    } else if(kind==="snow"){
+      ctx.fillStyle="rgba(255,255,255,.85)";
+      P.forEach(p=>{ ctx.globalAlpha=p.o; ctx.beginPath();
+        ctx.arc(p.x+Math.sin(t+p.ph)*7,p.y,p.l,0,6.29); ctx.fill();
+        p.y+=p.v; if(p.y>h){p.y=-6;p.x=Math.random()*w;} });
+    } else if(kind==="stars"){
+      ctx.fillStyle="#fff";
+      P.forEach(p=>{ ctx.globalAlpha=p.o*(0.55+0.45*Math.sin(t*1.4+p.ph));
+        ctx.beginPath(); ctx.arc(p.x,p.y*0.62,p.l*0.6,0,6.29); ctx.fill(); });
+    } else if(kind==="fog"){
+      P.forEach((p,i)=>{ ctx.globalAlpha=0.05+0.035*Math.sin(t*0.5+p.ph);
+        ctx.fillStyle=dark?"#9AA6B4":"#FFFFFF";
+        const y=(i/P.length)*h+Math.sin(t*0.3+p.ph)*10;
+        ctx.fillRect(0,y,w,46); });
+    }
+    ctx.globalAlpha=1;
+    ambRAF=requestAnimationFrame(loop);
+  })();
+}
+
+/* ---- views ---- */
+function heroHTML(p){
+  const r = RESOLVED[curCond()][curTod()];
+  return `
+  <div class="loc-row" role="group" aria-label="Saved locations">
+    ${PLACES.map(x=>`<button class="locchip" data-place="${x.id}" aria-pressed="${x.id===p.id}">
+      ${x.id===p.id?I.pin:""}${x.name}</button>`).join("")}
+  </div>
+  ${S.offline?`<div class="stale"><i></i>Offline &mdash; showing last known data, updated 2 h 14 min ago</div>`:""}
+  <div class="hero">
+    <div class="hero-top">
+      <div>
+        <div class="hero-temp">${p.temp}<sup>°C</sup></div>
+        <div class="hero-cond">${COND_LABEL[curCond()]}</div>
+        <div class="hero-sub">${p.station} &nbsp;·&nbsp; feels like ${p.feels}°</div>
+      </div>
+      <div style="width:62px;height:62px;flex:none">${I[curCond()]}</div>
+    </div>
+    <div class="hero-stats">
+      <div><b>${p.hum}%</b><span>Humidity</span></div>
+      <div><b>${p.wind} km/h</b><span>Wind</span></div>
+      <div><b>${nf(p.vis,1)} km</b><span>Visibility</span></div>
+      <div><b>${p.sunset}</b><span>Sunset</span></div>
+    </div>
+  </div>`;
+}
+function alertHTML(p){
+  if(!p.alert) return `<div class="alertwrap"><div class="noalert"><i></i>
+    No active IMD warnings for ${p.name}. Checked 4 min ago.</div></div>`;
+  const a=p.alert;
+  return `<div class="alertwrap"><button class="alert ${a.level}" data-alert="1">
+    <span class="alert-ico">${I.warn}</span>
+    <span><b>${a.level} warning · always pinned</b><p>${a.body}</p>
+    <small>${a.valid}</small></span></button></div>`;
+}
+function cardHTML(c,p,cards){
+  const per=P_BY_ID[c.id], rule=CARD_RULES[c.id];
+  const i = cards.indexOf(c);
+  const open = S.openWhy.has(c.id);
+  return `<article class="card enter" role="button" tabindex="0" data-card="${c.id}" style="animation-delay:${i*55}ms">
+    <div class="c-head">
+      <span class="c-ico">${I.cIco[c.id]}</span>
+      <span class="grip">${I.grip}</span>
+      <span class="c-label">${rule.source}</span>
+      <span class="c-tag">${per.short}</span>
+      <span class="arr">
+        <button data-move="up" data-id="${c.id}" ${i===0?"disabled":""} aria-label="Move ${rule.title} up">${I.up}</button>
+        <button data-move="down" data-id="${c.id}" ${i===cards.length-1?"disabled":""} aria-label="Move ${rule.title} down">${I.down}</button>
+      </span>
+    </div>
+    <div class="c-title">${rule.title}</div>
+    ${CARD_BODY[c.id](p)}
+    <div class="why" data-open="${open}">
+      <button class="why-btn" data-why="${c.id}" aria-expanded="${open}">Why this card${I.chev}</button>
+      <div class="why-body"><div><p>${whySentence(c,p,S.personas,S.manual)}</p></div></div>
+    </div>
+  </article>`;
+}
+function skeletons(n){
+  return `<div class="cards">${Array.from({length:n},()=>`<div class="skel"><div class="skel-in">
+    <div class="sk-bar" style="width:44%"></div><div class="sk-bar" style="width:70%;height:20px"></div>
+    <div class="sk-bar" style="width:100%"></div><div class="sk-bar" style="width:82%"></div>
+    </div></div>`).join("")}</div>`;
+}
+function homeView(){
+  const p=place();
+  const cards=scoreCards(p,S.personas,S.manual);
+  return heroHTML(p)+alertHTML(p)+
+    (S.loading ? skeletons(Math.max(2,cards.length)) :
+      `<div class="cards" id="cards">${cards.map(c=>cardHTML(c,p,cards)).join("")}</div>`);
+}
+function alertsView(){
+  const withAlerts = PLACES.filter(p=>p.alert);
+  return `<div class="listhead"><h2>Warnings</h2>
+    <p>Every CAP alert across your saved places, newest first. These sit above persona cards on the
+      homepage too &mdash; a warning is never something you scroll to find.</p></div>
+    ${withAlerts.map(p=>`<div class="alertwrap"><button class="alert ${p.alert.level}" data-alert="1" data-place-alert="${p.id}">
+      <span class="alert-ico">${I.warn}</span>
+      <span><b>${p.name} · ${p.alert.level}</b><p>${p.alert.body}</p><small>${p.alert.valid}</small></span>
+    </button></div>`).join("")}
+    ${PLACES.filter(p=>!p.alert).map(p=>`<div class="alertwrap"><div class="noalert"><i></i>
+      ${p.name} &mdash; no active warnings</div></div>`).join("")}`;
+}
+function placesView(){
+  return `<div class="listhead"><h2>Places</h2>
+    <p>Current location plus saved favourites. Each row shows that city&rsquo;s own local sky, derived
+      from its sunrise, not yours.</p></div>
+    ${PLACES.map(p=>{const t=todFor(p);
+      return `<button class="plate" data-place="${p.id}">
+        <span class="plate-row">
+          <span style="width:30px;height:30px;display:block">${I[p.cond]}</span>
+          <span style="flex:1"><b>${p.name}</b><small>${COND_LABEL[p.cond]} · ${t} · ${p.station}</small></span>
+          <em>${p.temp}°</em>
+        </span>
+        ${p.alert?`<span class="pill" style="background:var(--w-${p.alert.level});display:inline-block;margin-top:9px">${p.alert.level} warning</span>`:""}
+      </button>`}).join("")}`;
+}
+function youView(){
+  return `<div class="listhead"><h2>Your personas</h2>
+    <p>Pick one to three. The homepage re-scores instantly &mdash; nothing here needs a save button.</p></div>
+    <div class="psel">${PERSONAS.map(p=>{
+      const on=S.personas.includes(p.id);
+      const full=S.personas.length>=3 && !on;
+      return `<button class="pchip" data-persona="${p.id}" aria-pressed="${on}" ${full?"disabled":""}>
+        <span class="dot"></span>${p.label}</button>`}).join("")}</div>
+    <div class="hint">${S.personas.length} of 3 selected · order sets the base score</div>`;
+}
+const VIEWS = {home:homeView, alerts:alertsView, places:placesView, you:youView};
+
+function renderTabs(){
+  $("#tabbar").innerHTML = [["home","Home"],["alerts","Warnings"],["places","Places"],["you","You"]]
+    .map(([id,label])=>`<button class="tab" role="tab" data-tab="${id}"
+      aria-selected="${S.tab===id}">${I.tabs[id]}<span>${label}</span></button>`).join("");
+}
+function render(){
+  $("#view").innerHTML = VIEWS[S.tab]();
+  $("#clock").textContent = place().clock;
+  renderTabs(); paintSky(); syncRail();
+}
+
+/* ---- rail ---- */
+function syncRail(){
+  $("#pcount").textContent = `${S.personas.length} of 3`;
+  document.querySelectorAll("[data-rp]").forEach(b=>{
+    const on=S.personas.includes(b.dataset.rp);
+    b.setAttribute("aria-pressed",on);
+    b.disabled = !on && S.personas.length>=3;
+  });
+  document.querySelectorAll("[data-rl]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.rl===S.placeId));
+  document.querySelectorAll("[data-rc]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.rc===curCond()&&!!S.cond));
+  document.querySelectorAll("[data-rt]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.rt===curTod()&&!!S.tod));
+  document.querySelectorAll(".sw-cell").forEach(b=>
+    b.setAttribute("aria-pressed", b.dataset.sky===curCond()+"/"+curTod()));
+  $("#swOffline").setAttribute("aria-pressed",S.offline);
+  $("#swBlur").setAttribute("aria-pressed",S.flat);
+  $("#swArrange").setAttribute("aria-pressed",S.arrange);
+  $("#screen").dataset.arrange = S.arrange?"on":"off";
+}
+$("#railPersonas").innerHTML = PERSONAS.map(p=>
+  `<button class="opt" data-rp="${p.id}">${p.label}</button>`).join("");
+$("#railPlaces").innerHTML = PLACES.map(p=>
+  `<button class="opt" data-rl="${p.id}">${p.name}</button>`).join("");
+$("#railCond").innerHTML = CONDITIONS.map(c=>
+  `<button class="opt" data-rc="${c}">${COND_LABEL[c]}</button>`).join("");
+$("#railTod").innerHTML = TODS.map(t=>
+  `<button class="opt" data-rt="${t}">${t[0].toUpperCase()+t.slice(1)}</button>`).join("");
+
+/* ---- skeleton-then-content transition ---- */
+function reflow(ms=430){
+  S.loading=true; render();
+  setTimeout(()=>{ S.loading=false; render(); }, ms);
+}
+
+/* ---- events ---- */
+document.addEventListener("click", e=>{
+  const t = e.target.closest("button, [data-card]");
+  if(!t) return;
+
+  if(t.dataset.rp){
+    const id=t.dataset.rp, i=S.personas.indexOf(id);
+    if(i>=0) S.personas.splice(i,1);
+    else if(S.personas.length<3) S.personas.push(id);
+    S.manual=[]; reflow(); return;
+  }
+  if(t.dataset.persona){
+    const id=t.dataset.persona, i=S.personas.indexOf(id);
+    if(i>=0) S.personas.splice(i,1); else if(S.personas.length<3) S.personas.push(id);
+    S.manual=[]; render(); return;
+  }
+  if(t.dataset.rl || t.dataset.place){
+    S.placeId = t.dataset.rl || t.dataset.place;
+    S.cond=null; S.tod=null;
+    if(S.tab!=="home") S.tab="home";
+    reflow(); return;
+  }
+  if(t.dataset.rc){ S.cond = (S.cond===t.dataset.rc)?null:t.dataset.rc; render(); return; }
+  if(t.dataset.rt){ S.tod  = (S.tod ===t.dataset.rt)?null:t.dataset.rt; render(); return; }
+  if(t.dataset.sky){ const [c,d]=t.dataset.sky.split("/"); S.cond=c; S.tod=d; render();
+    $("#proto").scrollIntoView({behavior:"smooth",block:"center"}); return; }
+  if(t.id==="swOffline"){ S.offline=!S.offline; render(); return; }
+  if(t.id==="swBlur"){ S.flat=!S.flat; render(); return; }
+  if(t.id==="swArrange"){ S.arrange=!S.arrange;
+    if(S.arrange && !S.manual.length) S.manual=scoreCards(place(),S.personas,[]).map(c=>c.id);
+    render(); return; }
+  if(t.dataset.tab){ S.tab=t.dataset.tab; render(); $("#scroller").scrollTop=0; return; }
+  if(t.dataset.why){
+    const id=t.dataset.why;
+    S.openWhy.has(id) ? S.openWhy.delete(id) : S.openWhy.add(id);
+    const w=t.closest(".why"); w.dataset.open=S.openWhy.has(id); t.setAttribute("aria-expanded",S.openWhy.has(id));
+    return;
+  }
+  if(t.dataset.move){ moveCard(t.dataset.id, t.dataset.move); return; }
+  if(t.dataset.alert){ openSheet(t, "alert"); return; }
+  const card = t.closest?.("[data-card]") || (t.dataset.card?t:null);
+  if(card && !S.arrange){ openSheet(card, card.dataset.card); return; }
+});
+
+document.addEventListener("keydown", e=>{
+  if(e.key!=="Enter" && e.key!==" ") return;
+  const c=e.target.closest?.("[data-card]");
+  if(c && !S.arrange){ e.preventDefault(); openSheet(c, c.dataset.card); }
+});
+
+/* ---- FLIP reorder ---- */
+function moveCard(id,dir){
+  const order = S.manual.length ? [...S.manual] : scoreCards(place(),S.personas,[]).map(c=>c.id);
+  const i=order.indexOf(id), j=dir==="up"?i-1:i+1;
+  if(j<0||j>=order.length) return;
+  const host=$("#cards"); if(!host) return;
+  const first=new Map();
+  [...host.children].forEach(el=>first.set(el.dataset.card, el.getBoundingClientRect().top));
+  [order[i],order[j]]=[order[j],order[i]];
+  S.manual=order;
+  $("#view").innerHTML = homeView();
+  renderTabs();
+  const host2=$("#cards");
+  [...host2.children].forEach(el=>{
+    el.classList.remove("enter"); el.style.animation="none";
+    const was=first.get(el.dataset.card);
+    if(was==null) return;
+    const now=el.getBoundingClientRect().top;
+    el.style.transform=`translateY(${was-now}px)`;
+    requestAnimationFrame(()=>{ el.style.transition=""; el.style.transform=""; });
+  });
+}
+
+/* ---- shared-element expand ---- */
+let sheetEl=null;
+function openSheet(sourceEl, kind){
+  if(sheetEl) return;
+  const scr=$("#screen"), sb=scr.getBoundingClientRect(), r=sourceEl.getBoundingClientRect();
+  const p=place();
+  let eyebrow,title,lede,rows,src;
+  if(kind==="alert"){
+    const ap = sourceEl.dataset.placeAlert ? PLACES.find(x=>x.id===sourceEl.dataset.placeAlert) : p;
+    if(!ap.alert) return;
+    eyebrow=`IMD CAP feed · ${ap.name}`; title=ap.alert.head; lede=ap.alert.body;
+    rows=[["Colour code",ap.alert.level.toUpperCase()],["Validity",ap.alert.valid.replace("Valid till ","").split(" · ")[0]],
+      ["Issuing office",ap.alert.valid.split(" · ")[1]||"IMD"],["District",ap.station]];
+    src=`Parsed from IMD's Common Alerting Protocol XML feed. Warnings are cached on issue, not on a timer — a new CAP entry invalidates the old one immediately.`;
+  } else {
+    const rule=CARD_RULES[kind], d=CARD_DETAIL[kind](p);
+    eyebrow=`${P_BY_ID[kind].label} · ${p.name}`; title=rule.title; lede=d.lede; rows=d.rows; src=d.src;
+  }
+  sourceEl.classList.add("morphing");
+  sheetEl=document.createElement("div");
+  sheetEl.className="sheet";
+  sheetEl.style.top=(r.top-sb.top)+"px"; sheetEl.style.left=(r.left-sb.left)+"px";
+  sheetEl.style.width=r.width+"px"; sheetEl.style.height=r.height+"px";
+  sheetEl.style.borderRadius=kind==="alert"?"18px":"22px";
+  sheetEl.innerHTML=`<button class="sheet-close" aria-label="Close">${I.close}</button>
+    <div class="sheet-in">
+      <div class="s-eyebrow">${eyebrow}</div>
+      <h3>${title}</h3>
+      <p class="lede">${lede}</p>
+      <div class="dl">${rows.map(([k,v])=>`<div><dt>${k}</dt><dd>${v}</dd></div>`).join("")}</div>
+      <div class="srcbox"><b>Where this comes from</b><p>${src}</p></div>
+    </div>`;
+  scr.appendChild(sheetEl);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    sheetEl.style.top="0px"; sheetEl.style.left="0px";
+    sheetEl.style.width="100%"; sheetEl.style.height="100%";
+    sheetEl.style.borderRadius="42px";
+    sheetEl.dataset.open="true";
+  }));
+  const close=()=>{
+    sheetEl.dataset.open="false";
+    sheetEl.style.top=(r.top-sb.top)+"px"; sheetEl.style.left=(r.left-sb.left)+"px";
+    sheetEl.style.width=r.width+"px"; sheetEl.style.height=r.height+"px";
+    sheetEl.style.borderRadius=kind==="alert"?"18px":"22px";
+    const el=sheetEl; sheetEl=null;
+    setTimeout(()=>{ el.remove(); sourceEl.classList.remove("morphing"); },520);
+  };
+  sheetEl.querySelector(".sheet-close").addEventListener("click",e=>{e.stopPropagation();close();});
+  document.addEventListener("keydown",function esc(e){
+    if(e.key==="Escape"&&sheetEl){close();document.removeEventListener("keydown",esc);} });
+}
+
+/* ---- pull to refresh ---- */
+(function(){
+  const sc=$("#scroller"), host=$("#pullhost"), dial=$("#ptrDial"),
+        arc=$("#ptrArc"), drop=$("#ptrDrop");
+  const MAX=96, TRIP=64;
+  let startY=null, dy=0, busy=false;
+  sc.addEventListener("pointerdown",e=>{
+    if(busy || sc.scrollTop>0 || sheetEl) return;
+    startY=e.clientY; host.classList.add("dragging");
+  });
+  sc.addEventListener("pointermove",e=>{
+    if(startY===null) return;
+    dy=Math.max(0,(e.clientY-startY));
+    if(dy<=0) return;
+    if(e.cancelable) e.preventDefault();
+    const d=Math.min(MAX,dy*0.55);
+    host.style.transform=`translateY(${d}px)`;
+    const k=Math.min(1,d/TRIP);
+    dial.style.opacity=k; dial.style.transform=`scale(${0.6+k*0.4})`;
+    arc.setAttribute("stroke-dashoffset",String(88-88*k));
+    drop.setAttribute("opacity",String(k*0.9));
+  });
+  const end=()=>{
+    if(startY===null) return;
+    const tripped = Math.min(MAX,dy*0.55) >= TRIP;
+    startY=null; host.classList.remove("dragging");
+    if(tripped && !busy){
+      busy=true;
+      host.style.transform="translateY(52px)";
+      dial.classList.add("spin");
+      S.offline=false;
+      setTimeout(()=>{
+        dial.classList.remove("spin");
+        host.style.transform="";
+        dial.style.opacity="0";
+        arc.setAttribute("stroke-dashoffset","88");
+        busy=false;
+        reflow(380);
+      },1000);
+    } else {
+      host.style.transform="";
+      dial.style.opacity="0";
+      arc.setAttribute("stroke-dashoffset","88");
+    }
+    dy=0;
+  };
+  sc.addEventListener("pointerup",end);
+  sc.addEventListener("pointercancel",end);
+  sc.addEventListener("pointerleave",end);
+})();
+
+
+/* ========================================================================
+   8. THE SYSTEM SECTIONS
+   ===================================================================== */
+/* sky matrix */
+(function(){
+  const g=$("#mgrid");
+  let html=`<div class="mhead"></div>`+TODS.map(t=>`<div class="mhead">${t}</div>`).join("");
+  CONDITIONS.forEach(c=>{
+    html+=`<div class="mrow">${COND_LABEL[c]}</div>`;
+    TODS.forEach(t=>{
+      const r=RESOLVED[c][t], g2=GLASS[r.mode];
+      const fill=`rgba(${g2.fill.join(",")},${g2.fillA})`;
+      const scrim=`rgba(${g2.scrim.join(",")},${g2.scrimA})`;
+      const txt=`rgba(${g2.txt.join(",")},1)`;
+      html+=`<button class="sw-cell" data-sky="${c}/${t}" style="background:${r.css}"
+        aria-label="${COND_LABEL[c]} at ${t}, ${r.m.primary.toFixed(1)} to 1 contrast">
+        <span class="chipglass" style="background:linear-gradient(${scrim},${scrim}),${fill};
+          border-color:${g2.hair};color:${txt}">${r.m.primary.toFixed(1)}:1</span></button>`;
+    });
+  });
+  g.innerHTML=html;
+})();
+
+/* contrast audit table */
+(function(){
+  let rows="";
+  CONDITIONS.forEach(c=>TODS.forEach(t=>{
+    const r=RESOLVED[c][t];
+    const ok = r.m.primary>=4.5 && r.m.secondary>=4.5;
+    rows+=`<tr>
+      <td><b>${COND_LABEL[c]}</b><small>${t}</small></td>
+      <td class="n">${rgb2hex(r.ground)}</td>
+      <td><span class="polchip">${r.mode==="onDark"?"scrim + white text":"white fill + ink text"}</span></td>
+      <td class="n">${r.m.primary.toFixed(2)}:1</td>
+      <td class="n">${r.m.secondary.toFixed(2)}:1</td>
+      <td><span class="verdict ${ok?"p":"f"}">${ok?"AA PASS":"FAIL"}</span></td>
+    </tr>`;
+  }));
+  $("#contrastBody").innerHTML=rows;
+})();
+
+/* surface demos */
+(function(){
+  const demos=[
+    {sky:["clear","night"], mode:"onDark", flat:false, h:"Dark polarity",
+      p:"Below the luminance crossover the card takes a 34% ink scrim under a 10% white fill, so white text keeps its ratio even on a mid-toned dusk sky."},
+    {sky:["overcast","day"], mode:"onLight", flat:false, h:"Light polarity",
+      p:"Above the crossover the scrim drops to zero and the fill climbs to 60% white, and the text flips to ink. Same recipe, inverted, chosen by measurement."},
+    {sky:["rain","day"], mode:null, flat:true, h:"No-blur fallback",
+      p:"When frame time suffers on a low-end GPU, blur goes to zero and the fill opacity rises to compensate. The visual language survives; the frame budget does too."}
+  ];
+  $("#surfaceDemos").innerHTML = demos.map(d=>{
+    const [c,t]=d.sky, r=RESOLVED[c][t], mode=r.mode;
+    const g=GLASS[mode];
+    const sA=d.flat?GLASS_FLAT[mode].scrimA:g.scrimA, fA=d.flat?GLASS_FLAT[mode].fillA:g.fillA;
+    const fill=`rgba(${g.fill.join(",")},${fA})`, scrim=`rgba(${g.scrim.join(",")},${sA})`;
+    const m=d.flat?r.flat:r.m;
+    return `<div class="demo">
+      <div class="demo-sky" style="background:${r.css}">
+        <div class="demo-card" style="background:linear-gradient(${scrim},${scrim}),${fill};
+          border-color:${g.hair};color:rgba(${g.txt.join(",")},1);
+          backdrop-filter:${d.flat?"none":"blur(20px) saturate(1.45)"};
+          -webkit-backdrop-filter:${d.flat?"none":"blur(20px) saturate(1.45)"};
+          box-shadow:0 10px 30px rgba(4,10,20,.2)">
+          <b>Visibility 2.4 km</b>
+          <small style="color:rgba(${g.txt2.join(",")},${g.txt2A})">Reduced on the 18:30 run home</small>
+        </div>
+      </div>
+      <div class="demo-meta"><h4>${d.h}</h4><p>${d.p}</p>
+        <code>blur ${d.flat?"0":"20"}px · scrim ${Math.round(sA*100)}% · fill ${Math.round(fA*100)}% · ${m.primary.toFixed(2)}:1</code>
+      </div></div>`;
+  }).join("");
+})();
+
+/* type scale */
+(function(){
+  const scale=[
+    {s:"Display / 74 / 250 / −0.05em", size:74, w:250, ls:"-.05em", t:"27°"},
+    {s:"Screen title / 27 / 500 / −0.03em", size:27, w:500, ls:"-.03em", t:"Your personas"},
+    {s:"Card readout / 33 / 300 / −0.038em", size:33, w:300, ls:"-.038em", t:"168 AQI"},
+    {s:"Card title / 16 / 600", size:16, w:600, ls:"-.015em", t:"Commute watch"},
+    {s:"Body / 13.5 / 400", size:13.5, w:400, ls:"0", t:"Heavy to very heavy rainfall very likely at isolated places over Mumbai, Thane and Raigad districts."},
+    {s:"Instrument label / 9.5 / 600 / +0.12em / Google Sans Code", size:9.5, w:600, ls:".12em", t:"IMD NOWCAST · SANTACRUZ · 14:20 IST", mono:true}
+  ];
+  $("#typeScale").innerHTML = scale.map(x=>`<div class="typeblock">
+    <div class="type-spec">${x.s}</div>
+    <div class="type-samp" style="font-size:${x.size}px;font-weight:${x.w};letter-spacing:${x.ls};
+      ${x.mono?"font-family:var(--font-mono);text-transform:uppercase;":""}line-height:1.2">${x.t}</div>
+  </div>`).join("");
+})();
+
+/* motion */
+(function(){
+  const springs=[
+    {n:"spring.card", d:"Card enter and exit", cfg:{stiffness:260,damping:30,mass:.9}},
+    {n:"spring.reorder", d:"FLIP reordering", cfg:{stiffness:420,damping:38,mass:1}},
+    {n:"spring.sheet", d:"Card → detail expand", cfg:{stiffness:300,damping:34,mass:1}},
+    {n:"spring.refresh", d:"Pull-to-refresh release", cfg:{stiffness:200,damping:22,mass:1.1}}
+  ];
+  $("#springs").innerHTML = springs.map((s,i)=>`<div class="springrow">
+    <div class="spring-id"><b>${s.n}</b><small>${s.d}</small></div>
+    <div class="spring-cfg">type: "spring", stiffness: ${s.cfg.stiffness}, damping: ${s.cfg.damping}, mass: ${s.cfg.mass}</div>
+    <div class="track" id="tr${i}"><div class="puck"></div></div>
+    <button class="playbtn" data-spring="${i}">Play</button>
+  </div>`).join("");
+
+  /* real spring integration so the demo matches the config, not a bezier guess */
+  function play(i){
+    const s=springs[i], el=document.querySelector(`#tr${i} .puck`);
+    const dist=152-5-22-5;
+    let x=0,v=0,target=dist,t0=null,dir=1;
+    if(el.dataset.at==="1"){ target=0; }
+    x = el.dataset.at==="1" ? dist : 0;
+    el.dataset.at = el.dataset.at==="1" ? "0" : "1";
+    const {stiffness:k,damping:c,mass:m}=s.cfg;
+    function step(ts){
+      if(t0===null) t0=ts;
+      const dt=Math.min(0.032,(ts-t0)/1000); t0=ts;
+      const F=-k*(x-target)-c*v;
+      v+=(F/m)*dt; x+=v*dt;
+      el.style.transform=`translateX(${x}px)`;
+      if(Math.abs(x-target)>0.4||Math.abs(v)>0.4) requestAnimationFrame(step);
+      else el.style.transform=`translateX(${target}px)`;
+    }
+    requestAnimationFrame(step);
+  }
+  document.addEventListener("click",e=>{
+    const b=e.target.closest("[data-spring]"); if(!b) return;
+    play(Number(b.dataset.spring));
+  });
+})();
+
+/* rules table */
+(function(){
+  $("#rulesBody").innerHTML = PERSONAS.map(p=>{
+    const r=CARD_RULES[p.id];
+    return `<tr><td><b>${p.label}</b></td><td>${r.title}<small>${r.source}</small></td>
+      <td class="n">${r.fires}</td><td>${r.suppress}</td></tr>`;
+  }).join("");
+})();
+
+/* boot */
+render();
+window.addEventListener("resize",()=>startAmbient(curCond(),curTod()));
+</script>
