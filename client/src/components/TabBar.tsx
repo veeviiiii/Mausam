@@ -13,10 +13,12 @@ export function TabBar() {
 
   return (
     <nav
-      className="absolute inset-x-0 bottom-0 z-[15] flex border-t px-3 pb-6 pt-2.5 backdrop-blur-[18px] lg:hidden"
+      className="absolute inset-x-0 bottom-0 z-[15] flex border-t px-3 pb-6 pt-2.5 lg:hidden"
       style={{
         borderColor: "var(--hair)",
         backgroundImage: "linear-gradient(to top, var(--tab-scrim) 58%, transparent)",
+        backdropFilter: "blur(var(--glass-blur))",
+        WebkitBackdropFilter: "blur(var(--glass-blur))",
       }}
       role="tablist"
       aria-label="Mausam sections"

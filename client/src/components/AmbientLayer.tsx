@@ -53,7 +53,22 @@ interface Particle {
   phase: number;
 }
 
-const FRAME_MS = 1000 / 30;
+const FRAME_MS = 1000 / 24;
+
+/**
+ * Hard cap on the canvas's internal render resolution, independent of the
+ * viewport or devicePixelRatio.
+ *
+ * Confirmed on the live deployment: the canvas backing store was hitting
+ * ~1900x930px (full viewport at 1.5 DPR) and being cleared + redrawn every
+ * frame, directly underneath 3-4 backdrop-filter layers — every canvas frame
+ * forced the browser to recompute blur for every glass surface above it. This
+ * is soft, blurred, ambient weather; nobody can tell it apart from full
+ * resolution once it sits behind 10-14px of blur, so the fill-rate cost is
+ * pure waste. Capping the long edge keeps total pixels — and everything that
+ * scales with them — bounded regardless of screen size.
+ */
+const MAX_CANVAS_EDGE = 480;
 
 /** Particle budget per million device-independent pixels, by kind. */
 const DENSITY: Record<Kind, number> = {
@@ -93,15 +108,21 @@ export function AmbientLayer({
     let h = 0;
 
     const seed = () => {
-      const dpr = Math.min(1.5, window.devicePixelRatio || 1);
       w = canvas.clientWidth;
       h = canvas.clientHeight;
-      canvas.width = Math.max(1, Math.round(w * dpr));
-      canvas.height = Math.max(1, Math.round(h * dpr));
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // Render at a capped internal resolution and let the browser upscale
+      // the canvas element via CSS — the particles are soft and sit behind a
+      // blur, so nobody can see the difference, and it bounds draw cost on a
+      // 6" phone the same as a 27" monitor.
+      const longEdge = Math.max(w, h);
+      const scale = longEdge > MAX_CANVAS_EDGE ? MAX_CANVAS_EDGE / longEdge : 1;
+      canvas.width = Math.max(1, Math.round(w * scale));
+      canvas.height = Math.max(1, Math.round(h * scale));
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
 
       const area = (w * h) / 1_000_000;
-      const n = Math.max(6, Math.round(DENSITY[kind] * Math.max(0.12, area)));
+      const n = Math.max(6, Math.round(DENSITY[kind] * Math.max(0.12, area) * 0.7));
 
       particles = Array.from({ length: n }, () => ({
         x: Math.random() * w,

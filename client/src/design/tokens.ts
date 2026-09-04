@@ -170,7 +170,17 @@ export const GLASS_FLAT: Record<GlassMode, Pick<GlassTier, "scrimA" | "fillA">> 
   onLight: { scrimA: 0, fillA: 0.8 },
 };
 
-export const BLUR = { card: 20, sheet: 26, chip: 12, tabbar: 18, flat: 0 } as const;
+/**
+ * Backdrop-filter is the single most expensive thing on this screen, and it
+ * gets recomputed every time whatever sits behind it changes — which, over
+ * the animated sky, is every frame. These radii were tuned for a static
+ * screenshot; on real hardware they compounded with the ambient canvas into
+ * visible lag across the whole app, not just the weather animation. Cut hard
+ * here rather than cutting the glass language entirely.
+ */
+// tabbar has no entry of its own: it reuses --glass-blur (the same value as
+// cards) since TabBar.tsx sits over the same scrolling content.
+export const BLUR = { card: 10, sheet: 14, chip: 12, flat: 0 } as const;
 
 export const RADIUS = { card: 22, sheet: 20, alert: 18, plate: 20, chip: 14, pill: 999 } as const;
 
