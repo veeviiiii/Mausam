@@ -290,3 +290,56 @@ Mumbai), and `useNow` ticks on the minute boundary so the strip and the sky
 actually advance. The readings stay synthetic until IMD's forecast endpoints are
 reachable — but the labels are real, because a strip that says 15:00 at noon is
 wrong in a way anyone can see.
+
+## Provenance audit (06 Sep 2026)
+
+A review found the advice card narrating seeded constants in the same
+typography as live regulatory feeds. Audit result, from the code rather than
+from CLAUDE.md's plan:
+
+| Value on the advice card | Actual source |
+|---|---|
+| AQI, PM2.5 | **Live** — CPCB, when the station answers |
+| Alert level / event / valid-until / issuing office | **Live** — NDMA Sachet CAP, when matched |
+| Rain probability (`schoolDropRain: 72`) | Seeded constant |
+| Visibility (`2.4`) | Seeded constant |
+| Wave height (`2.3`) | Seeded constant |
+| Urban waterlogging + junction prose | Seeded, illustrative |
+| UV, feels-like, temp, 24 h rainfall | Seeded constants |
+
+Three findings worth stating plainly:
+
+- **Visibility does not come from OpenWeather.** OWM is used for exactly one
+  thing in this project — the radar's `wind_new` raster tiles. There is no
+  current-conditions call anywhere, so no attribution is owed for visibility,
+  because no provider supplied it.
+- **There is no marine data source at all.** INCOIS appeared in a provenance
+  string on the beach card and has never been called. The swim advisory
+  ("Swell is 2.3 m, above the 2 m swim-advisory line") was a safety
+  instruction with nothing behind it and has been **removed**, from both the
+  advice list and the card. It comes back when a wave-height API is wired.
+- **The junction claims are synthetic.** "Hindmata and Sion junctions
+  typically hold water above 60 mm/day" is seed prose; IMD nowcasts are
+  district-scale and no urban dataset is wired. Labelled illustrative.
+
+### What changed
+
+`src/data/provenance.ts` attaches a `Source { name, status, asOf? }` to every
+field the advice engine reads, and each advice line renders it under the
+reading it narrates. The rule engine's mechanism is untouched — a reading still
+crosses a threshold and fires a line narrated with that reading. Only the
+origin is now visible.
+
+- The **fog threshold** was re-grounded. IMD's bands top out at 1 km (shallow
+  fog 501–1000 m, moderate 201–500, dense 51–200, very dense below 50); there
+  is no IMD category near 3 km. Below 1 km now cites the real band. Between 1
+  and 3 km is a separate rule, renamed "Allow extra time on the road", which
+  says outright that it is our own driving caution and not a fog warning.
+- The **alert badge** said "IMD CAP FEED" on a seeded bulletin. It now reads
+  "Seeded bulletin · <place>" when seeded, and "NDMA Sachet · <issuing office>"
+  when live — with the office read off the CAP `sender`, because Sachet carries
+  SDMA and CWC bulletins as well as IMD's. Verified against a Maharashtra SDMA
+  alert: the card credits the SDMA, not IMD.
+- Seven **persona card labels** claimed IMD endpoints that are blocked and
+  never called ("IMD hourly · UV index", "INCOIS · IMD coastal", …). They now
+  end in `· seeded`.

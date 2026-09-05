@@ -168,10 +168,10 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
     ),
     Body: ({ place }) => {
       const t = useT();
+      // No swim recommendation here either. The advisory version was dropped
+      // because `waveHeight` is a seeded constant with no marine API behind it;
+      // repeating the same instruction on the card would just move it.
       const wave = place.waveHeight ?? 0;
-      const advice = t(
-        wave >= 2 ? "card.beach.noSwim" : wave >= 1.2 ? "card.beach.caution" : "card.beach.calm",
-      );
       const regime =
         place.moon.tideRegime === "spring"
           ? t("card.beach.spring")
@@ -184,13 +184,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       return (
         <>
           <Readout value={one(wave)} unit={t("unit.mSwell")} />
-          <Note>
-            {t("card.beach.line", {
-              advice,
-              side: t(wave >= 2 ? "card.beach.above" : "card.beach.below"),
-            })}{" "}
-            {regime}
-          </Note>
+          <Note>{regime}</Note>
           <KeyValues
             items={[
               [
@@ -216,7 +210,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         [t("row.onshoreWind"), t("unit.kmh", { v: String(p.wind) })],
       ],
       source:
-        "INCOIS sea-state bulletin joined to the IMD coastal station list, cached 6 hours. Moon phase is carried only because it explains the tide range — moonrise and moonset themselves are out of scope.",
+        "Seeded. There is no marine data source in this build: INCOIS has never been called, and no wave-height or tide API is wired. The wave, tide and sea-temperature figures here are demo values shaped to be plausible, and the swim advisory that used to read off them has been removed rather than shown without backing. Moon phase is carried only because it explains the tide range.",
     }),
   },
 

@@ -1,4 +1,5 @@
 import type { Place } from "../data/types";
+import type { Source, Sources } from "../data/provenance";
 
 /**
  * "What to do" — the same rule-based, explainable machinery as the card
@@ -24,11 +25,17 @@ export interface Advisory {
   vars?: Record<string, string>;
   /** Drives the glyph and the accent. */
   tone: "danger" | "warn" | "info";
+  /**
+   * Where the reading in `whyKey` came from. Rendered beside it, because a
+   * seeded constant and a live regulatory feed narrated in identical
+   * typography is the app claiming more than it knows.
+   */
+  source: Source;
 }
 
 const MAX_ITEMS = 4;
 
-export function advisoriesFor(place: Place): Advisory[] {
+export function advisoriesFor(place: Place, sources: Sources): Advisory[] {
   const out: Advisory[] = [];
   const p = place;
   const rainNow = p.rainProbability[0] ?? 0;
@@ -60,6 +67,7 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.secureWhy",
       vars: { system: p.alert.track.systemName, when: p.alert.track.landfall },
       tone: "danger",
+      source: sources.alert,
     });
   }
 
@@ -70,6 +78,7 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.higherGroundWhy",
       vars: { place: p.name },
       tone: "danger",
+      source: sources.alert,
     });
   }
 
@@ -79,8 +88,11 @@ export function advisoriesFor(place: Place): Advisory[] {
       titleKey: "adv.indoors",
       whyKey: warnsStorm && warnLabel ? "adv.indoorsWarnWhy" : "adv.indoorsWhy",
       vars:
-        warnsStorm && warnLabel ? { office: p.alert?.issuingOffice ?? "IMD" } : undefined,
+        warnsStorm && warnLabel
+          ? { office: p.alert?.issuingOffice ?? "the district" }
+          : undefined,
       tone: "danger",
+      source: warnsStorm ? sources.alert : sources.temp,
     });
   }
 
@@ -99,6 +111,7 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.schoolUmbrellaWhy",
       vars: { pct: String(schoolWorst) },
       tone: "info",
+      source: sources.schoolRain,
     });
   } else if (warnsRain && warnLabel) {
     // The bulletin outranks the seeded probability: a live rain warning means
@@ -109,6 +122,7 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.umbrellaWarnWhy",
       vars: { level: warnLabel.level, event: warnLabel.event, until: warnLabel.until },
       tone: "warn",
+      source: sources.alert,
     });
   } else if (rainNow >= 50 || p.condition === "rain") {
     out.push({
@@ -117,6 +131,7 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.umbrellaWhy",
       vars: { pct: String(rainNow) },
       tone: "info",
+      source: sources.rainProbability,
     });
   }
 
@@ -128,6 +143,7 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.maskWhy",
       vars: { aqi: String(p.aqi), band: p.aqiCategory },
       tone: "warn",
+      source: sources.aqi,
     });
   } else if (p.aqi > 150) {
     out.push({
@@ -136,6 +152,7 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.windowsWhy",
       vars: { pm: String(p.pm25) },
       tone: "warn",
+      source: sources.pm25,
     });
   }
 
@@ -146,17 +163,37 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.hydrateWhy",
       vars: { v: String(p.feelsLike) },
       tone: "warn",
+      source: sources.feelsLike,
     });
   }
 
-  /* ---- getting around ---- */
-  if (p.visibility < 3) {
+  /* ---- getting around ----
+
+     IMD's fog classification tops out at 1 km: shallow fog is 501-1000 m,
+     moderate 201-500 m, dense 51-200 m, very dense below 50 m. There is no IMD
+     band anywhere near 3 km, so the old "under the 3 km fog line" narration
+     implied an official definition that does not exist.
+
+     Two rules now. Below 1 km is genuinely inside IMD's shallow-fog band and
+     says so. Between 1 and 3 km is a driving caution this app is making on its
+     own judgement, and it is named and worded as one. */
+  if (p.visibility <= 1) {
     out.push({
       id: "fog-lights",
       titleKey: "adv.fogLights",
       whyKey: "adv.fogLightsWhy",
+      vars: { m: String(Math.round(p.visibility * 1000)) },
+      tone: "warn",
+      source: sources.visibility,
+    });
+  } else if (p.visibility < 3) {
+    out.push({
+      id: "low-visibility",
+      titleKey: "adv.lowVisibility",
+      whyKey: "adv.lowVisibilityWhy",
       vars: { v: p.visibility.toFixed(1) },
       tone: "warn",
+      source: sources.visibility,
     });
   }
 
@@ -167,6 +204,7 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.avoidUnderpassWhy",
       vars: { place: p.name },
       tone: "warn",
+      source: sources.waterlogging,
     });
   }
 
@@ -178,18 +216,22 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.sunscreenWhy",
       vars: { uv: String(p.uv) },
       tone: "info",
+      source: sources.uv,
     });
   }
 
-  if (p.waveHeight != null && p.waveHeight >= 2) {
-    out.push({
-      id: "no-swim",
-      titleKey: "adv.noSwim",
-      whyKey: "adv.noSwimWhy",
-      vars: { m: p.waveHeight.toFixed(1) },
-      tone: "warn",
-    });
-  }
+  /*
+   * The swim advisory is deliberately absent.
+   *
+   * It fired on `waveHeight`, which is a seeded constant: there is no marine
+   * API anywhere in this project. INCOIS is named in a provenance string on the
+   * beach card but has never been called. "Swell is 2.3 m, above the 2 m
+   * swim-advisory line" is a precise, safety-relevant instruction with nothing
+   * behind it, and a labelled-but-invented number is still an invented number
+   * when the advice is "stay out of the water".
+   *
+   * Restore it when a real wave-height source is wired, not before.
+   */
 
   if (p.temp < 6) {
     out.push({
@@ -198,6 +240,7 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.frostWhy",
       vars: { v: String(p.temp) },
       tone: "info",
+      source: sources.temp,
     });
   }
 
@@ -208,6 +251,7 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.delayFieldWhy",
       vars: { mm: String(p.rain24) },
       tone: "info",
+      source: sources.rain24,
     });
   }
 
@@ -220,6 +264,7 @@ export function advisoriesFor(place: Place): Advisory[] {
       whyKey: "adv.noneWhy",
       vars: { place: p.name },
       tone: "info",
+      source: sources.alert,
     });
   }
 

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { fade, scrimVariants, sheetVariants } from "../animations/variants";
 import { CARD_RULES } from "../personalization/rules";
 import { advisoriesFor, type Advisory } from "../personalization/advisories";
+import { sourcesFor } from "../data/provenance";
 import { CARD_UI } from "../features/cards/registry";
 import { useT } from "../i18n/context";
 import { capText } from "../i18n/capText";
@@ -77,7 +78,8 @@ export function DetailSheet({
 
   // Advice is the alert sheet's reason for existing beyond the colour code: a
   // red banner tells you a warning is live, not whether to pack an umbrella.
-  const advisories = target.kind === "alert" ? advisoriesFor(subject) : [];
+  const advisories =
+    target.kind === "alert" ? advisoriesFor(subject, sourcesFor(subject, liveAqi, t)) : [];
 
   const state = closing ? "exit" : "animate";
 
@@ -214,6 +216,21 @@ function AdvisoryRow({ advisory, index, t }: { advisory: Advisory; index: number
         <small className="mt-0.5 block text-[11.5px] leading-[1.42]" style={{ color: "var(--txt-2)" }}>
           {t(advisory.whyKey, advisory.vars)}
         </small>
+        {/* The reading is narrated as measurement, so where it came from is
+            shown next to it. A seeded constant and a live regulatory feed must
+            not read identically. */}
+        <small
+          className="mt-1 flex items-center gap-1.5 font-mono text-[9.5px] uppercase tracking-[0.06em]"
+          style={{ color: "var(--txt-2)", opacity: 0.85 }}
+        >
+          <span
+            className="h-[5px] w-[5px] shrink-0 rounded-full"
+            style={{ background: advisory.source.status === "live" ? "#37C57D" : "#9AA6B4" }}
+            aria-hidden
+          />
+          {t(`src.status.${advisory.source.status}`)} · {advisory.source.name}
+          {advisory.source.asOf ? ` · ${advisory.source.asOf}` : ""}
+        </small>
       </span>
     </motion.li>
   );
@@ -302,7 +319,12 @@ function alertContent(place: Place, t: Translate): SheetContent | null {
   const text = capText(place.id, a, t);
 
   return {
-    eyebrow: t(a.live ? "sheet.liveEyebrow" : "sheet.capEyebrow", { place: place.name }),
+    // NDMA's Sachet feed carries IMD, state SDMA and CWC bulletins, so the
+    // issuing body is read off the alert rather than hardcoded — and a seeded
+    // bulletin says it is seeded instead of borrowing IMD's name.
+    eyebrow: a.live
+      ? t("sheet.liveEyebrow", { office: a.issuingOffice, place: place.name })
+      : t("sheet.seededEyebrow", { place: place.name }),
     title: text.headline,
     lede: text.body,
     rows,
