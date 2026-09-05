@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useApp } from "./state/AppState";
 import { skyCssVars } from "./design/tokens";
-import { PLACES } from "./data/seed";
 import { SkyBackground } from "./components/SkyBackground";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PerfOverlay } from "./components/PerfOverlay";
@@ -32,7 +31,7 @@ import { screenVariants } from "./animations/variants";
 const SHEET_EXIT_MS = 210;
 
 export default function App() {
-  const { tab, condition, timeOfDay, flatGlass, place, refresh, liveAqi } = useApp();
+  const { tab, condition, timeOfDay, flatGlass, place, places, refresh, liveAqi } = useApp();
   const [sheet, setSheet] = useState<SheetTarget | null>(null);
 
   /**
@@ -143,7 +142,7 @@ export default function App() {
             key={`${sheet.kind}-${sheet.kind === "card" ? sheet.id : sheet.placeId}`}
             target={sheet}
             place={place}
-            places={PLACES}
+            places={places}
             liveAqi={liveAqi}
             onClose={closeSheet}
             closing={closing}

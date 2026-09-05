@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { useApp } from "../state/AppState";
-import { PLACES } from "../data/seed";
 import { springCard, springReorder } from "../animations/variants";
 import { WARNING_COLOR } from "../design/tokens";
 import { WeatherIcon } from "./WeatherIcon";
@@ -19,7 +18,7 @@ import { useT } from "../i18n/context";
  * Hidden below `lg`; the mobile layout is untouched.
  */
 export function SideNav() {
-  const { tab, setTab, place, selectPlace, offline, dataAgeMinutes } = useApp();
+  const { tab, setTab, place, places: PLACES, selectPlace, offline, dataAgeMinutes } = useApp();
   const t = useT();
 
   return (

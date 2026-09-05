@@ -1,6 +1,5 @@
 import { Suspense, lazy, useState } from "react";
 import { motion } from "framer-motion";
-import { PLACES } from "../data/seed";
 import { useApp } from "../state/AppState";
 import { ScreenHeading } from "../components/ScreenHeading";
 import { WeatherIcon } from "../components/WeatherIcon";
@@ -25,7 +24,7 @@ const RadarMap = lazy(() =>
 
 export function PlacesScreen() {
   const t = useT();
-  const { place, selectPlace } = useApp();
+  const { place, places: PLACES, selectPlace } = useApp();
   const [radarOpen, setRadarOpen] = useState(false);
   const [radarClosing, setRadarClosing] = useState(false);
 

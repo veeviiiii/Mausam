@@ -243,6 +243,17 @@ const en: Dict = {
   "sheet.advice": "What to do",
   "sheet.capEyebrow": "IMD CAP feed · {place}",
 
+  "sheet.liveEyebrow": "NDMA Sachet · live CAP · {place}",
+  "adv.umbrellaWarnWhy": "A {level} warning for {event} is active until {until}.",
+  "adv.indoorsWarnWhy": "Lightning is named in the active {office} bulletin — vehicles and buildings are safe, open fields are not.",
+  "alert.badgeLive": "LIVE",
+  "alert.badgeSeeded": "SEEDED",
+  "alert.liveProvenance": "Live · {matched} of {scanned} CAP alerts match your places",
+  "alert.seededProvenance": "Seeded warnings — the live CAP feed did not answer",
+  "row.areaCovered": "Districts covered",
+  "row.capSource": "Feed",
+  "sheet.viewAlert": "Open the original bulletin",
+
   /* ---- alert detail rows ---- */
   "row.colourCode": "Colour code",
   "row.alertType": "Alert type",
@@ -634,6 +645,17 @@ const hi: Dict = {
   "sheet.sourceEnglish": "स्रोत विवरण अंग्रेज़ी में रखे गए हैं — इनमें IMD एंडपॉइंट नाम और कैश नीति उद्धृत है।",
   "sheet.advice": "क्या करें",
   "sheet.capEyebrow": "IMD CAP फ़ीड · {place}",
+
+  "sheet.liveEyebrow": "NDMA सचेत · लाइव CAP · {place}",
+  "adv.umbrellaWarnWhy": "{event} के लिए {level} चेतावनी {until} तक सक्रिय है।",
+  "adv.indoorsWarnWhy": "सक्रिय {office} बुलेटिन में बिजली का उल्लेख है — वाहन और इमारतें सुरक्षित हैं, खुले खेत नहीं।",
+  "alert.badgeLive": "लाइव",
+  "alert.badgeSeeded": "संग्रहीत",
+  "alert.liveProvenance": "लाइव · {scanned} CAP चेतावनियों में से {matched} आपके स्थानों से मेल खाती हैं",
+  "alert.seededProvenance": "संग्रहीत चेतावनियाँ — लाइव CAP फ़ीड ने जवाब नहीं दिया",
+  "row.areaCovered": "शामिल ज़िले",
+  "row.capSource": "फ़ीड",
+  "sheet.viewAlert": "मूल बुलेटिन खोलें",
 
   /* ---- alert detail rows ---- */
   "row.colourCode": "रंग कोड",

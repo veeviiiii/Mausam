@@ -39,8 +39,17 @@ export const AlertBanner = forwardRef<
     >
       <WarnGlyph />
       <span className="min-w-0 flex-1">
-        <span className="instrument block !text-white/90">
+        <span className="instrument flex flex-wrap items-center gap-1.5 !text-white/90">
           {place} · {t(`level.${alert.level}`)} · {t(`alert.kind.${alert.kind}`)}
+          {/* Which of these is a real bulletin and which is demo data is the
+              first thing anyone will ask. It is answered on the banner, not
+              buried in the sheet. */}
+          <span
+            className="rounded-[4px] border border-white/35 px-1 py-px !text-[8px] leading-none"
+            style={{ background: alert.live ? "rgba(255,255,255,.26)" : "transparent" }}
+          >
+            {t(alert.live ? "alert.badgeLive" : "alert.badgeSeeded")}
+          </span>
         </span>
         <span className="mt-1 block text-[12.8px] font-medium leading-[1.38]">
           {text.body}

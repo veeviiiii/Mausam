@@ -13,6 +13,12 @@ type Translate = (key: string, vars?: Record<string, string>) => string;
  * the Hindi behind.
  */
 export function capText(placeId: string, alert: Alert, t: Translate) {
+  // A live bulletin is shown exactly as issued. The dictionary holds Hindi for
+  // the SEEDED warning of the same city, and quietly swapping that in for a
+  // different, real alert would put words in IMD's mouth. Untranslated and
+  // true beats translated and wrong.
+  if (alert.live) return { headline: alert.headline, body: alert.body };
+
   const pick = (suffix: "headline" | "body", fallback: string) => {
     const key = `capText.${placeId}.${suffix}`;
     const value = t(key);

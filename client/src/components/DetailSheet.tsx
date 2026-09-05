@@ -164,6 +164,17 @@ export function DetailSheet({
             <p className="mt-2 text-[11.5px] leading-[1.45]" style={{ color: "var(--txt-2)" }}>
               {t("sheet.sourceEnglish")}
             </p>
+            {content.href ? (
+              <a
+                href={content.href}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="mt-2.5 inline-block text-[12px] font-semibold underline"
+                style={{ color: "var(--txt)" }}
+              >
+                {t("sheet.viewAlert")}
+              </a>
+            ) : null}
           </div>
         </motion.div>
       </motion.div>
@@ -214,6 +225,8 @@ interface SheetContent {
   lede: string;
   rows: [string, string][];
   source: string;
+  /** Live bulletins link back to the issuing feed, so the claim is checkable. */
+  href?: string;
 }
 
 function cardContent(
@@ -266,6 +279,12 @@ function alertContent(place: Place, t: Translate): SheetContent | null {
     [t("row.district"), place.station],
   ];
 
+  // A live bulletin carries the districts CAP actually named, which is usually
+  // wider than our one station — worth showing rather than quietly narrowing.
+  if (a.live) {
+    rows.push([t("row.areaCovered"), a.live.areaDesc], [t("row.capSource"), a.live.source]);
+  }
+
   if (a.track) {
     rows.push(
       [t("row.system"), a.track.systemName],
@@ -277,12 +296,14 @@ function alertContent(place: Place, t: Translate): SheetContent | null {
   const text = capText(place.id, a, t);
 
   return {
-    eyebrow: t("sheet.capEyebrow", { place: place.name }),
+    eyebrow: t(a.live ? "sheet.liveEyebrow" : "sheet.capEyebrow", { place: place.name }),
     title: text.headline,
     lede: text.body,
     rows,
-    source:
-      a.kind === "cyclone"
+    href: a.live?.href,
+    source: a.live
+      ? `Live Common Alerting Protocol bulletin, republished by NDMA's public Sachet feed and issued by ${a.issuingOffice}. IMD's own APIs require the calling server's IP to be whitelisted; NDMA carries the same IMD, SDMA and CWC bulletins with no key, so warnings are real while the forecast figures on other cards are still seeded. Cached five minutes — CAP arrives on issue, not on a schedule — and anything past its expiry time is dropped rather than shown.`
+      : a.kind === "cyclone"
         ? "Parsed from IMD's CAP XML feed and cross-referenced with the Interactive Cyclone Track bulletin, which supplies the fixes drawn on the Places map. Cyclone entries are cached on issue, never on a timer."
         : a.kind === "flash-flood"
           ? "Parsed from IMD's Flash Flood Guidance bulletin, which publishes as CAP alongside district warnings. The same parser handles all three warning types."

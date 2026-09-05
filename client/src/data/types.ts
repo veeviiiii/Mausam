@@ -41,6 +41,17 @@ export interface Alert {
   validUntil: string;
   issuingOffice: string;
   track?: CycloneTrack;
+  /**
+   * Present only on warnings that came from the live CAP feed. Its absence is
+   * what makes a warning seeded, so the UI never has to guess which it holds.
+   */
+  live?: {
+    /** The alert's own page, so the claim on screen is checkable. */
+    href: string;
+    /** CAP's district list, e.g. "Thane, Raigad districts of Maharashtra". */
+    areaDesc: string;
+    source: string;
+  };
 }
 
 /** Agromet Advisory Service bulletin — issued Tuesdays and Fridays. */

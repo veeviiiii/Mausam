@@ -33,6 +33,25 @@ export function advisoriesFor(place: Place): Advisory[] {
   const p = place;
   const rainNow = p.rainProbability[0] ?? 0;
 
+  /**
+   * What the active warning itself says.
+   *
+   * This exists because live CAP warnings arrive independently of the forecast
+   * numbers on the cards. A red "Heavy Rain" bulletin for Delhi sat next to a
+   * seeded 20% rain probability, and the advice list said "apply sunscreen"
+   * and never "take an umbrella" — technically consistent with the readings,
+   * and obviously wrong to anyone reading the banner above it.
+   *
+   * So the warning gets a vote. It is still one threshold on one field, and it
+   * still shows its working: the reason names the bulletin.
+   */
+  const warned = `${p.alert?.headline ?? ""} ${p.alert?.body ?? ""}`.toLowerCase();
+  const warnsRain = /rain|shower|downpour|precipitat/.test(warned);
+  const warnsStorm = /thunder|lightning|squall/.test(warned);
+  const warnLabel = p.alert
+    ? { level: p.alert.level, event: p.alert.headline, until: p.alert.validUntil }
+    : null;
+
   /* ---- life safety ---- */
   if (p.alert?.kind === "cyclone" && p.alert.track) {
     out.push({
@@ -54,8 +73,51 @@ export function advisoriesFor(place: Place): Advisory[] {
     });
   }
 
-  if (p.condition === "thunderstorm") {
-    out.push({ id: "indoors", titleKey: "adv.indoors", whyKey: "adv.indoorsWhy", tone: "danger" });
+  if (p.condition === "thunderstorm" || warnsStorm) {
+    out.push({
+      id: "indoors",
+      titleKey: "adv.indoors",
+      whyKey: warnsStorm && warnLabel ? "adv.indoorsWarnWhy" : "adv.indoorsWhy",
+      vars:
+        warnsStorm && warnLabel ? { office: p.alert?.issuingOffice ?? "IMD" } : undefined,
+      tone: "danger",
+    });
+  }
+
+  /* ---- what the warning is actually about ----
+
+     Ranked here, not down with the comfort items, because MAX_ITEMS is a real
+     cap and ordering decides what survives it. With "take an umbrella" sitting
+     below "apply sunscreen", a red Heavy Rain bulletin produced an advice list
+     that recommended sunscreen and never mentioned rain. Whatever the warning
+     is about outranks everything except life safety. */
+  const schoolWorst = Math.max(p.schoolDropRain, p.schoolPickupRain);
+  if (schoolWorst >= 60) {
+    out.push({
+      id: "school-umbrella",
+      titleKey: "adv.schoolUmbrella",
+      whyKey: "adv.schoolUmbrellaWhy",
+      vars: { pct: String(schoolWorst) },
+      tone: "info",
+    });
+  } else if (warnsRain && warnLabel) {
+    // The bulletin outranks the seeded probability: a live rain warning means
+    // rain regardless of what the forecast row happens to say.
+    out.push({
+      id: "umbrella",
+      titleKey: "adv.umbrella",
+      whyKey: "adv.umbrellaWarnWhy",
+      vars: { level: warnLabel.level, event: warnLabel.event, until: warnLabel.until },
+      tone: "warn",
+    });
+  } else if (rainNow >= 50 || p.condition === "rain") {
+    out.push({
+      id: "umbrella",
+      titleKey: "adv.umbrella",
+      whyKey: "adv.umbrellaWhy",
+      vars: { pct: String(rainNow) },
+      tone: "info",
+    });
   }
 
   /* ---- health ---- */
@@ -109,25 +171,6 @@ export function advisoriesFor(place: Place): Advisory[] {
   }
 
   /* ---- the ordinary, useful ones ---- */
-  const schoolWorst = Math.max(p.schoolDropRain, p.schoolPickupRain);
-  if (schoolWorst >= 60) {
-    out.push({
-      id: "school-umbrella",
-      titleKey: "adv.schoolUmbrella",
-      whyKey: "adv.schoolUmbrellaWhy",
-      vars: { pct: String(schoolWorst) },
-      tone: "info",
-    });
-  } else if (rainNow >= 50 || p.condition === "rain") {
-    out.push({
-      id: "umbrella",
-      titleKey: "adv.umbrella",
-      whyKey: "adv.umbrellaWhy",
-      vars: { pct: String(rainNow) },
-      tone: "info",
-    });
-  }
-
   if (p.uv >= 6) {
     out.push({
       id: "sunscreen",

@@ -3,17 +3,79 @@
 Status as of 05 Sep 2026. Every claim here was verified by calling the endpoint,
 not by reading its documentation.
 
-## The three feeds that are live
+## The four feeds that are live
 
 | Feed | Source | Key | Reaches the client via | Verified |
 |---|---|---|---|---|
+| **Severe warnings** | NDMA Sachet CAP | none | `/api/warnings` | 99 CAP alerts scanned in 3.7 s; live red Heavy Rain from `IMD-New-Delhi` |
 | **Air quality (India)** | CPCB via data.gov.in | `DATA_GOV_KEY` (server only) | `/api/aqi` | Mumbai `119` Moderate (NO2, 24 stations); Delhi `218` Poor (PM2.5, 42 stations) |
 | **Air quality (map)** | Open-Meteo | none | direct fetch | 70-point batch `200`, CORS `*` |
 | **Radar rain / wind** | RainViewer / OpenWeather | `VITE_OWM_KEY` (wind only) | direct tiles | both `200` |
 
-Everything else — forecasts, warnings, tides, agromet, aviation — is still the
-seeded dataset in `client/src/data/seed.ts`. That is a deliberate floor, not a
-gap waiting to be filled in a panic: see "Seed is the floor" below.
+Everything else — forecasts, tides, agromet, aviation — is still the seeded
+dataset in `client/src/data/seed.ts`. That is a deliberate floor, not a gap
+waiting to be filled in a panic: see "Seed is the floor" below.
+
+## Severe warnings: real, without waiting for IMD
+
+The headline feature runs on real bulletins. IMD's own APIs need the calling
+server's IP whitelisted, which is a procurement timeline — but **NDMA
+republishes the same IMD, SDMA and CWC bulletins** as public CAP 1.2 XML with no
+key and no whitelisting.
+
+```bash
+curl -s "https://sachet.ndma.gov.in/cap_public_website/rss/rss_india.xml" | head -40
+```
+
+Each alert carries `event`, `severity`, `urgency`, `certainty`,
+`effective`/`expires`, `areaDesc`, `instruction` and `sender` — everything
+`AlertBanner`, the advisory rules and the detail sheet already consume. CAP
+`severity` (Extreme/Severe/Moderate/Minor) maps onto IMD's own red/orange/
+yellow/green colour code.
+
+### Three things the first run got wrong
+
+Each found by running it against the live feed, not by reasoning:
+
+1. **Substring matching put a Tamil Nadu thunderstorm on the Indore card.**
+   "Dhar" (MP) matched inside "Dharmapuri" (TN). Matching is now word-boundary
+   and Unicode-aware.
+2. **An expired Chennai bulletin was displayed.** Sachet keeps recently lapsed
+   entries in the feed. Anything past its `expires`, or with `status != Actual`
+   or `msgType = Cancel`, is now dropped. An expired warning on screen is worse
+   than no warning — it is wrong in the direction that teaches people to ignore
+   the banner.
+3. **A red Heavy Rain warning produced no umbrella advice.** The advisories only
+   read the seeded rain probability, which for Delhi was low, so the list
+   recommended sunscreen. The warning now gets a vote, and warning-driven advice
+   is ranked directly below life-safety — ordering matters because `MAX_ITEMS`
+   is a real cap and comfort items were surviving it while the actual hazard
+   was not.
+
+### Nothing is passed off as ours
+
+- Every alert keeps its `sender` verbatim: the Delhi banner reads
+  **IMD New Delhi**, not "Mausam".
+- Each warning carries a **LIVE** or **SEEDED** badge on the banner itself, so
+  "which of these are real?" is answered without opening anything.
+- The Warnings tab states the count: *"Live · 1 of 99 CAP alerts match your
+  places"*.
+- The detail sheet links to the original bulletin on Sachet, so the claim on
+  screen is checkable.
+- **Live bulletins are never machine-translated.** The dictionary holds Hindi
+  for the *seeded* warning of the same city, and swapping that in for a
+  different real alert would put words in IMD's mouth. `capText` skips
+  translation whenever `alert.live` is set: untranslated and true beats
+  translated and wrong.
+
+### Matching and budget
+
+District keywords per saved place live in `api/warnings.ts`, matched against
+CAP's `areaDesc` (a real district list), with the headline as a fallback for
+anything whose detail did not arrive. Enrichment runs a 12-way worker pool
+under a 7 s wall-clock budget, well inside a serverless execution limit; the
+result is cached 5 minutes, because CAP arrives on issue rather than on a
+schedule. Failures cache for 1 minute.
 
 ## CPCB: the fast path, and why it needs a server
 
@@ -137,15 +199,21 @@ DATA_GOV_KEY=…      # server only — no VITE_ prefix, never in the bundle
 On Vercel, add **both** under Project → Settings → Environment Variables.
 `DATA_GOV_KEY` without the prefix is what makes `/api/aqi` work in production.
 
-## Still needed from IMD — the long pole
+## Still needed from IMD
 
-Nothing here unblocks IMD's own APIs. Those require **IP whitelisting for the
-calling server**, which means:
+Only the **forecast numbers** now — the 7-day city forecast, district nowcast,
+subdivision rainfall and sunrise/sunset endpoints. Those require **IP
+whitelisting for the calling server**, which means:
 
 - a host with a **static IP** (a small VPS — Railway, Render, Hetzner,
   DigitalOcean). Vercel is serverless with rotating IPs and cannot satisfy this.
 - IMD approval for that IP.
 
-Until then, forecasts and CAP warnings stay seeded. The architecture already
-assumes the split — the client never talks to a weather provider directly — so
-this is a deployment task, not a rewrite.
+That is no longer the critical path. Warnings — the feature this project exists
+for — are live through NDMA, and air quality is live through CPCB. What stays
+seeded is temperatures, tides, agromet and aviation: the numbers that make a
+demo look complete rather than the ones that make it matter.
+
+The architecture already assumes the split — the client never talks to a
+weather provider directly — so switching those on is a deployment task and one
+more route, not a rewrite.

@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useApp } from "../state/AppState";
-import { PLACES } from "../data/seed";
 import { BrandHeader } from "../components/BrandHeader";
 import { RollingText } from "../components/RollingText";
 import { WeatherIcon } from "../components/WeatherIcon";
@@ -34,6 +33,7 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
     moveCard,
     timeOfDay,
     liveAqi,
+    places: PLACES,
   } = useApp();
 
   const suppressed = suppressedPersonas(place, personas);

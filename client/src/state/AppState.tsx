@@ -14,6 +14,7 @@ import { PLACES, PLACE_BY_ID } from "../data/seed";
 import { scoreCards, setPlaceUniverse, type ScoredCard } from "../personalization/rules";
 import { timeOfDayFor } from "../lib/time";
 import { useLiveAqi, type LiveAqi } from "../lib/useLiveAqi";
+import { useLiveWarnings, type LiveWarnings } from "../lib/useLiveWarnings";
 
 setPlaceUniverse(PLACES);
 
@@ -51,8 +52,16 @@ interface AppActions {
 
 interface Derived {
   place: Place;
+  /**
+   * Every saved place with whatever live data has arrived folded in. Screens
+   * read this, never the raw seed array — otherwise the Warnings tab and the
+   * side rail would disagree with the homepage about what is happening.
+   */
+  places: Place[];
   /** Non-null once CPCB answers for this city; null on the seeded floor. */
   liveAqi: LiveAqi | null;
+  /** Non-null once the CAP feed answers; null on the seeded floor. */
+  liveWarnings: LiveWarnings | null;
   condition: Condition;
   timeOfDay: TimeOfDay;
   isDerivedSky: boolean;
@@ -166,21 +175,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const seedPlace = PLACE_BY_ID[state.placeId];
   const liveAqi = useLiveAqi(seedPlace.name);
 
+  /**
+   * Live severe-weather warnings, from NDMA's public CAP feed.
+   *
+   * IMD's own APIs need the calling server's IP whitelisted, which is a
+   * procurement timeline. NDMA republishes the same IMD/SDMA/CWC bulletins
+   * with no key, so the app's headline feature runs on real warnings while the
+   * forecast numbers stay seeded. Each alert keeps its issuing office, so
+   * nothing is passed off as ours.
+   */
+  const liveWarnings = useLiveWarnings();
+
+  /**
+   * One merge, at the place level, so everything downstream lights up without
+   * further wiring: the banner, the Warnings tab, the side-rail dots, the
+   * advisories, the travel card's boost and the tab-bar badge all read `alert`
+   * off a place and neither know nor care where it came from.
+   */
+  const places = useMemo<Place[]>(
+    () =>
+      PLACES.map((p) => {
+        const alert = liveWarnings?.alerts[p.id];
+        return alert ? { ...p, alert } : p;
+      }),
+    [liveWarnings],
+  );
+
+  // The travel card scores against the other saved places, so it has to see
+  // the merged set or it will count seeded warnings that are no longer there.
+  useEffect(() => setPlaceUniverse(places), [places]);
+
   const derived = useMemo<Derived>(() => {
+    const merged = places.find((p) => p.id === state.placeId) ?? seedPlace;
     const place: Place = liveAqi
-      ? { ...seedPlace, aqi: liveAqi.aqi, aqiCategory: liveAqi.category }
-      : seedPlace;
+      ? { ...merged, aqi: liveAqi.aqi, aqiCategory: liveAqi.category }
+      : merged;
     return {
       place,
+      places,
       liveAqi,
+      liveWarnings,
       condition: state.condOverride ?? place.condition,
       timeOfDay: state.todOverride ?? timeOfDayFor(place),
       isDerivedSky: state.condOverride === null && state.todOverride === null,
       cards: scoreCards(place, state.personas, state.manualOrder),
     };
   }, [
+    places,
     seedPlace,
     liveAqi,
+    liveWarnings,
+    state.placeId,
     state.condOverride,
     state.todOverride,
     state.personas,
