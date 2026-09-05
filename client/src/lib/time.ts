@@ -7,12 +7,41 @@ export const toMinutes = (hhmm: string) => {
 };
 
 /**
- * Time of day comes from the location's own sunrise/sunset, never the device
- * clock — a user checking a saved destination should see that destination's
- * day/night state. CLAUDE.md is explicit about this.
+ * What time is it *there*, in minutes past local midnight.
+ *
+ * Intl does the zone conversion, so this is correct whatever the device is set
+ * to — which is the point. A demo laptop in another timezone, or a user
+ * checking a saved Indian city from abroad, must not change what the app says
+ * about that city.
  */
-export function timeOfDayFor(place: Place): TimeOfDay {
-  const now = toMinutes(place.clock);
+export function nowMinutesInZone(timeZone: string, at: Date = new Date()): number {
+  try {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(at);
+    const hour = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+    const minute = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
+    // Intl renders midnight as "24" in some engines under hour12:false.
+    return (hour % 24) * 60 + minute;
+  } catch {
+    // An unknown zone must not blank the app; fall back to the device clock
+    // and say so, rather than freezing on a constant.
+    console.warn(`[Mausam] unknown timeZone "${timeZone}" — using the device clock`);
+    return at.getHours() * 60 + at.getMinutes();
+  }
+}
+
+/**
+ * Time of day comes from the location's own sunrise/sunset against the real
+ * time there, never the device clock and never a baked anchor — a user
+ * checking a saved destination should see that destination's day/night state.
+ * CLAUDE.md is explicit about this.
+ */
+export function timeOfDayFor(place: Place, nowMinutes?: number): TimeOfDay {
+  const now = nowMinutes ?? nowMinutesInZone(place.timeZone);
   const rise = toMinutes(place.sunrise);
   const set = toMinutes(place.sunset);
 

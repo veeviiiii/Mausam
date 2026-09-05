@@ -14,6 +14,7 @@ import {
 import type { Place } from "../../data/types";
 import { CARD_UI } from "./registry";
 import { useT } from "../../i18n/context";
+import type { LiveAqi } from "../../lib/useLiveAqi";
 
 interface Props {
   card: ScoredCard;
@@ -27,8 +28,8 @@ interface Props {
   onMove: (dir: "up" | "down") => void;
   /** Opens the stack's motion window so the press-scale is not blurred. */
   onPressStart?: () => void;
-  /** True once CPCB has answered — the health card's label says which it is. */
-  liveAqi?: boolean;
+  /** Non-null once CPCB has answered; the health card reads and labels it. */
+  liveAqi?: LiveAqi | null;
 }
 
 export function PersonaCard({
@@ -42,7 +43,7 @@ export function PersonaCard({
   onOpen,
   onMove,
   onPressStart,
-  liveAqi = false,
+  liveAqi = null,
 }: Props) {
   const t = useT();
   const [whyOpen, setWhyOpen] = useState(false);
@@ -113,7 +114,13 @@ export function PersonaCard({
         {/* The air card is the only one with a live feed today, so it is the
             only one whose label can be wrong. It says which number it holds. */}
         <span className="instrument min-w-0 flex-1 truncate">
-          {t(card.id === "health" && !liveAqi ? "source.health.fallback" : rule.sourceKey)}
+          {t(
+            card.id !== "health" || liveAqi
+              ? rule.sourceKey
+              : place.cpcbCity
+                ? "source.health.fallback"
+                : "source.health.noStation",
+          )}
         </span>
 
         {arrange ? (
@@ -135,7 +142,7 @@ export function PersonaCard({
 
       <h3 className="mb-1 text-[16px] font-semibold tracking-[-0.015em]">{title}</h3>
 
-      <ui.Body place={place} />
+      <ui.Body place={place} liveAqi={liveAqi} />
 
       {arrange ? null : (
         <div className="mt-auto">

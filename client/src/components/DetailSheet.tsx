@@ -245,7 +245,13 @@ function cardContent(
   const rows =
     id === "health" && liveAqi
       ? ([
-          ...detail.rows,
+          ...detail.rows.filter(([label]) => label !== t("row.pm10")),
+          // The seeded sheet estimates PM10 as 1.9x PM2.5. With a live station
+          // there is a real number, and where there is not, an invented one is
+          // worse than none.
+          ...(liveAqi.readings["PM10"] != null
+            ? ([[t("row.pm10"), `${liveAqi.readings["PM10"]} µg/m³`]] as [string, string][])
+            : []),
           [t("row.station"), liveAqi.station],
           [t("row.governing"), liveAqi.pollutant],
           [t("row.stations"), String(liveAqi.stationCount)],

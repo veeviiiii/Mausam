@@ -152,11 +152,67 @@ Per CLAUDE.md, no single TTL for everything:
 
 | Layer | TTL | Why |
 |---|---|---|
-| `api/aqi.ts` in-memory, success | 60 min | CPCB publishes hourly |
+| `api/aqi.ts` in-memory, success | 20 min | CPCB publishes on the hour; 60 min could serve a reading nearly two hours old |
 | `api/aqi.ts` in-memory, failure | 2 min | see below |
 | `/api/aqi` response header | `max-age=900, stale-while-revalidate=3600` | an edge miss never blocks a render |
 | `lib/openMeteoAqi.ts` | 30 min | AQI is an hourly product; re-asking inside it is wasted bytes |
-| `lib/useLiveAqi.ts` | session | switching places twice is one fetch |
+| `lib/useLiveAqi.ts` success | 10 min | switching places twice is one fetch, but an app left open must not freeze |
+| `lib/useLiveAqi.ts` failure | 45 s | a stall must not pin the card to seeded long after the route recovers |
+| HTTP response, success | `max-age=900` | matches the upstream cadence |
+| HTTP response, failure | `no-store` | see bug 4 above |
+
+### Four bugs found by checking a number against another source
+
+A user reported Indore showing 85 while another source showed ~101-103. The
+number turned out to be right; looking for the discrepancy found four real bugs
+around it.
+
+**1. "New Delhi" returned zero rows.** `filters[city]` is an exact match and
+CPCB files the capital's stations under `Delhi`. The Delhi card had been
+silently showing a seeded figure with a `CPCB · live` label for the entire life
+of the feature. Places now carry `cpcbCity` where it differs from the display
+name; verified row counts: Mumbai 175, Delhi 308, Chennai 49, Visakhapatnam 7,
+Indore 35.
+
+**2. Kochi has no CPCB station at all.** Kerala reports Kannur,
+Thiruvananthapuram and Thrissur — nothing in Kochi or Ernakulam. `cpcbCity` is
+absent for it, the app makes no request, and the card says
+*"CPCB has no monitoring station in Kochi, so this figure is seeded"* instead of
+implying coverage that does not exist.
+
+**3. `limit=200` truncated Delhi.** The city returns 308 rows across 44
+stations, so a third never reached the computation and the "worst station" could
+be one we never saw — under-reporting pollution, which is the worse direction to
+be wrong in. Raised to 600 (the endpoint returns everything at 500).
+
+**4. Failure responses were HTTP-cached for 15 minutes.** `max-age=900` was set
+on every response including `ok:false`, so one transient upstream stall was
+pinned in the *browser's* cache underneath every retry the route and the client
+could make. The symptom was baffling from outside: `curl` returned live data
+while the app sat on "seeded", because curl has no HTTP cache. Failures now send
+`no-store`, and pull-to-refresh fetches with `cache: "reload"`.
+
+### Why 85 and ~101 were both right
+
+Both are the Indian CPCB scale — the app never mixes in the US AQI the radar
+labels use. The gap is the concentration, and it lands on a band edge:
+
+| PM2.5 µg/m³ | CPCB AQI | Band |
+|---|---|---|
+| 51 | 85 | Satisfactory |
+| 53 | 88 | Satisfactory |
+| 60 | 100 | Satisfactory |
+| **61** | **101** | **Moderate** |
+| 62 | 104 | Moderate |
+
+85 corresponds to PM2.5 ≈ 51; 101-103 to ≈ 61-62. Ten µg/m³ apart — one hour of
+rain, or a different station — but it straddles the 60/61 breakpoint, which is
+exactly the Satisfactory/Moderate boundary. A small change in the air produces a
+large-looking change in the index and a change of category.
+
+The card now shows which station and which pollutant produced the figure, and
+when CPCB published it, so this is checkable from the screen rather than by
+reading the source.
 
 ### Failures are cached separately, and the upstream has a deadline
 
@@ -217,3 +273,20 @@ demo look complete rather than the ones that make it matter.
 The architecture already assumes the split — the client never talks to a
 weather provider directly — so switching those on is a deployment task and one
 more route, not a rewrite.
+
+## The clock
+
+Separate from the data, and worth stating because it looked like a data problem:
+the hourly strip used to open at 15:00 whatever the real time was.
+
+`clock: "14:20"` was compiled into every seeded place, `buildHourly` anchored to
+it, and `PLACES` baked the result at module load — so it was frozen twice over.
+`timeOfDayFor` read the same field, which meant **the sky's time-of-day was
+frozen too**, not just the carousel.
+
+Now: each place carries an IANA `timeZone`, `nowMinutesInZone` converts through
+`Intl` (so a laptop in another timezone does not change what the app says about
+Mumbai), and `useNow` ticks on the minute boundary so the strip and the sky
+actually advance. The readings stay synthetic until IMD's forecast endpoints are
+reachable — but the labels are real, because a strip that says 15:00 at noon is
+wrong in a way anyone can see.

@@ -3,6 +3,7 @@ import type { PersonaId, Place } from "../../data/types";
 import { WARNING_COLOR } from "../../design/tokens";
 import { WeatherIcon } from "../../components/WeatherIcon";
 import { useT } from "../../i18n/context";
+import type { LiveAqi } from "../../lib/useLiveAqi";
 import { Band, Bars, Gauge, KeyValues, Note, Readout, WindowPair } from "./viz";
 
 export type Translate = (key: string, vars?: Record<string, string>) => string;
@@ -22,7 +23,12 @@ export interface CardDetail {
 }
 
 export interface CardPresentation {
-  Body: (props: { place: Place }) => JSX.Element;
+  /**
+   * `liveAqi` is passed rather than pulled from context on purpose: a card
+   * presentation reaching into app state both inverts the layering and makes
+   * this module un-hot-reloadable, which cost a blank screen once already.
+   */
+  Body: (props: { place: Place; liveAqi?: LiveAqi | null }) => JSX.Element;
   detail: (place: Place, t: Translate) => CardDetail;
   icon: JSX.Element;
 }
@@ -38,23 +44,43 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         <circle cx="18" cy="7" r="2.4" fill="currentColor" opacity=".55" />
       </>
     ),
-    Body: ({ place }) => {
+    Body: ({ place, liveAqi }) => {
       const t = useT();
       const band = aqiBand(place.aqi);
+      // With a live station, show the pollutant that actually produced the
+      // index and its own concentration. Showing "PM2.5 34" beside a live
+      // NO2-governed AQI of 169 reads as a contradiction, and the station may
+      // not report PM2.5 at all.
+      const governing: [string, string] = liveAqi
+        ? [
+            `${liveAqi.pollutant} µg/m³`,
+            String(liveAqi.readings[liveAqi.pollutant] ?? place.pm25),
+          ]
+        : [t("kv.pm25"), String(place.pm25)];
       return (
         <>
           <Readout value={place.aqi} unit={t("unit.aqi", { band: band.name })} />
+          {/* Which station and when, on the card itself. Without this a figure
+              that disagrees with another source is unverifiable rather than
+              explainable — which is the whole point of the rest of this app. */}
+          <Note>
+            {liveAqi
+              ? t("card.health.station", {
+                  station: liveAqi.station,
+                  pollutant: liveAqi.pollutant,
+                  at: liveAqi.updated,
+                })
+              : place.cpcbCity
+                ? t("card.health.noLive")
+                : t("card.health.noStation", { place: place.name })}
+          </Note>
           <Band
             segments={AQI_BANDS.map((b) => ({ color: b.color }))}
             activeIndex={AQI_BANDS.indexOf(band)}
             labels={[t("band.good"), t("band.moderate"), t("band.severe")]}
           />
           <KeyValues
-            items={[
-              [t("kv.pm25"), String(place.pm25)],
-              [t("kv.pollen"), place.pollen],
-              [t("kv.humidity"), `${place.humidity}%`],
-            ]}
+            items={[governing, [t("kv.pollen"), place.pollen], [t("kv.humidity"), `${place.humidity}%`]]}
           />
         </>
       );
@@ -70,7 +96,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         [t("row.dewPoint"), `${p.dewPoint} °C`],
       ],
       source:
-        "CPCB real-time AQI via data.gov.in, cached 60 minutes — the interval CPCB actually publishes on. No IP whitelisting needed, which is why this is the first live feed we wire up.",
+        "CPCB real-time AQI via data.gov.in, cached 20 minutes. CPCB publishes on the hour, so a full-hour cache could serve a reading nearly two hours old — long enough to visibly disagree with another source during rain, when PM2.5 moves fast. No IP whitelisting needed, which is why this is the first live feed we wired up.",
     }),
   },
 

@@ -389,6 +389,11 @@ const en: Dict = {
   /* ---- card source lines ---- */
   "source.health": "CPCB · live",
   "source.health.fallback": "CPCB · seeded",
+  "card.health.station": "{station} · {pollutant} governing · CPCB {at}",
+  "card.health.noLive": "Seeded reading — CPCB has not answered yet",
+  "card.health.noStation": "CPCB has no monitoring station in {place}, so this figure is seeded",
+  "source.health.noStation": "CPCB · no station",
+
   "row.station": "Reporting station",
   "row.governing": "Governing pollutant",
   "row.stations": "Stations in city",
@@ -790,6 +795,11 @@ const hi: Dict = {
   /* ---- card source lines ---- */
   "source.health": "CPCB · लाइव",
   "source.health.fallback": "CPCB · संग्रहीत",
+  "card.health.station": "{station} · {pollutant} निर्धारक · CPCB {at}",
+  "card.health.noLive": "संग्रहीत माप — CPCB ने अभी उत्तर नहीं दिया",
+  "card.health.noStation": "{place} में CPCB का कोई निगरानी स्टेशन नहीं है, इसलिए यह आँकड़ा संग्रहीत है",
+  "source.health.noStation": "CPCB · कोई स्टेशन नहीं",
+
   "row.station": "रिपोर्टिंग स्टेशन",
   "row.governing": "निर्धारक प्रदूषक",
   "row.stations": "शहर में स्टेशन",

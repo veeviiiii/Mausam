@@ -31,13 +31,14 @@ const BASE_PLACES: Omit<Place, "hourly">[] = [
     id: "mumbai",
     name: "Mumbai",
     station: "Santacruz · MH",
+    cpcbCity: "Mumbai",
     coastal: true,
     lat: 19.09,
     lon: 72.87,
     condition: "rain",
     sunrise: "06:26",
     sunset: "18:47",
-    clock: "14:20",
+    timeZone: "Asia/Kolkata",
     temp: 27,
     feelsLike: 31,
     humidity: 88,
@@ -102,13 +103,15 @@ const BASE_PLACES: Omit<Place, "hourly">[] = [
     id: "delhi",
     name: "New Delhi",
     station: "Safdarjung · DL",
+    // CPCB files these stations under "Delhi"; "New Delhi" returns nothing.
+    cpcbCity: "Delhi",
     coastal: false,
     lat: 28.58,
     lon: 77.21,
     condition: "partly",
     sunrise: "06:00",
     sunset: "18:31",
-    clock: "14:20",
+    timeZone: "Asia/Kolkata",
     temp: 34,
     feelsLike: 41,
     humidity: 62,
@@ -173,13 +176,14 @@ const BASE_PLACES: Omit<Place, "hourly">[] = [
     id: "chennai",
     name: "Chennai",
     station: "Nungambakkam · TN",
+    cpcbCity: "Chennai",
     coastal: true,
     lat: 13.08,
     lon: 80.27,
     condition: "partly",
     sunrise: "06:00",
     sunset: "18:16",
-    clock: "14:20",
+    timeZone: "Asia/Kolkata",
     temp: 34,
     feelsLike: 40,
     humidity: 70,
@@ -237,13 +241,15 @@ const BASE_PLACES: Omit<Place, "hourly">[] = [
     id: "kochi",
     name: "Kochi",
     station: "Ernakulam · KL",
+    // No CPCB station in Kochi. Kerala reports Kannur, Thiruvananthapuram
+    // and Thrissur only, so this card stays seeded and says why.
     coastal: true,
     lat: 9.93,
     lon: 76.27,
     condition: "thunderstorm",
     sunrise: "06:16",
     sunset: "18:29",
-    clock: "14:20",
+    timeZone: "Asia/Kolkata",
     temp: 26,
     feelsLike: 30,
     humidity: 91,
@@ -308,13 +314,14 @@ const BASE_PLACES: Omit<Place, "hourly">[] = [
     id: "vizag",
     name: "Visakhapatnam",
     station: "Waltair · AP",
+    cpcbCity: "Visakhapatnam",
     coastal: true,
     lat: 17.69,
     lon: 83.22,
     condition: "overcast",
     sunrise: "05:47",
     sunset: "18:07",
-    clock: "14:20",
+    timeZone: "Asia/Kolkata",
     temp: 29,
     feelsLike: 34,
     humidity: 84,
@@ -390,13 +397,14 @@ const BASE_PLACES: Omit<Place, "hourly">[] = [
     id: "indore",
     name: "Indore",
     station: "Indore AP · MP",
+    cpcbCity: "Indore",
     coastal: false,
     lat: 22.72,
     lon: 75.86,
     condition: "rain",
     sunrise: "06:12",
     sunset: "18:42",
-    clock: "14:20",
+    timeZone: "Asia/Kolkata",
     temp: 26,
     feelsLike: 29,
     humidity: 86,
@@ -490,9 +498,21 @@ const asHours = (hhmm: string) => {
   return h + m / 60;
 };
 
-function buildHourly(p: Omit<Place, "hourly">): HourlyPoint[] {
+/**
+ * Twenty-four hours from a given real hour.
+ *
+ * The readings are synthetic — a diurnal curve over the station's current
+ * values — and stay that way until IMD's forecast endpoints are reachable. The
+ * LABELS are not: they count forward from the hour it actually is in this
+ * city, because a strip that says 15:00 at noon is wrong in a way anyone can
+ * see, regardless of how plausible the temperatures are.
+ *
+ * `startHour` is a real local hour (fractional), from nowInZone(p.timeZone).
+ * Nothing here reads the device clock or a baked anchor.
+ */
+export function buildHourly(p: Omit<Place, "hourly">, startHour: number): HourlyPoint[] {
   const rnd = seededRandom(p.id);
-  const start = asHours(p.clock);
+  const start = startHour;
   const rise = asHours(p.sunrise);
   const set = asHours(p.sunset);
   const noon = (rise + set) / 2;
@@ -540,7 +560,19 @@ function buildHourly(p: Omit<Place, "hourly">): HourlyPoint[] {
   });
 }
 
-export const PLACES: Place[] = BASE_PLACES.map((p) => ({ ...p, hourly: buildHourly(p) }));
+/**
+ * The saved places, with an EMPTY hourly strip.
+ *
+ * Deliberate: the strip depends on what time it is, and a value baked at module
+ * load is frozen for the life of the page. That was the bug — every place's
+ * carousel started at 14:00 because a `clock: "14:20"` string was compiled into
+ * the seed. AppState fills `hourly` from the real local hour and refills it as
+ * the clock moves; the carousel and the chart both render nothing for an empty
+ * array, so a consumer that forgets shows a gap rather than a lie.
+ */
+export const PLACES: Place[] = BASE_PLACES.map((p) => ({ ...p, hourly: [] }));
+
+export { BASE_PLACES };
 
 export const PLACE_BY_ID = Object.fromEntries(PLACES.map((p) => [p.id, p])) as Record<string, Place>;
 

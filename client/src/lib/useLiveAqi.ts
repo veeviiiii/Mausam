@@ -22,14 +22,46 @@ export interface LiveAqi {
   station: string;
   updated: string;
   stationCount: number;
+  /** The governing station's own concentrations, µg/m³. */
+  readings: Partial<Record<string, number>>;
 }
 
-/** Survives remounts and tab switches, so switching places twice is one fetch. */
-const cache = new Map<string, LiveAqi | null>();
+/**
+ * Survives remounts and tab switches, so switching places twice is one fetch —
+ * but it EXPIRES. A session-lifetime cache meant an app left open for an
+ * afternoon showed the morning's air quality forever, which is the same frozen
+ * failure the hourly strip had. Shorter than the server's TTL, so a refresh
+ * reaches the route and the route decides whether to reach CPCB.
+ */
+const CLIENT_TTL_MS = 10 * 60 * 1000;
+
+/**
+ * A miss is retried far sooner than a hit is refreshed.
+ *
+ * Same mistake as the server's original single TTL, made a second time one
+ * layer up: caching a failure for the success window meant one slow moment at
+ * data.gov.in pinned the card to "seeded" for ten minutes, long after the
+ * route itself had recovered. Caught by the route answering ok:true while the
+ * card still said seeded.
+ */
+const CLIENT_FAIL_TTL_MS = 45 * 1000;
+
+const cache = new Map<string, { at: number; value: LiveAqi | null }>();
 const inflight = new Map<string, Promise<LiveAqi | null>>();
 
-async function load(city: string): Promise<LiveAqi | null> {
-  const res = await fetch(`/api/aqi?city=${encodeURIComponent(city)}`);
+/** Called by pull-to-refresh: the user asking again should actually ask. */
+export function invalidateLiveAqi() {
+  cache.clear();
+}
+
+async function load(city: string, force = false): Promise<LiveAqi | null> {
+  // Pull-to-refresh means "ask again for real", so it steps around the HTTP
+  // cache. Without this the browser can answer from a cached response the user
+  // is explicitly trying to replace — which is exactly how a stale failure hid
+  // behind three layers of retry logic that were all working correctly.
+  const res = await fetch(`/api/aqi?city=${encodeURIComponent(city)}`, {
+    cache: force ? "reload" : "default",
+  });
   if (!res.ok) return null;
   const json = await res.json();
   if (!json?.ok) {
@@ -45,26 +77,39 @@ async function load(city: string): Promise<LiveAqi | null> {
     station: json.station,
     updated: json.updated,
     stationCount: json.stationCount,
+    readings: json.readings ?? {},
   };
 }
 
-export function useLiveAqi(city: string): LiveAqi | null {
-  const [value, setValue] = useState<LiveAqi | null>(() => cache.get(city) ?? null);
+/**
+ * `city` is the CPCB name, which is not always the display name — see
+ * Place.cpcbCity. Pass undefined for a place CPCB does not cover; the hook
+ * then makes no request at all rather than burning one on a guaranteed miss.
+ */
+export function useLiveAqi(city: string | undefined, epoch = 0): LiveAqi | null {
+  const [value, setValue] = useState<LiveAqi | null>(() =>
+    city ? (cache.get(city)?.value ?? null) : null,
+  );
 
   useEffect(() => {
-    let alive = true;
+    if (!city) {
+      setValue(null);
+      return;
+    }
 
-    if (cache.has(city)) {
-      setValue(cache.get(city) ?? null);
+    let alive = true;
+    const hit = cache.get(city);
+    if (hit && Date.now() - hit.at < (hit.value ? CLIENT_TTL_MS : CLIENT_FAIL_TTL_MS)) {
+      setValue(hit.value);
       return;
     }
 
     let promise = inflight.get(city);
     if (!promise) {
-      promise = load(city)
+      promise = load(city, epoch > 0)
         .catch(() => null)
         .then((v) => {
-          cache.set(city, v);
+          cache.set(city, { at: Date.now(), value: v });
           inflight.delete(city);
           return v;
         });
@@ -78,7 +123,7 @@ export function useLiveAqi(city: string): LiveAqi | null {
     return () => {
       alive = false;
     };
-  }, [city]);
+  }, [city, epoch]);
 
   return value;
 }

@@ -113,6 +113,17 @@ export interface Place {
   id: string;
   name: string;
   station: string;
+  /**
+   * What CPCB calls this city in the data.gov.in feed, when that differs from
+   * our display name — `filters[city]` is an exact match, so "New Delhi"
+   * returns zero rows where "Delhi" returns three hundred.
+   *
+   * Absent means CPCB has no station in this city at all. That is a real state,
+   * not an oversight: Kerala currently reports Kannur, Thiruvananthapuram and
+   * Thrissur, and nothing in Kochi. The card says so instead of silently
+   * showing a seeded figure that looks live.
+   */
+  cpcbCity?: string;
   coastal: boolean;
   lat: number;
   lon: number;
@@ -120,8 +131,16 @@ export interface Place {
   condition: Condition;
   sunrise: string;
   sunset: string;
-  /** Demo clock, IST. Time of day is derived from this against sunrise/sunset. */
-  clock: string;
+  /**
+   * IANA zone for this location's own clock.
+   *
+   * Time of day and the hourly strip are derived from the real time HERE, not
+   * from the device. A user in London checking a saved Indian city must see
+   * that city's night, and the demo laptop's timezone must not change what the
+   * app claims about Mumbai. All six seeded places are Asia/Kolkata; the field
+   * exists so adding a place outside IST is a data change, not a code change.
+   */
+  timeZone: string;
 
   temp: number;
   feelsLike: number;
@@ -139,7 +158,11 @@ export interface Place {
 
   rain24: number;
   rainProbability: number[];
-  /** 24 rolling hours from `clock`, used by the carousel and the metric chart. */
+  /**
+   * 24 rolling hours from the real local hour, used by the carousel and the
+   * metric chart. Time-dependent, so it is NOT baked into the seed export —
+   * AppState rebuilds it as the clock moves. See buildHourly in data/seed.ts.
+   */
   hourly: HourlyPoint[];
 
   runStart: string;

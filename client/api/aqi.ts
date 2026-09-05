@@ -132,6 +132,8 @@ interface StationAqi {
   aqi: number;
   pollutant: Pollutant;
   updated: string;
+  /** Every concentration this station reported, µg/m³. */
+  readings: Partial<Record<Pollutant, number>>;
 }
 
 interface CityAqi {
@@ -146,6 +148,14 @@ interface CityAqi {
   station: string;
   updated: string;
   stationCount: number;
+  /**
+   * The governing station's own concentrations. Returned so the card can show
+   * a live PM2.5 beside a live AQI: it previously showed the live index next to
+   * the SEEDED PM2.5, which reads as a contradiction to anyone who knows the
+   * scale ("AQI 169 with PM2.5 34?") and is exactly the kind of unexplainable
+   * number this project is built to avoid.
+   */
+  readings: Partial<Record<Pollutant, number>>;
   source: "CPCB via data.gov.in";
 }
 
@@ -157,11 +167,27 @@ interface AqiFailure {
 const RESOURCE = "3b01bcb8-0b14-4abf-b6f2-c1bfd384ba69";
 
 /**
- * CPCB publishes hourly, so anything shorter is wasted bytes on both sides.
- * Matched to the source's real cadence, per CLAUDE.md's rule that every TTL is
- * justified by the feed rather than picked once for everything.
+ * Rows per request.
+ *
+ * This was 200, which silently truncated Delhi: the city reports 308 rows
+ * across 43 stations, so a third of them never reached the sub-index
+ * computation and the "worst station" could easily be a station we never saw.
+ * A city AQI computed from two thirds of the city is wrong in the direction
+ * that under-reports pollution, which is the worse direction.
+ *
+ * The endpoint returns everything at 500; anything above that changes nothing.
+ * Verified: total=308, returned=200 at limit 200, 308 at limit 500.
  */
-const TTL_MS = 60 * 60 * 1000;
+const ROW_LIMIT = 600;
+
+/**
+ * CPCB publishes on the hour, so a 60-minute cache was the wrong shape: a read
+ * taken at :59 would serve a reading up to two hours old, and PM2.5 moves fast
+ * enough during rain that the number visibly disagrees with other sources.
+ * Twenty minutes bounds the staleness at one publish interval plus a third,
+ * still without hammering a feed that changes hourly.
+ */
+const TTL_MS = 20 * 60 * 1000;
 
 /**
  * Failures get their own, much shorter TTL.
@@ -181,7 +207,16 @@ const FAIL_TTL_MS = 2 * 60 * 1000;
  * the client waits on a card that already has a perfectly good seeded number
  * on screen. Failing at 6s and letting the seed stand is strictly better.
  */
-const UPSTREAM_TIMEOUT_MS = 6000;
+const UPSTREAM_TIMEOUT_MS = 5000;
+
+/**
+ * One retry, because the observed failure mode is a transient stall rather
+ * than an outage: the same URL answers in 0.5s, then times out, then answers
+ * again. A single retry converts most of those into a hit. Worst case is
+ * 5s + 4s = 9s, deliberately inside a 10s serverless budget — the retry must
+ * never be the thing that kills the function.
+ */
+const RETRY_TIMEOUT_MS = 4000;
 
 const cache = new Map<string, { at: number; value: CityAqi | AqiFailure }>();
 
@@ -206,8 +241,21 @@ function reduce(city: string, records: RawRecord[]): CityAqi | AqiFailure {
     if (idx == null) continue;
 
     const existing = byStation.get(station);
-    if (!existing || idx > existing.aqi) {
-      byStation.set(station, { station, aqi: idx, pollutant, updated: r.last_update ?? "" });
+    if (!existing) {
+      byStation.set(station, {
+        station,
+        aqi: idx,
+        pollutant,
+        updated: r.last_update ?? "",
+        readings: { [pollutant]: value },
+      });
+      continue;
+    }
+
+    existing.readings[pollutant] = value;
+    if (idx > existing.aqi) {
+      existing.aqi = idx;
+      existing.pollutant = pollutant;
     }
   }
 
@@ -226,6 +274,7 @@ function reduce(city: string, records: RawRecord[]): CityAqi | AqiFailure {
     station: worst.station,
     updated: worst.updated,
     stationCount: byStation.size,
+    readings: worst.readings,
     source: "CPCB via data.gov.in",
   };
 }
@@ -237,29 +286,34 @@ async function cityAqi(city: string, apiKey: string): Promise<CityAqi | AqiFailu
 
   const url =
     `https://api.data.gov.in/resource/${RESOURCE}` +
-    `?api-key=${encodeURIComponent(apiKey)}&format=json&limit=200` +
+    `?api-key=${encodeURIComponent(apiKey)}&format=json&limit=${ROW_LIMIT}` +
     `&filters%5Bcity%5D=${encodeURIComponent(city)}`;
 
-  let result: CityAqi | AqiFailure;
-  try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS) });
-    if (!res.ok) {
-      result = { ok: false, reason: `data.gov.in returned ${res.status}` };
-    } else {
+  const attempt = async (timeoutMs: number): Promise<CityAqi | AqiFailure> => {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+      if (!res.ok) return { ok: false, reason: `data.gov.in returned ${res.status}` };
       // A 200 carrying an HTML error page is a real failure mode here, so the
       // parse is inside the try rather than trusted.
       const json = (await res.json()) as { records?: RawRecord[] };
-      result = reduce(city, json.records ?? []);
+      return reduce(city, json.records ?? []);
+    } catch (err) {
+      const e = err as Error;
+      return {
+        ok: false,
+        reason:
+          e.name === "TimeoutError" || e.name === "AbortError"
+            ? `data.gov.in did not answer within ${timeoutMs}ms`
+            : `data.gov.in unreachable: ${e.message}`,
+      };
     }
-  } catch (err) {
-    const e = err as Error;
-    result = {
-      ok: false,
-      reason:
-        e.name === "TimeoutError" || e.name === "AbortError"
-          ? `data.gov.in did not answer within ${UPSTREAM_TIMEOUT_MS}ms`
-          : `data.gov.in unreachable: ${e.message}`,
-    };
+  };
+
+  let result = await attempt(UPSTREAM_TIMEOUT_MS);
+  // Retry only a transport failure. A "no stations reporting" answer is a real
+  // answer and asking again will not change it.
+  if (!result.ok && /did not answer|unreachable|returned 5/.test(result.reason)) {
+    result = await attempt(RETRY_TIMEOUT_MS);
   }
 
   cache.set(key, { at: Date.now(), value: result });
@@ -294,9 +348,23 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   const result = await cityAqi(city, apiKey);
 
-  // Matches the upstream cadence: CPCB publishes hourly, and a stale-while-
-  // revalidate window means an edge miss never blocks a render.
-  res.setHeader("cache-control", "public, max-age=900, stale-while-revalidate=3600");
+  /**
+   * A failure must not be cached by the browser.
+   *
+   * This was `max-age=900` on every response, failures included — so one
+   * transient upstream stall was pinned in the HTTP cache for fifteen minutes,
+   * underneath every retry the client and the route could make. The symptom was
+   * baffling from the outside: curl returned live data while the app sat on
+   * "seeded", because curl does not have an HTTP cache and the browser does.
+   *
+   * Successes still cache to the upstream cadence.
+   */
+  res.setHeader(
+    "cache-control",
+    result.ok
+      ? "public, max-age=900, stale-while-revalidate=3600"
+      : "no-store",
+  );
   res.statusCode = 200;
   res.end(JSON.stringify(result));
 }

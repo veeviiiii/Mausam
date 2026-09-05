@@ -24,7 +24,7 @@ const RadarMap = lazy(() =>
 
 export function PlacesScreen() {
   const t = useT();
-  const { place, places: PLACES, selectPlace } = useApp();
+  const { place, places: PLACES, selectPlace, nowFor } = useApp();
   const [radarOpen, setRadarOpen] = useState(false);
   const [radarClosing, setRadarClosing] = useState(false);
 
@@ -76,7 +76,7 @@ export function PlacesScreen() {
               <span className="min-w-0 flex-1">
                 <b className="block text-[15px] font-semibold">{p.name}</b>
                 <small className="mt-px block text-[11.5px]" style={{ color: "var(--txt-2)" }}>
-                  {t(`cond.${p.condition}`)} · {t(`tod.${timeOfDayFor(p)}`)} · {p.station}
+                  {t(`cond.${p.condition}`)} · {t(`tod.${timeOfDayFor(p, nowFor(p))}`)} · {p.station}
                 </small>
               </span>
               <span className="tnum ml-auto text-[25px] font-light tracking-[-0.03em]">{p.temp}°</span>

@@ -26,6 +26,7 @@ export function YouScreen() {
     setTodOverride,
     isDerivedSky,
     timeOfDay,
+    nowFor,
   } = useApp();
 
   return (
@@ -104,7 +105,7 @@ export function YouScreen() {
       <div className="px-4 pb-3 lg:px-0">
         <p className="instrument on-sky pb-2">
           {isDerivedSky
-            ? timeOfDayReason(place, timeOfDayFor(place), t)
+            ? timeOfDayReason(place, timeOfDayFor(place, nowFor(place)), t)
             : t("you.skyOverridden")}
         </p>
         <ChipRow

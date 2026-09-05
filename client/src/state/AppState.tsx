@@ -10,10 +10,11 @@ import {
 } from "react";
 import type { Condition, TimeOfDay } from "../design/tokens";
 import type { PersonaId, Place } from "../data/types";
-import { PLACES, PLACE_BY_ID } from "../data/seed";
+import { PLACES, PLACE_BY_ID, buildHourly } from "../data/seed";
 import { scoreCards, setPlaceUniverse, type ScoredCard } from "../personalization/rules";
-import { timeOfDayFor } from "../lib/time";
-import { useLiveAqi, type LiveAqi } from "../lib/useLiveAqi";
+import { nowMinutesInZone, timeOfDayFor } from "../lib/time";
+import { useNow } from "../lib/useNow";
+import { invalidateLiveAqi, useLiveAqi, type LiveAqi } from "../lib/useLiveAqi";
 import { useLiveWarnings, type LiveWarnings } from "../lib/useLiveWarnings";
 
 setPlaceUniverse(PLACES);
@@ -35,6 +36,8 @@ interface AppState {
   loading: boolean;
   /** Minutes since the last successful fetch. */
   dataAgeMinutes: number;
+  /** Bumped by pull-to-refresh; re-runs the live fetches. */
+  refreshEpoch: number;
 }
 
 interface AppActions {
@@ -52,6 +55,8 @@ interface AppActions {
 
 interface Derived {
   place: Place;
+  /** Real local time at a place, in minutes past midnight. Advances. */
+  nowFor: (place: Place) => number;
   /**
    * Every saved place with whatever live data has arrived folded in. Screens
    * read this, never the raw seed array — otherwise the Warnings tab and the
@@ -83,6 +88,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     tab: "home",
     loading: false,
     dataAgeMinutes: 4,
+    refreshEpoch: 0,
   });
 
   const loadTimer = useRef<number | null>(null);
@@ -154,7 +160,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setTab: (t) => setState((s) => ({ ...s, tab: t })),
 
       refresh: async () => {
-        setState((s) => ({ ...s, loading: true }));
+        // Pull-to-refresh has to actually re-ask. It used to spin for 420ms and
+        // change nothing, because the live readings sat behind caches that only
+        // a reload could clear.
+        invalidateLiveAqi();
+        setState((s) => ({ ...s, loading: true, refreshEpoch: s.refreshEpoch + 1 }));
         await new Promise((r) => setTimeout(r, 420));
         setState((s) => ({ ...s, loading: false, offline: false, dataAgeMinutes: 0 }));
       },
@@ -173,7 +183,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
    * moment before it lands (and forever, if data.gov.in is down mid-demo).
    */
   const seedPlace = PLACE_BY_ID[state.placeId];
-  const liveAqi = useLiveAqi(seedPlace.name);
+
+  /**
+   * Keyed on the CPCB city name, not the display name. `filters[city]` is an
+   * exact match, so "New Delhi" quietly returned zero rows for the entire life
+   * of this feature while the card showed a seeded figure. Places CPCB does not
+   * cover at all pass undefined and make no request.
+   */
+  const liveAqi = useLiveAqi(seedPlace.cpcbCity, state.refreshEpoch);
 
   /**
    * Live severe-weather warnings, from NDMA's public CAP feed.
@@ -187,6 +204,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const liveWarnings = useLiveWarnings();
 
   /**
+   * The clock, ticking. Everything time-dependent hangs off this: the hourly
+   * strip's labels, each place's time-of-day, and therefore the sky.
+   *
+   * This is what was missing. `clock: "14:20"` was compiled into every seeded
+   * place and `hourly` was built once at module load, so the strip opened at
+   * 15:00 whatever the real time was and never moved. Synthetic readings are a
+   * deliberate stand-in until IMD's forecast endpoints are reachable; a frozen
+   * clock was just a bug wearing the same clothes.
+   */
+  const now = useNow();
+  const nowFor = useCallback(
+    (p: Place) => nowMinutesInZone(p.timeZone, now),
+    [now],
+  );
+
+  /**
    * One merge, at the place level, so everything downstream lights up without
    * further wiring: the banner, the Warnings tab, the side-rail dots, the
    * advisories, the travel card's boost and the tab-bar badge all read `alert`
@@ -196,9 +229,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     () =>
       PLACES.map((p) => {
         const alert = liveWarnings?.alerts[p.id];
-        return alert ? { ...p, alert } : p;
+        // Rebuilt against this place's own local hour, so the strip starts at
+        // the hour it actually is there — not the device's, and not a baked one.
+        const hourly = buildHourly(p, nowMinutesInZone(p.timeZone, now) / 60);
+        return alert ? { ...p, alert, hourly } : { ...p, hourly };
       }),
-    [liveWarnings],
+    [liveWarnings, now],
   );
 
   // The travel card scores against the other saved places, so it has to see
@@ -207,22 +243,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const derived = useMemo<Derived>(() => {
     const merged = places.find((p) => p.id === state.placeId) ?? seedPlace;
+    // PM2.5 comes across with the index so the two cannot disagree. Anything
+    // the station did not report keeps its seeded value rather than showing a
+    // blank, which is the same floor the rest of the data uses.
     const place: Place = liveAqi
-      ? { ...merged, aqi: liveAqi.aqi, aqiCategory: liveAqi.category }
+      ? {
+          ...merged,
+          aqi: liveAqi.aqi,
+          aqiCategory: liveAqi.category,
+          pm25: liveAqi.readings["PM2.5"] ?? merged.pm25,
+        }
       : merged;
     return {
       place,
       places,
+      nowFor,
       liveAqi,
       liveWarnings,
       condition: state.condOverride ?? place.condition,
-      timeOfDay: state.todOverride ?? timeOfDayFor(place),
+      timeOfDay: state.todOverride ?? timeOfDayFor(place, nowFor(place)),
       isDerivedSky: state.condOverride === null && state.todOverride === null,
       cards: scoreCards(place, state.personas, state.manualOrder),
     };
   }, [
     places,
     seedPlace,
+    nowFor,
     liveAqi,
     liveWarnings,
     state.placeId,

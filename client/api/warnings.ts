@@ -311,9 +311,14 @@ async function load(): Promise<Success | Failure> {
 export default async function handler(_req: IncomingMessage, res: ServerResponse) {
   res.setHeader("content-type", "application/json; charset=utf-8");
 
+  // Failures are never cached by the browser — see the note in api/aqi.ts.
+  // An HTTP-cached failure sits underneath every retry the app can make.
+  const headerFor = (ok: boolean) =>
+    ok ? "public, max-age=120, stale-while-revalidate=600" : "no-store";
+
   const ttl = cache?.value.ok ? TTL_MS : FAIL_TTL_MS;
   if (cache && Date.now() - cache.at < ttl) {
-    res.setHeader("cache-control", "public, max-age=120, stale-while-revalidate=600");
+    res.setHeader("cache-control", headerFor(cache.value.ok));
     res.statusCode = 200;
     res.end(JSON.stringify(cache.value));
     return;
@@ -322,7 +327,7 @@ export default async function handler(_req: IncomingMessage, res: ServerResponse
   const value = await load();
   cache = { at: Date.now(), value };
 
-  res.setHeader("cache-control", "public, max-age=120, stale-while-revalidate=600");
+  res.setHeader("cache-control", headerFor(value.ok));
   res.statusCode = 200;
   res.end(JSON.stringify(value));
 }

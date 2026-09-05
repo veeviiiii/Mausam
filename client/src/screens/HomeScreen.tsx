@@ -205,7 +205,7 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
                 onOpen={() => onOpen({ kind: "card", id: card.id })}
                 onMove={(dir) => moveCard(card.id, dir)}
                 onPressStart={beginMotion}
-                liveAqi={liveAqi !== null}
+                liveAqi={liveAqi}
               />
             ))}
           </AnimatePresence>
