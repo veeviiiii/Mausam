@@ -6,6 +6,7 @@ import { RollingText } from "../components/RollingText";
 import { WeatherIcon } from "../components/WeatherIcon";
 import { AlertBanner, NoAlerts } from "../components/AlertBanner";
 import { HourlyCarousel } from "../components/HourlyCarousel";
+import { TopAdvice } from "../components/TopAdvice";
 import { HourlyMetricChart } from "../components/HourlyMetricChart";
 import { SkeletonStack } from "../components/SkeletonCard";
 import { PersonaCard } from "../features/cards/PersonaCard";
@@ -107,6 +108,11 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
             checked={relativeAge(dataAgeMinutes, tr)}
           />
         )}
+
+        {/* One line of advice, always visible. Deliberately outside the
+            warning branch: a city with no active warning can still have
+            something worth acting on, and that used to be unreachable. */}
+        <TopAdvice place={place} liveAqi={liveAqi} />
       </div>
 
       {offline ? (

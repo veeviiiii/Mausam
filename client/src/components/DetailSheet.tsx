@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { fade, scrimVariants, sheetVariants } from "../animations/variants";
 import { CARD_RULES } from "../personalization/rules";
-import { advisoriesFor, type Advisory } from "../personalization/advisories";
+import { ADVISORY_TONE, advisoriesFor, type Advisory } from "../personalization/advisories";
 import { sourcesFor } from "../data/provenance";
 import { CARD_UI } from "../features/cards/registry";
 import { useT } from "../i18n/context";
@@ -184,12 +184,6 @@ export function DetailSheet({
   );
 }
 
-const TONE_ACCENT: Record<Advisory["tone"], string> = {
-  danger: "#E4574C",
-  warn: "#E8A33C",
-  info: "#5FB6E8",
-};
-
 /**
  * One instruction, with the reading that produced it directly underneath.
  *
@@ -208,7 +202,7 @@ function AdvisoryRow({ advisory, index, t }: { advisory: Advisory; index: number
     >
       <span
         className="mt-[5px] h-[8px] w-[8px] shrink-0 rounded-full"
-        style={{ background: TONE_ACCENT[advisory.tone] }}
+        style={{ background: ADVISORY_TONE[advisory.tone] }}
         aria-hidden
       />
       <span className="min-w-0">

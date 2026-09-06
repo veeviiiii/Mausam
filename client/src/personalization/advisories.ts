@@ -35,6 +35,13 @@ export interface Advisory {
 
 const MAX_ITEMS = 4;
 
+/** Accent per tone. Shared by the home-screen strip and the detail sheet. */
+export const ADVISORY_TONE: Record<Advisory["tone"], string> = {
+  danger: "#E4574C",
+  warn: "#E8A33C",
+  info: "#5FB6E8",
+};
+
 export function advisoriesFor(place: Place, sources: Sources): Advisory[] {
   const out: Advisory[] = [];
   const p = place;
