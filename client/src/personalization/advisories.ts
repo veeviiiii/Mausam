@@ -1,5 +1,6 @@
 import type { Place } from "../data/types";
 import type { Source, Sources } from "../data/provenance";
+import { capText } from "../i18n/capText";
 
 /**
  * "What to do" — the same rule-based, explainable machinery as the card
@@ -42,7 +43,9 @@ export const ADVISORY_TONE: Record<Advisory["tone"], string> = {
   info: "#5FB6E8",
 };
 
-export function advisoriesFor(place: Place, sources: Sources): Advisory[] {
+type Translate = (key: string, vars?: Record<string, string>) => string;
+
+export function advisoriesFor(place: Place, sources: Sources, tr: Translate): Advisory[] {
   const out: Advisory[] = [];
   const p = place;
   const rainNow = p.rainProbability[0] ?? 0;
@@ -62,8 +65,31 @@ export function advisoriesFor(place: Place, sources: Sources): Advisory[] {
   const warned = `${p.alert?.headline ?? ""} ${p.alert?.body ?? ""}`.toLowerCase();
   const warnsRain = /rain|shower|downpour|precipitat/.test(warned);
   const warnsStorm = /thunder|lightning|squall/.test(warned);
+  /*
+   * Seeded headlines are shaped "Orange warning · heavy rainfall"; live CAP
+   * headlines are just the event ("Heavy Rain"). The advice template adds the
+   * level itself, so the seeded shape produced "Orange warning · heavy
+   * rainfall — orange warning, active until ...". Strip the redundant prefix
+   * and leave live headlines alone — they have no separator to split on.
+   */
+  /*
+   * The bulletin's own words, in the reader's language where we have them.
+   *
+   * Goes through capText for the same reason the banner does: seeded warnings
+   * have a Hindi translation, live ones deliberately do not and are shown as
+   * issued.
+   *
+   * The colour code is deliberately NOT repeated in the advice sentence. The
+   * banner sits directly above this line and already carries it, and seeded
+   * headlines embed it too — so a template that added it produced "Orange
+   * warning · heavy rainfall — orange warning, active until ...". Stripping the
+   * prefix instead meant matching a colour word across languages, which broke
+   * immediately on Hindi adjective gender: the headline reads "पीली चेतावनी"
+   * but the standalone level word is "पीला". Quoting the headline and dropping
+   * the level needs no parsing and cannot drift.
+   */
   const warnLabel = p.alert
-    ? { level: p.alert.level, event: p.alert.headline, until: p.alert.validUntil }
+    ? { event: capText(p.id, p.alert, tr).headline, until: p.alert.validUntil }
     : null;
 
   /* ---- life safety ---- */
@@ -110,33 +136,42 @@ export function advisoriesFor(place: Place, sources: Sources): Advisory[] {
      below "apply sunscreen", a red Heavy Rain bulletin produced an advice list
      that recommended sunscreen and never mentioned rain. Whatever the warning
      is about outranks everything except life safety. */
-  const schoolWorst = Math.max(p.schoolDropRain, p.schoolPickupRain);
-  if (schoolWorst >= 60) {
-    out.push({
-      id: "school-umbrella",
-      titleKey: "adv.schoolUmbrella",
-      whyKey: "adv.schoolUmbrellaWhy",
-      vars: { pct: String(schoolWorst) },
-      tone: "info",
-      source: sources.schoolRain,
-    });
-  } else if (warnsRain && warnLabel) {
+  /*
+   * One umbrella line, for everybody.
+   *
+   * This used to split into "send an umbrella to school" whenever the 07:30 or
+   * 14:45 window was wet. But the advice list is not persona-filtered — it is
+   * the same list for every user — so a parent-specific instruction was being
+   * shown to people with no school run. School framing belongs on the Parents
+   * & families CARD, which is a persona a user opts into; it does not belong
+   * here.
+   *
+   * The three rain readings are just probabilities at different times of day,
+   * so the highest of them answers "will I need an umbrella" for anyone.
+   */
+  const rainPeak = Math.max(rainNow, p.schoolDropRain, p.schoolPickupRain);
+
+  if (warnsRain && warnLabel) {
     // The bulletin outranks the seeded probability: a live rain warning means
     // rain regardless of what the forecast row happens to say.
     out.push({
       id: "umbrella",
       titleKey: "adv.umbrella",
       whyKey: "adv.umbrellaWarnWhy",
-      vars: { level: warnLabel.level, event: warnLabel.event, until: warnLabel.until },
+      vars: { event: warnLabel.event, until: warnLabel.until },
       tone: "warn",
       source: sources.alert,
     });
-  } else if (rainNow >= 50 || p.condition === "rain") {
+  } else if (rainPeak >= 50 || p.condition === "rain") {
+    // NOTE: adv.umbrellaWhy hardcodes the word "seeded". Rain probability has
+    // no live path today; whoever wires IMD's forecast endpoints must drop that
+    // word from the string, or it becomes the exact overstatement the
+    // provenance audit removed. The badge beside it is already dynamic.
     out.push({
       id: "umbrella",
       titleKey: "adv.umbrella",
       whyKey: "adv.umbrellaWhy",
-      vars: { pct: String(rainNow) },
+      vars: { pct: String(rainPeak) },
       tone: "info",
       source: sources.rainProbability,
     });

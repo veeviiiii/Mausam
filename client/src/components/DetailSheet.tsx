@@ -79,7 +79,7 @@ export function DetailSheet({
   // Advice is the alert sheet's reason for existing beyond the colour code: a
   // red banner tells you a warning is live, not whether to pack an umbrella.
   const advisories =
-    target.kind === "alert" ? advisoriesFor(subject, sourcesFor(subject, liveAqi, t)) : [];
+    target.kind === "alert" ? advisoriesFor(subject, sourcesFor(subject, liveAqi, t), t) : [];
 
   const state = closing ? "exit" : "animate";
 

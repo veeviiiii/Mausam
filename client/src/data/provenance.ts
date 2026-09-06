@@ -35,7 +35,6 @@ export type FieldKey =
   | "pm25"
   | "alert"
   | "rainProbability"
-  | "schoolRain"
   | "visibility"
   | "waterlogging"
   | "uv"
@@ -76,7 +75,6 @@ export function sourcesFor(place: Place, liveAqi: LiveAqi | null, t: Translate):
     pm25: air,
     alert,
     rainProbability: seeded,
-    schoolRain: seeded,
     visibility: seeded,
     // Called out separately because the seeded prose names specific road
     // junctions and thresholds. IMD's nowcasts are district-scale; no dataset

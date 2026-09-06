@@ -28,7 +28,7 @@ import type { LiveAqi } from "../lib/useLiveAqi";
 export function TopAdvice({ place, liveAqi }: { place: Place; liveAqi: LiveAqi | null }) {
   const t = useT();
 
-  const top = advisoriesFor(place, sourcesFor(place, liveAqi, t)).find((a) => a.id !== "none");
+  const top = advisoriesFor(place, sourcesFor(place, liveAqi, t), t).find((a) => a.id !== "none");
 
   // The "nothing to act on" fallback is skipped: the no-warnings chip directly
   // above already says the same thing, and repeating it reads as padding.
