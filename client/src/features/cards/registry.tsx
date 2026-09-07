@@ -1,7 +1,9 @@
-import { AQI_BANDS, PLACES, aqiBand } from "../../data/seed";
+import { AQI_BANDS, aqiBand } from "../../data/seed";
 import type { PersonaId, Place } from "../../data/types";
 import { WARNING_COLOR } from "../../design/tokens";
 import { WeatherIcon } from "../../components/WeatherIcon";
+import { savedPlaces } from "../../personalization/rules";
+import { packingFor } from "../../personalization/packing";
 import { useT } from "../../i18n/context";
 import type { LiveAqi } from "../../lib/useLiveAqi";
 import { Band, Bars, Gauge, KeyValues, Note, Readout, WindowPair } from "./viz";
@@ -34,6 +36,21 @@ export interface CardPresentation {
 }
 
 const one = (n: number) => n.toFixed(1);
+
+/**
+ * Highest rain probability in the next `hours` hours.
+ *
+ * Reads the hourly strip rather than `rainProbability`, because the strip is
+ * anchored to the real local hour and has one entry per hour — so a "next 3 h"
+ * figure covers three hours rather than the 2.4-hour slot that indexing
+ * `rainProbability[0]` actually returns. Falls back to the first slot for a
+ * place whose hourly strip has not been built yet (the raw seed export ships
+ * with `hourly: []`; AppState fills it in).
+ */
+const rainWithin = (p: Place, hours: number) =>
+  p.hourly.length
+    ? Math.max(...p.hourly.slice(0, hours).map((h) => h.precipitation))
+    : (p.rainProbability[0] ?? 0);
 
 export const CARD_UI: Record<PersonaId, CardPresentation> = {
   /* ---------------------------------------------------------------- */
@@ -79,8 +96,19 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
             activeIndex={AQI_BANDS.indexOf(band)}
             labels={[t("band.good"), t("band.moderate"), t("band.severe")]}
           />
+          {/* UV sits here because the persona spec lists it under
+              Health-conscious — skin sensitivity, not athletic load. It also
+              stays on the Fitness card, whose scoring rule fires on UV >= 8 and
+              whose "why this card" sentence names the reading; removing it
+              there would leave that explanation pointing at a number the card
+              no longer shows. Same field, two readings of it. */}
           <KeyValues
-            items={[governing, [t("kv.pollen"), place.pollen], [t("kv.humidity"), `${place.humidity}%`]]}
+            items={[
+              governing,
+              [t("kv.pollen"), place.pollen],
+              [t("kv.peakUv"), String(place.uv)],
+              [t("kv.humidity"), `${place.humidity}%`],
+            ]}
           />
         </>
       );
@@ -92,11 +120,12 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         [t("row.pm25"), `${p.pm25} µg/m³`],
         [t("row.pm10"), `${Math.round(p.pm25 * 1.9)} µg/m³`],
         [t("row.pollenLoad"), p.pollen],
+        [t("row.peakUv"), String(p.uv)],
         [t("row.rh"), `${p.humidity} %`],
         [t("row.dewPoint"), `${p.dewPoint} °C`],
       ],
       source:
-        "CPCB real-time AQI via data.gov.in, cached 20 minutes. CPCB publishes on the hour, so a full-hour cache could serve a reading nearly two hours old — long enough to visibly disagree with another source during rain, when PM2.5 moves fast. No IP whitelisting needed, which is why this is the first live feed we wired up.",
+        "AQI, PM2.5 and PM10 are live from CPCB via data.gov.in, cached 20 minutes. CPCB publishes on the hour, so a full-hour cache could serve a reading nearly two hours old — long enough to visibly disagree with another source during rain, when PM2.5 moves fast. No IP whitelisting needed, which is why this is the first live feed we wired up. Pollen, UV index, humidity and dew point are seeded: CPCB publishes pollutant concentrations only, and no live source for those four is wired.",
     }),
   },
 
@@ -226,67 +255,104 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
     ),
     Body: ({ place }) => {
       const t = useT();
-      const others = PLACES.filter((x) => x.id !== place.id).slice(0, 3);
-      const warned = others.filter((d) => d.alert).length;
+      // savedPlaces(), not the raw seed array: this has live warnings merged
+      // in, so the badge here agrees with the banner and with the travel rule's
+      // own boost, which already scored against the merged set.
+      const all = savedPlaces().filter((x) => x.id !== place.id);
+      // The list shows the first three; the COUNT is over all of them, because
+      // the travel rule's boost counts all of them. Counting only the visible
+      // three put "2 of 3 saved destinations are under an active warning" on
+      // the card directly above a "why this card" line reading "4 saved
+      // destinations have an active warning".
+      const others = all.slice(0, 3);
+      const warned = all.filter((d) => d.alert).length;
+      // The packing line per destination, from the same advice engine the home
+      // screen uses. See personalization/packing.ts for why this is a
+      // projection of existing advisories rather than rules of its own.
+      const packing = new Map(packingFor(others, t).map((x) => [x.placeId, x]));
       return (
         <>
           <div className="mt-1">
-            {others.map((d, i) => (
-              <div
-                key={d.id}
-                className={`flex items-center gap-2.5 py-2 ${i === 0 ? "" : "border-t"}`}
-                style={{ borderColor: "var(--hair)" }}
-              >
-                <WeatherIcon condition={d.condition} size={22} />
-                <b className="flex-1 text-[13.5px] font-semibold">{d.name}</b>
-                {d.alert ? (
-                  <span
-                    className="rounded-[5px] px-1.5 py-0.5 font-mono text-[8.5px] font-bold uppercase tracking-[0.06em] text-white"
-                    style={{ background: WARNING_COLOR[d.alert.level] }}
-                  >
-                    {t(`level.${d.alert.level}`)}
+            {others.map((d, i) => {
+              const pack = packing.get(d.id);
+              return (
+                <div
+                  key={d.id}
+                  className={`flex items-center gap-2.5 py-2 ${i === 0 ? "" : "border-t"}`}
+                  style={{ borderColor: "var(--hair)" }}
+                >
+                  <WeatherIcon condition={d.condition} size={22} />
+                  <span className="min-w-0 flex-1">
+                    <b className="block text-[13.5px] font-semibold">{d.name}</b>
+                    {pack ? (
+                      <small
+                        className="block text-[11px] leading-[1.35]"
+                        style={{ color: "var(--txt-2)" }}
+                      >
+                        {t(pack.itemKey)}
+                      </small>
+                    ) : null}
                   </span>
-                ) : null}
-                <span className="tnum font-mono text-[13.5px] font-semibold">{d.temp}°</span>
-              </div>
-            ))}
+                  {d.alert ? (
+                    <span
+                      className="rounded-[5px] px-1.5 py-0.5 font-mono text-[8.5px] font-bold uppercase tracking-[0.06em] text-white"
+                      style={{ background: WARNING_COLOR[d.alert.level] }}
+                    >
+                      {t(`level.${d.alert.level}`)}
+                    </span>
+                  ) : null}
+                  <span className="tnum font-mono text-[13.5px] font-semibold">{d.temp}°</span>
+                </div>
+              );
+            })}
           </div>
           <Note>
             {t("card.travel.note", {
-              pack: t(warned ? "card.travel.packWet" : "card.travel.packDry"),
               warned: String(warned),
-              total: String(others.length),
+              total: String(all.length),
             })}
           </Note>
         </>
       );
     },
-    detail: (p, t) => ({
-      lede: t("card.travel.lede"),
-      rows: [
-        ...PLACES.filter((x) => x.id !== p.id).map(
-          (d) =>
-            [
-              d.name,
-              `${d.temp}° · ${
-                d.alert
-                  ? `${t(`level.${d.alert.level}`)} ${t(`alert.kind.${d.alert.kind}`)}`
-                  : t("val.noWarningShort")
-              }`,
-            ] as [string, string],
-        ),
-        ...(p.aviation
-          ? ([
-              [t("row.airport"), p.aviation.airport],
-              [t("row.runwayVis"), `${p.aviation.visibilityM} m`],
-              [t("row.crosswind"), `${p.aviation.crosswindKt} kt`],
-              [t("row.terminal"), p.aviation.terminalStatus],
-            ] as [string, string][])
-          : []),
-      ],
-      source:
-        "IMD 7-day city forecast and the CAP warning feed, re-checked whenever a new CAP alert is issued rather than on a timer. Airport rows come from IMD's Aviation Services, surfaced here rather than as a persona of their own.",
-    }),
+    detail: (p, t) => {
+      const others = savedPlaces().filter((x) => x.id !== p.id);
+      const packing = packingFor(others, t);
+      return {
+        lede: t("card.travel.lede"),
+        rows: [
+          ...others.map(
+            (d) =>
+              [
+                d.name,
+                `${d.temp}° · ${
+                  d.alert
+                    ? `${t(`level.${d.alert.level}`)} ${t(`alert.kind.${d.alert.kind}`)}`
+                    : t("val.noWarningShort")
+                }`,
+              ] as [string, string],
+          ),
+          ...(packing.length
+            ? ([
+                [
+                  t("row.packing"),
+                  packing.map((x) => `${x.placeName}: ${t(x.itemKey)}`).join(" · "),
+                ],
+              ] as [string, string][])
+            : []),
+          ...(p.aviation
+            ? ([
+                [t("row.airport"), p.aviation.airport],
+                [t("row.runwayVis"), `${p.aviation.visibilityM} m`],
+                [t("row.crosswind"), `${p.aviation.crosswindKt} kt`],
+                [t("row.terminal"), p.aviation.terminalStatus],
+              ] as [string, string][])
+            : []),
+        ],
+        source:
+          "The warnings on this card are live, from NDMA's public CAP feed — the same bulletins the banner carries, re-checked whenever a new one is issued rather than on a timer. Everything else is seeded: there is no IMD 7-day city forecast in this build, so the destination temperatures are demo values and the airport rows are illustrative rather than IMD Aviation Services data. The packing line is not a separate forecast — it is the top advisory the rule engine already produces for that destination, projected onto something you can put in a bag.",
+      };
+    },
   },
 
   /* ---------------------------------------------------------------- */
@@ -365,8 +431,10 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       return (
         <>
           <Readout value={place.rain24} unit={t("unit.mmNext24")} />
+          {/* The full ten slots. This was slicing to six — the first
+              14.4 hours — under an axis labelled "+24 h". */}
           <Bars
-            values={place.rainProbability.slice(0, 6)}
+            values={place.rainProbability}
             highlight={0}
             axis={[t("home.now"), "+12 h", "+24 h"]}
           />
@@ -418,6 +486,9 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
     ),
     Body: ({ place }) => {
       const t = useT();
+      // "Clear roads" used to be the third branch. Visibility above 5 km
+      // says nothing about what is on the road — there is no traffic source in
+      // this build — so the phrase now describes the reading it actually has.
       const risk = t(
         place.visibility < 3
           ? "card.commute.spray"
@@ -448,10 +519,10 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         [t("row.urbanAdvisory"), p.urban.advisory],
         [t("row.wind"), t("unit.kmh", { v: String(p.wind) })],
         [t("row.gustingTo"), t("unit.kmh", { v: String(p.gust) })],
-        [t("row.rain3h"), `${p.rainProbability[0]} %`],
+        [t("row.rain3h"), `${rainWithin(p, 3)} %`],
       ],
       source:
-        "IMD district nowcast for visibility and precipitation, cached 15 minutes, joined to IMD's Urban Meteorological Services bulletin for the city-scale waterlogging call.",
+        "Weather-side conditions only. There is no traffic or road-status source anywhere in this build and nothing on this card implies one: the visibility, gust and waterlogging figures are seeded demo values, and the named junctions are illustrative rather than an urban nowcast. Live severe warnings do reach this card, through the alert banner above it — that is the one feed here that is real.",
     }),
   },
 
@@ -469,14 +540,16 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       return (
         <>
           <Readout value={place.comfortIndex} unit={t("unit.comfort")} />
+          {/* Was "Today / +5 d / +10 d" over the same array the farm card drew
+              as 24 hours and buildHourly spreads across 24 hours. There is no
+              multi-day series in this build; the axis says what the numbers
+              are. */}
           <Bars
             values={place.rainProbability}
             highlight={place.rainProbability.indexOf(min)}
-            axis={["Today", "+5 d", "+10 d"]}
+            axis={[t("home.now"), "+12 h", "+24 h"]}
           />
-          <Note>
-            {t("card.event.note", { day: place.tourism.bestDay, pct: String(min) })}
-          </Note>
+          <Note>{t("card.event.note", { pct: String(min) })}</Note>
         </>
       );
     },
@@ -490,7 +563,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         [t("row.rh"), `${p.humidity} %`],
       ],
       source:
-        "IMD extended-range outlook cached 12 hours and re-scored on every screen load, with the narrative line taken from IMD's Tourism Forecast for the station.",
+        "Seeded. The chart is a single 24-hour rain-probability curve in ten slots — the same series the hourly strip interpolates — and the comfort index is scored from it on every screen load. There is no IMD extended-range product in this build, so nothing here covers more than a day; the driest-day and tourism-outlook rows are seeded narrative text rather than a forecast.",
     }),
   },
 };

@@ -45,6 +45,18 @@ export function setPlaceUniverse(places: Place[]) {
   placeUniverse = places;
 }
 
+/**
+ * The saved places as the app currently knows them — live warnings merged in.
+ *
+ * The travel card needs the same set the travel RULE scores against, and it was
+ * reading the raw seed array instead, so a destination whose seeded warning had
+ * been replaced by a live one showed the stale colour while its own boost
+ * counted the live one. Same source for both, now.
+ */
+export function savedPlaces(): Place[] {
+  return placeUniverse;
+}
+
 export const CARD_RULES: Record<PersonaId, CardRule> = {
   health: {
     titleKey: "card.health.title",

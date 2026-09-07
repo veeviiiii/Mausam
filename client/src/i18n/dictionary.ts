@@ -173,7 +173,7 @@ const en: Dict = {
   "card.event.title": "Comfort index",
 
   /* ---- card ledes ---- */
-  "card.health.lede": "Continuous ambient monitoring from the nearest CPCB station.",
+  "card.health.lede": "Air quality from the nearest CPCB station, with the day's other exposure readings.",
   "card.fitness.lede": "Hour-by-hour heat and UV load, scored for sustained outdoor effort.",
   "card.beach.lede": "Sea state and tide timings for the nearest coastal station.",
   "card.travel.lede":
@@ -181,7 +181,7 @@ const en: Dict = {
   "card.family.lede": "The two windows that matter, taken from the district nowcast.",
   "card.farm.lede": "Field-scale rainfall, soil moisture and the current Agromet advisory.",
   "card.commute.lede": "Road-relevant conditions for the evening run home.",
-  "card.event.lede": "Ten days of rain probability, scored into one comfort number.",
+  "card.event.lede": "Twenty-four hours of rain probability, scored into one comfort number.",
 
   /* ---- card body copy ---- */
   "card.fitness.note": "Coolest stretch before the sun clears the horizon.",
@@ -194,17 +194,15 @@ const en: Dict = {
   "card.beach.spring": "Spring tides this week, so the range is at its widest.",
   "card.beach.neap": "Neap tides this week, so the range is unusually narrow.",
   "card.beach.transitional": "Moon is {phase} at {pct}%, so the range is moderate.",
-  "card.travel.packWet": "Pack for rain and delays",
-  "card.travel.packDry": "Pack for warm, dry days",
-  "card.travel.note": "{pack} — {warned} of {total} saved cities are under a warning.",
+  "card.travel.note": "{warned} of {total} saved destinations are under an active warning.",
   "card.family.umbrella": "Send an umbrella.",
   "card.family.noUmbrella": "No umbrella needed.",
   "card.family.note": "{advice} Nowcast refreshes for your district every 15 minutes.",
   "card.commute.spray": "High spray and low visibility",
   "card.commute.reduced": "Reduced visibility",
-  "card.commute.clear": "Clear roads",
+  "card.commute.clear": "Good visibility",
   "card.commute.note": "{risk} on the 18:30 run home. {advisory}",
-  "card.event.note": "Driest day in the outlook is {day} at {pct}% rain probability.",
+  "card.event.note": "Calmest stretch in the next 24 hours sits at {pct}% rain probability.",
 
   /* ---- units and readouts ---- */
   "unit.aqi": "AQI · {band}",
@@ -302,8 +300,9 @@ const en: Dict = {
   "row.gustingTo": "Gusting to",
   "row.rain3h": "Rain in next 3 h",
   "row.comfortToday": "Comfort index today",
+  "row.packing": "Suggested packing",
   "row.driestDay": "Driest day ahead",
-  "row.lowestRain": "Lowest rain probability",
+  "row.lowestRain": "Lowest rain probability (next 24 h)",
   "row.tourismOutlook": "Tourism outlook",
   "val.present": "Present",
   "val.noneReported": "None reported",
@@ -343,6 +342,14 @@ const en: Dict = {
   "adv.secureWhy": "{system} is forecast to make landfall {when}.",
   "adv.higherGround": "Move to higher ground if water rises",
   "adv.higherGroundWhy": "Flash flood guidance is active for {place} — these rise in minutes, not hours.",
+
+  /* ---- packing, projected from the advisories above ---- */
+  "pack.rain": "Pack rain cover",
+  "pack.mask": "Pack an N95 mask",
+  "pack.water": "Pack water for the heat",
+  "pack.sunscreen": "Pack sunscreen",
+  "pack.layers": "Pack warm layers",
+  "pack.reconsider": "Check before you travel",
   "adv.noSwim": "Stay out of the water",
   "adv.noSwimWhy": "Swell is {m} m, above the 2 m swim-advisory line.",
   "adv.frost": "Cover young plants tonight",
@@ -413,7 +420,7 @@ const en: Dict = {
   "source.family": "IMD nowcast shape · seeded",
   "source.farm": "Agromet shape · seeded",
   "source.commute": "Urban met shape · seeded",
-  "source.event": "Extended range shape · seeded",
+  "source.event": "24 h rain shape · seeded",
 
   /* ---- why-this-card, assembled from parts so it can be reordered ---- */
   "explain.manual": "You moved {persona} to position {n} by hand, so the manual order wins over the score.",
@@ -590,7 +597,7 @@ const hi: Dict = {
   "card.event.title": "आराम सूचकांक",
 
   /* ---- card ledes ---- */
-  "card.health.lede": "निकटतम CPCB स्टेशन से लगातार परिवेशी निगरानी।",
+  "card.health.lede": "निकटतम CPCB स्टेशन से वायु गुणवत्ता, साथ में दिन के अन्य जोखिम आँकड़े।",
   "card.fitness.lede": "घंटे-दर-घंटे गर्मी और UV भार, लगातार बाहरी परिश्रम के हिसाब से आँका गया।",
   "card.beach.lede": "निकटतम तटीय स्टेशन की समुद्री स्थिति और ज्वार समय।",
   "card.travel.lede":
@@ -598,7 +605,7 @@ const hi: Dict = {
   "card.family.lede": "ज़िला नाउकास्ट से लिए गए वे दो समय जो मायने रखते हैं।",
   "card.farm.lede": "खेत-स्तर की वर्षा, मिट्टी की नमी और वर्तमान कृषि-मौसम सलाह।",
   "card.commute.lede": "शाम की वापसी यात्रा के लिए सड़क से जुड़ी स्थितियाँ।",
-  "card.event.lede": "दस दिन की वर्षा संभावना, एक आराम अंक में समेटी गई।",
+  "card.event.lede": "चौबीस घंटे की वर्षा संभावना, एक आराम अंक में समेटी गई।",
 
   /* ---- card body copy ---- */
   "card.fitness.note": "सूरज क्षितिज पार करने से पहले का सबसे ठंडा समय।",
@@ -611,17 +618,15 @@ const hi: Dict = {
   "card.beach.spring": "इस सप्ताह वृहद ज्वार, इसलिए उतार-चढ़ाव सबसे अधिक है।",
   "card.beach.neap": "इस सप्ताह लघु ज्वार, इसलिए उतार-चढ़ाव असामान्य रूप से कम है।",
   "card.beach.transitional": "चंद्रमा {phase} है, {pct}% पर, इसलिए उतार-चढ़ाव मध्यम है।",
-  "card.travel.packWet": "बारिश और देरी के लिए तैयारी करें",
-  "card.travel.packDry": "गर्म, सूखे दिनों के लिए तैयारी करें",
-  "card.travel.note": "{pack} — {total} में से {warned} सहेजे शहर चेतावनी में हैं।",
+  "card.travel.note": "{total} में से {warned} सहेजे गंतव्य सक्रिय चेतावनी में हैं।",
   "card.family.umbrella": "छाता भेजें।",
   "card.family.noUmbrella": "छाते की ज़रूरत नहीं।",
   "card.family.note": "{advice} नाउकास्ट आपके ज़िले के लिए हर 15 मिनट में ताज़ा होता है।",
   "card.commute.spray": "अधिक छींटे और कम दृश्यता",
   "card.commute.reduced": "घटी हुई दृश्यता",
-  "card.commute.clear": "साफ़ सड़कें",
+  "card.commute.clear": "अच्छी दृश्यता",
   "card.commute.note": "18:30 की वापसी पर {risk}। {advisory}",
-  "card.event.note": "आगे का सबसे सूखा दिन {day} है, {pct}% वर्षा संभावना पर।",
+  "card.event.note": "अगले 24 घंटों का सबसे शांत समय {pct}% वर्षा संभावना पर है।",
 
   /* ---- units and readouts ---- */
   "unit.aqi": "AQI · {band}",
@@ -719,8 +724,9 @@ const hi: Dict = {
   "row.gustingTo": "झोंके तक",
   "row.rain3h": "अगले 3 घंटे में वर्षा",
   "row.comfortToday": "आज का आराम सूचकांक",
+  "row.packing": "सुझाई गई पैकिंग",
   "row.driestDay": "आगे का सबसे सूखा दिन",
-  "row.lowestRain": "न्यूनतम वर्षा संभावना",
+  "row.lowestRain": "न्यूनतम वर्षा संभावना (अगले 24 घंटे)",
   "row.tourismOutlook": "पर्यटन पूर्वानुमान",
   "val.present": "मौजूद",
   "val.noneReported": "कोई रिपोर्ट नहीं",
@@ -760,6 +766,14 @@ const hi: Dict = {
   "adv.secureWhy": "{system} का लैंडफ़ॉल {when} अनुमानित है।",
   "adv.higherGround": "पानी बढ़े तो ऊँची जगह जाएँ",
   "adv.higherGroundWhy": "{place} के लिए आकस्मिक बाढ़ मार्गदर्शन सक्रिय है — यह घंटों में नहीं, मिनटों में बढ़ती है।",
+
+  /* ---- packing, projected from the advisories above ---- */
+  "pack.rain": "बारिश का बचाव रखें",
+  "pack.mask": "N95 मास्क रखें",
+  "pack.water": "गर्मी के लिए पानी रखें",
+  "pack.sunscreen": "सनस्क्रीन रखें",
+  "pack.layers": "गर्म कपड़े रखें",
+  "pack.reconsider": "यात्रा से पहले जाँच लें",
   "adv.noSwim": "पानी से दूर रहें",
   "adv.noSwimWhy": "लहर {m} मी है, 2 मी तैराकी सलाह-रेखा से ऊपर।",
   "adv.frost": "आज रात छोटे पौधे ढँक दें",
@@ -828,7 +842,7 @@ const hi: Dict = {
   "source.family": "IMD नाउकास्ट ढाँचा · संग्रहीत",
   "source.farm": "कृषि-मौसम ढाँचा · संग्रहीत",
   "source.commute": "शहरी मौसम ढाँचा · संग्रहीत",
-  "source.event": "विस्तारित परिसर ढाँचा · संग्रहीत",
+  "source.event": "24 घंटे वर्षा ढाँचा · संग्रहीत",
 
   /* ---- why-this-card ---- */
   "explain.manual": "आपने {persona} को हाथ से स्थान {n} पर रखा, इसलिए मैनुअल क्रम अंक पर भारी है।",

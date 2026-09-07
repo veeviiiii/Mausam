@@ -157,6 +157,21 @@ export interface Place {
   pollen: string;
 
   rain24: number;
+  /**
+   * Rain probability over the NEXT 24 HOURS, as ten equal slots of 2.4 hours.
+   * Index 0 is the slot starting now.
+   *
+   * This is the definition the whole app now reads it under, and it is the one
+   * `buildHourly` has always assumed — it spreads these ten values across a
+   * 24-entry hourly strip. The cards had drifted away from it: the same array
+   * was drawn as "Today / +5 d / +10 d" on the event card, "now / +12 h /
+   * +24 h" on the farm card, and a single 3-hour figure on the commute card.
+   * Two of those cards, opened one after the other, showed identical bars
+   * under incompatible timescales.
+   *
+   * There is no multi-day series in this build. When one is wired it belongs
+   * in a separate field with its own cadence, not in this one.
+   */
   rainProbability: number[];
   /**
    * 24 rolling hours from the real local hour, used by the carousel and the
