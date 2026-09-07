@@ -178,8 +178,8 @@ const en: Dict = {
   "card.beach.lede": "Sea state and tide timings for the nearest coastal station.",
   "card.travel.lede":
     "Your saved destinations, checked against every active district, cyclone and flash-flood warning.",
-  "card.family.lede": "The two windows that matter, taken from the district nowcast.",
-  "card.farm.lede": "Field-scale rainfall, soil moisture and the current Agromet advisory.",
+  "card.family.lede": "The two windows that matter: the school drop and the afternoon pick-up.",
+  "card.farm.lede": "Field-scale rainfall, soil moisture and the current field advisory.",
   "card.commute.lede": "Road-relevant conditions for the evening run home.",
   "card.event.lede": "Twenty-four hours of rain probability, scored into one comfort number.",
 
@@ -197,7 +197,7 @@ const en: Dict = {
   "card.travel.note": "{warned} of {total} saved destinations are under an active warning.",
   "card.family.umbrella": "Send an umbrella.",
   "card.family.noUmbrella": "No umbrella needed.",
-  "card.family.note": "{advice} Nowcast refreshes for your district every 15 minutes.",
+  "card.family.note": "{advice} Both windows are seeded — no live district nowcast yet.",
   "card.commute.spray": "High spray and low visibility",
   "card.commute.reduced": "Reduced visibility",
   "card.commute.clear": "Good visibility",
@@ -237,9 +237,8 @@ const en: Dict = {
   /* ---- detail sheet ---- */
   "sheet.close": "Close",
   "sheet.whyHeading": "Where this comes from",
-  "sheet.sourceEnglish": "Source notes are kept in English — they quote IMD endpoint names and cache policy.",
+  "sheet.sourceEnglish": "Source notes are kept in English — they name endpoints, feeds and cache policy.",
   "sheet.advice": "What to do",
-  "sheet.capEyebrow": "IMD CAP feed · {place}",
 
   "sheet.liveEyebrow": "NDMA Sachet · {office} · {place}",
   "adv.umbrellaWarnWhy": "{event} — active until {until}.",
@@ -441,7 +440,8 @@ const en: Dict = {
   "boost.family.rain": "rain probability reaches {pct}% inside a school window",
   "boost.farm.rain": "{mm} mm expected in 24 h, enough to change field work",
   "boost.farm.soil": "soil moisture is down to {v} m³/m³",
-  "boost.commute.fog": "visibility is down to {v} km, under the 3 km fog line",
+  "boost.commute.fog": "visibility is down to {m} m, inside IMD's shallow-fog band",
+  "boost.commute.lowVis": "visibility is down to {v} km, below our own 3 km driving-caution line",
   "boost.commute.water": "urban waterlogging risk is high for {place}",
   "boost.commute.vis": "visibility is {v} km",
   "boost.event.comfort": "comfort index is only {v}/100 today",
@@ -602,8 +602,8 @@ const hi: Dict = {
   "card.beach.lede": "निकटतम तटीय स्टेशन की समुद्री स्थिति और ज्वार समय।",
   "card.travel.lede":
     "आपके सहेजे गए गंतव्य, हर सक्रिय ज़िला, चक्रवात और आकस्मिक बाढ़ चेतावनी के विरुद्ध जाँचे गए।",
-  "card.family.lede": "ज़िला नाउकास्ट से लिए गए वे दो समय जो मायने रखते हैं।",
-  "card.farm.lede": "खेत-स्तर की वर्षा, मिट्टी की नमी और वर्तमान कृषि-मौसम सलाह।",
+  "card.family.lede": "जो दो समय मायने रखते हैं: स्कूल छोड़ना और दोपहर की वापसी।",
+  "card.farm.lede": "खेत-स्तर की वर्षा, मिट्टी की नमी और वर्तमान खेत सलाह।",
   "card.commute.lede": "शाम की वापसी यात्रा के लिए सड़क से जुड़ी स्थितियाँ।",
   "card.event.lede": "चौबीस घंटे की वर्षा संभावना, एक आराम अंक में समेटी गई।",
 
@@ -621,7 +621,7 @@ const hi: Dict = {
   "card.travel.note": "{total} में से {warned} सहेजे गंतव्य सक्रिय चेतावनी में हैं।",
   "card.family.umbrella": "छाता भेजें।",
   "card.family.noUmbrella": "छाते की ज़रूरत नहीं।",
-  "card.family.note": "{advice} नाउकास्ट आपके ज़िले के लिए हर 15 मिनट में ताज़ा होता है।",
+  "card.family.note": "{advice} दोनों समय संग्रहीत हैं — अभी कोई लाइव ज़िला नाउकास्ट नहीं।",
   "card.commute.spray": "अधिक छींटे और कम दृश्यता",
   "card.commute.reduced": "घटी हुई दृश्यता",
   "card.commute.clear": "अच्छी दृश्यता",
@@ -661,9 +661,8 @@ const hi: Dict = {
   /* ---- detail sheet ---- */
   "sheet.close": "बंद करें",
   "sheet.whyHeading": "यह कहाँ से आता है",
-  "sheet.sourceEnglish": "स्रोत विवरण अंग्रेज़ी में रखे गए हैं — इनमें IMD एंडपॉइंट नाम और कैश नीति उद्धृत है।",
+  "sheet.sourceEnglish": "स्रोत विवरण अंग्रेज़ी में रखे गए हैं — इनमें एंडपॉइंट, फ़ीड और कैश नीति के नाम आते हैं।",
   "sheet.advice": "क्या करें",
-  "sheet.capEyebrow": "IMD CAP फ़ीड · {place}",
 
   "sheet.liveEyebrow": "NDMA सचेत · {office} · {place}",
   "adv.umbrellaWarnWhy": "{event} — {until} तक सक्रिय।",
@@ -863,7 +862,8 @@ const hi: Dict = {
   "boost.family.rain": "स्कूल के समय के भीतर वर्षा संभावना {pct}% तक पहुँचती है",
   "boost.farm.rain": "24 घंटे में {mm} मिमी अनुमानित, जो खेत के काम को बदल देता है",
   "boost.farm.soil": "मिट्टी की नमी घटकर {v} मी³/मी³ रह गई है",
-  "boost.commute.fog": "दृश्यता {v} किमी रह गई है, 3 किमी कोहरा-रेखा से नीचे",
+  "boost.commute.fog": "दृश्यता {m} मी रह गई है, IMD के उथले कोहरे के बैंड में",
+  "boost.commute.lowVis": "दृश्यता {v} किमी रह गई है, हमारी अपनी 3 किमी सावधानी-रेखा से नीचे",
   "boost.commute.water": "{place} के लिए शहरी जलभराव जोखिम अधिक है",
   "boost.commute.vis": "दृश्यता {v} किमी है",
   "boost.event.comfort": "आराम सूचकांक आज केवल {v}/100 है",

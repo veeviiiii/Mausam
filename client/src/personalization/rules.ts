@@ -157,13 +157,35 @@ export const CARD_RULES: Record<PersonaId, CardRule> = {
     sourceKey: "source.commute",
     boost: (p): Boost | null =>
       p.visibility < 3
-        ? { points: 36, reasonKey: "boost.commute.fog", vars: { v: String(p.visibility) } }
+        ? {
+            points: 36,
+            /*
+             * Same 1 km line the advice engine draws, for the same reason.
+             * IMD's fog classification tops out at 1000 m — shallow fog is
+             * 501-1000 m, and there is no IMD band anywhere near 3 km — so this
+             * narration used to invent an official "3 km fog line" on the first
+             * card of the default Mumbai home screen, while the advice two
+             * inches above it correctly called the same reading our own driving
+             * caution.
+             *
+             * The score is deliberately unchanged: both cases are worth +36,
+             * because a commuter cares about the visibility either way. Only
+             * the sentence differs, and it now turns on the same threshold the
+             * advice engine uses, so the two cannot disagree again.
+             */
+            reasonKey: p.visibility <= 1 ? "boost.commute.fog" : "boost.commute.lowVis",
+            vars:
+              p.visibility <= 1
+                ? { m: String(Math.round(p.visibility * 1000)) }
+                : { v: String(p.visibility) },
+          }
         : p.urban.waterloggingRisk === "high"
           ? { points: 24, reasonKey: "boost.commute.water", vars: { place: p.name } }
           : p.visibility < 5
             ? { points: 16, reasonKey: "boost.commute.vis", vars: { v: String(p.visibility) } }
             : null,
-    firesWhen: "visibility < 3 km (+36), high waterlogging risk (+24), or visibility < 5 km (+16)",
+    firesWhen:
+      "visibility < 3 km (+36, narrated as IMD shallow fog only at or below 1 km), high waterlogging risk (+24), or visibility < 5 km (+16)",
     suppressedWhen: "never",
     isSuppressed: never,
   },

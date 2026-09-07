@@ -16,9 +16,9 @@ export interface CardDetail {
   /**
    * Provenance and cache policy — one sentence, no hand-waving.
    *
-   * Kept in English in both languages: these quote IMD endpoint names and
-   * cache TTLs, and a machine-flavoured Hindi rendering of "cached until the
-   * next issue rather than on a clock" would read worse than the original.
+   * Kept in English in both languages: these name endpoints, feeds and cache
+   * TTLs, and a machine-flavoured Hindi rendering of "cached until the next
+   * issue rather than on a clock" would read worse than the original.
    * The sheet says so on screen rather than leaving it as a gap to discover.
    */
   source: string;
@@ -171,7 +171,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         [t("row.sunrise"), `${p.sunrise} IST`],
       ],
       source:
-        "IMD hourly city forecast plus the sunrise/sunset endpoint, cached 3 hours to match IMD's forecast refresh.",
+        "Seeded. The best-window, UV, feels-like and heat-index figures are demo values: no IMD hourly city forecast is called anywhere in this build, and neither is the sunrise/sunset endpoint. The temperature curve is derived from the station's current reading over a diurnal shape — only its hour labels are real, counting forward from the actual local time in this city.",
     }),
   },
 
@@ -409,7 +409,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         ],
       ],
       source:
-        "IMD district nowcast, refreshed every 15 minutes — the shortest TTL in the cache, because this is the data most likely to change between the school run and the pick-up.",
+        "Seeded. The drop and pick-up rain probabilities, the wind, the visibility and the lightning row are demo values: there is no IMD district nowcast in this build, and nothing on this card refreshes on a fifteen-minute timer. Severe weather does reach this persona for real — through the alert banner and the advice line under it, which run on NDMA's live CAP feed — but not through these two windows.",
     }),
   },
 
@@ -465,7 +465,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         [t("row.frostRisk"), p.temp < 6 ? t("val.watch") : t("val.none")],
       ],
       source:
-        "IMD subdivision rainfall forecast cached 6 hours, plus the district Agromet Advisory Service bulletin — issued Tuesdays and Fridays, so it is cached until the next issue rather than on a clock.",
+        "Seeded. The rainfall total, the 24-hour rain curve, the soil-moisture reading and the advisory paragraph are all demo values: no IMD subdivision rainfall forecast is called, and no Agromet Advisory Service bulletin is fetched. The advisory text is written to read like a real AAS bulletin, which is exactly why it is labelled here — an invented paragraph in an official register is the easiest thing on this card to mistake for the real one.",
     }),
   },
 

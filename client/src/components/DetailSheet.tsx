@@ -325,10 +325,20 @@ function alertContent(place: Place, t: Translate): SheetContent | null {
     href: a.live?.href,
     source: a.live
       ? `Live Common Alerting Protocol bulletin, republished by NDMA's public Sachet feed and issued by ${a.issuingOffice}. IMD's own APIs require the calling server's IP to be whitelisted; NDMA carries the same IMD, SDMA and CWC bulletins with no key, so warnings are real while the forecast figures on other cards are still seeded. Cached five minutes — CAP arrives on issue, not on a schedule — and anything past its expiry time is dropped rather than shown.`
-      : a.kind === "cyclone"
-        ? "Parsed from IMD's CAP XML feed and cross-referenced with the Interactive Cyclone Track bulletin, which supplies the fixes drawn on the Places map. Cyclone entries are cached on issue, never on a timer."
+      : /*
+         * These three are the SEEDED branch, and they used to describe a live
+         * parse — "parsed from IMD's CAP XML feed", "IMD's Flash Flood Guidance
+         * bulletin" — directly under an eyebrow reading "Seeded bulletin". The
+         * eyebrow was doing the honest work and this paragraph was undoing it.
+         *
+         * The parser they described is real and does run. It simply has nothing
+         * to say about this city at this moment, which is what the seeded
+         * bulletin stands in for.
+         */
+        a.kind === "cyclone"
+        ? "Seeded. This bulletin and the track fixes drawn on the Places map are demo data — no IMD CAP entry or Interactive Cyclone Track bulletin is behind them. The live parser is real and runs against NDMA's public Sachet feed; when it carries a cyclone warning for this coast, that bulletin replaces this one and the sheet is labelled live."
         : a.kind === "flash-flood"
-          ? "Parsed from IMD's Flash Flood Guidance bulletin, which publishes as CAP alongside district warnings. The same parser handles all three warning types."
-          : "Parsed from IMD's Common Alerting Protocol XML feed. Warnings are cached on issue, not on a timer — a new CAP entry invalidates the old one immediately.",
+          ? "Seeded. No IMD Flash Flood Guidance bulletin is behind this — it is demo data shaped like one. Flash-flood entries publish as CAP alongside district warnings, so when NDMA's live feed carries one for this district the same parser handles it and the sheet is labelled live."
+          : "Seeded. This is demo data shaped like a district warning, not a parsed CAP entry. The live path is real and runs against NDMA's public Sachet feed; when it carries a warning for this district, that bulletin replaces this one and the sheet is labelled live.",
   };
 }
