@@ -8,6 +8,7 @@ import { citiesUpTo, type AqiCity } from "../data/aqi-cities";
 import { cachedAqiFor, fetchAqiFor, usAqiBand } from "../lib/openMeteoAqi";
 import { fade, sheetVariants } from "../animations/variants";
 import { useT } from "../i18n/context";
+import { placeName } from "../i18n/seedText";
 
 /**
  * Full-screen weather radar.
@@ -303,7 +304,7 @@ export function RadarMap({
       for (const p of PLACES) {
         const value = active === "wind" ? `${p.wind}` : `${p.rainProbability[0]}%`;
         const color = active === "wind" ? "#8FB0CC" : "#7FC4E8";
-        const marker = new maplibregl.Marker({ element: cityLabel(p.name, value, color) })
+        const marker = new maplibregl.Marker({ element: cityLabel(placeName(t, p), value, color) })
           .setLngLat([p.lon, p.lat])
           .addTo(map);
         markersRef.current.push(marker);
@@ -315,7 +316,7 @@ export function RadarMap({
       controller.abort();
       clearMarkers();
     };
-  }, [active, status, tier, clearMarkers]);
+  }, [active, status, tier, clearMarkers, t]);
 
   /* ---- crossfade on switch ---- */
   useEffect(() => {

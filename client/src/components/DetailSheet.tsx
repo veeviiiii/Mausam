@@ -6,6 +6,7 @@ import { ADVISORY_TONE, advisoriesFor, type Advisory } from "../personalization/
 import { sourcesFor } from "../data/provenance";
 import { CARD_UI } from "../features/cards/registry";
 import { useT } from "../i18n/context";
+import { placeName, stationName } from "../i18n/seedText";
 import { capText } from "../i18n/capText";
 import type { PersonaId, Place } from "../data/types";
 import type { LiveAqi } from "../lib/useLiveAqi";
@@ -276,7 +277,7 @@ function cardContent(
       : detail.source;
 
   return {
-    eyebrow: `${t(`persona.${id}`)} · ${place.name}`,
+    eyebrow: `${t(`persona.${id}`)} · ${placeName(t, place)}`,
     title: t(rule.titleKey),
     lede: detail.lede,
     rows,
@@ -288,12 +289,14 @@ function alertContent(place: Place, t: Translate): SheetContent | null {
   const a = place.alert;
   if (!a) return null;
 
+  const text = capText(place.id, a, t);
+
   const rows: [string, string][] = [
     [t("row.colourCode"), t(`level.${a.level}`).toUpperCase()],
     [t("row.alertType"), t(`alert.kind.${a.kind}`)],
-    [t("row.validUntil"), a.validUntil],
-    [t("row.issuingOffice"), a.issuingOffice],
-    [t("row.district"), place.station],
+    [t("row.validUntil"), text.validUntil],
+    [t("row.issuingOffice"), text.issuingOffice],
+    [t("row.district"), stationName(t, place)],
   ];
 
   // A live bulletin carries the districts CAP actually named, which is usually
@@ -310,15 +313,13 @@ function alertContent(place: Place, t: Translate): SheetContent | null {
     );
   }
 
-  const text = capText(place.id, a, t);
-
   return {
     // NDMA's Sachet feed carries IMD, state SDMA and CWC bulletins, so the
     // issuing body is read off the alert rather than hardcoded — and a seeded
     // bulletin says it is seeded instead of borrowing IMD's name.
     eyebrow: a.live
-      ? t("sheet.liveEyebrow", { office: a.issuingOffice, place: place.name })
-      : t("sheet.seededEyebrow", { place: place.name }),
+      ? t("sheet.liveEyebrow", { office: a.issuingOffice, place: placeName(t, place) })
+      : t("sheet.seededEyebrow", { place: placeName(t, place) }),
     title: text.headline,
     lede: text.body,
     rows,

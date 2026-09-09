@@ -181,7 +181,7 @@ function PackRow({ pack }: { pack: (typeof PACKS)[number] }) {
         <span className="min-w-0 flex-1">
           <b className="block text-[13px] font-semibold">{pack.label}</b>
           <small className="block text-[11px]" style={{ color: "var(--txt-2)" }}>
-            {pack.english} · {t("lang.size", { mb: pack.mb.toFixed(1) })}
+            {t(`lang.name.${pack.code}`)} · {t("lang.size", { mb: pack.mb.toFixed(1) })}
           </small>
         </span>
 

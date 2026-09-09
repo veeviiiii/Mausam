@@ -210,6 +210,7 @@ const en: Dict = {
   "unit.mmNext24": "mm next 24 h",
   "unit.kmVisibility": "km visibility",
   "unit.comfort": "/ 100 comfort",
+  "unit.km": "km",
   "unit.kmh": "{v} km/h",
   "unit.to": "to {v}",
   "unit.pct": "{v}%",
@@ -377,6 +378,135 @@ const en: Dict = {
   "capText.indore.headline": "Yellow warning · heavy rainfall",
   "capText.indore.body":
     "Heavy rainfall very likely at isolated places over Indore, Dewas and Ujjain districts.",
+
+  /* ---- seeded place text ----
+
+     Everything data/seed.ts holds as prose. The English here is a copy of the
+     English of record in seed.ts; verify-tokens diffs the two, so rewording the
+     seed fails the build until the Hindi beside it is updated.
+
+     Station and airport entries keep their codes -- MH, VABB, AAS are
+     identifiers, not words. Live CPCB station names and live CAP bulletins are
+     deliberately absent: those are shown exactly as the upstream issued them. */
+  "axis.plus12h": "+12 h",
+  "axis.plus24h": "+24 h",
+  "lang.name.bn": "Bengali",
+  "lang.name.ta": "Tamil",
+  "lang.name.te": "Telugu",
+  "lang.name.mr": "Marathi",
+  "lang.name.gu": "Gujarati",
+  "lang.name.kn": "Kannada",
+  "lang.name.ml": "Malayalam",
+  "lang.name.pa": "Punjabi",
+  "lang.name.or": "Odia",
+  "lang.name.as": "Assamese",
+  "capText.mumbai.validUntil": "08:30 IST, 05 Sep",
+  "capText.mumbai.issuingOffice": "IMD Mumbai RMC",
+  "capText.delhi.validUntil": "23:30 IST, 04 Sep",
+  "capText.delhi.issuingOffice": "IMD Delhi RMC",
+  "capText.kochi.validUntil": "20:30 IST, 04 Sep",
+  "capText.kochi.issuingOffice": "IMD Flash Flood Guidance · Thiruvananthapuram",
+  "capText.vizag.validUntil": "17:30 IST, 05 Sep",
+  "capText.vizag.issuingOffice": "IMD Cyclone Warning Division · Visakhapatnam",
+  "capText.indore.validUntil": "23:30 IST, 04 Sep",
+  "capText.indore.issuingOffice": "IMD Bhopal RMC",
+  "val.thisDistrict": "this district",
+  "place.mumbai": "Mumbai",
+  "place.delhi": "New Delhi",
+  "place.chennai": "Chennai",
+  "place.kochi": "Kochi",
+  "place.vizag": "Visakhapatnam",
+  "place.indore": "Indore",
+
+  "station.mumbai": "Santacruz \u00b7 MH",
+  "station.delhi": "Safdarjung \u00b7 DL",
+  "station.chennai": "Nungambakkam \u00b7 TN",
+  "station.kochi": "Ernakulam \u00b7 KL",
+  "station.vizag": "Waltair \u00b7 AP",
+  "station.indore": "Indore AP \u00b7 MP",
+
+  "aqiCat.good": "Good",
+  "aqiCat.satisfactory": "Satisfactory",
+  "aqiCat.moderate": "Moderate",
+  "aqiCat.poor": "Poor",
+  "aqiCat.veryPoor": "Very poor",
+  "aqiCat.severe": "Severe",
+
+  "pollenLevel.low": "Low",
+  "pollenLevel.moderate": "Moderate",
+  "pollenLevel.high": "High",
+
+  "risk.low": "low",
+  "risk.moderate": "moderate",
+  "risk.high": "high",
+
+  "soil.saturated": "Saturated",
+  "soil.adequate": "Adequate",
+  "soil.dry": "Dry",
+  "soil.wet": "Wet",
+
+  "tide.spring": "spring",
+  "tide.neap": "neap",
+  "tide.transitional": "transitional",
+
+  "moonPhase.waningGibbous": "Waning gibbous",
+
+  "urbanText.mumbai": "Hindmata and Sion junctions typically hold water above 60 mm/day.",
+  "urbanText.delhi": "Minto Bridge underpass closes above 40 mm/hour.",
+  "urbanText.chennai": "No waterlogging expected; heat stress is the current urban risk.",
+  "urbanText.kochi": "Low-lying Ernakulam wards drain slowly at high tide.",
+  "urbanText.vizag": "Secure hoardings and loose roofing; gusts above 60 km/h expected.",
+  "urbanText.indore": "Bhawarkuan and Khajrana junctions pond above 45 mm/hour.",
+
+  "agrometText.mumbai":
+    "Hold off on urea top-dressing until the spell passes \u2014 surface run-off will carry it away. Drain standing water from vegetable beds.",
+  "agrometText.delhi":
+    "Irrigate kharif vegetables early morning. Watch for whitefly on brinjal after the humid spell.",
+  "agrometText.chennai":
+    "Soil moisture is falling \u2014 schedule drip irrigation for groundnut. Delay transplanting until the next spell.",
+  "agrometText.kochi":
+    "Provide drainage in pepper and cardamom plots. Prophylactic spray against quick wilt once rain pauses.",
+  "agrometText.vizag":
+    "Harvest mature groundnut immediately and move produce to covered storage ahead of the system.",
+  "agrometText.indore":
+    "Drain standing water from soybean plots and delay pod-borer spray until the spell breaks. Earth up maize to prevent lodging in gusty winds.",
+
+  "agrometIssued.mumbai": "Tue 01 Sep \u00b7 Konkan AAS",
+  "agrometIssued.delhi": "Tue 01 Sep \u00b7 Delhi AAS",
+  "agrometIssued.chennai": "Tue 01 Sep \u00b7 Tamil Nadu AAS",
+  "agrometIssued.kochi": "Tue 01 Sep \u00b7 Kerala AAS",
+  "agrometIssued.vizag": "Tue 01 Sep \u00b7 Andhra Pradesh AAS",
+  "agrometIssued.indore": "Tue 01 Sep \u00b7 Madhya Pradesh AAS",
+
+  "tourismText.mumbai": "Wet through the weekend; indoor plans advised.",
+  "tourismText.delhi": "Hot and humid; evenings usable after 19:00.",
+  "tourismText.chennai": "Bright and hot; coast comfortable after sunset.",
+  "tourismText.kochi": "Heavy showers; backwater trips likely disrupted.",
+  "tourismText.vizag": "Beaches closed; travel not advised until the system clears.",
+  "tourismText.indore": "Showery through midweek; mornings are the usable window.",
+
+  "tourismDay.mumbai": "Sun 07 Sep",
+  "tourismDay.delhi": "Tue 09 Sep",
+  "tourismDay.chennai": "Sat 06 Sep",
+  "tourismDay.kochi": "Mon 08 Sep",
+  "tourismDay.vizag": "Wed 10 Sep",
+  "tourismDay.indore": "Wed 10 Sep",
+
+  "aviationAirport.mumbai": "VABB \u00b7 Chhatrapati Shivaji",
+  "aviationAirport.delhi": "VIDP \u00b7 Indira Gandhi",
+  "aviationAirport.chennai": "VOMM \u00b7 Chennai",
+  "aviationAirport.kochi": "VOCI \u00b7 Cochin",
+  "aviationAirport.vizag": "VOVZ \u00b7 Visakhapatnam",
+  "aviationAirport.indore": "VAID \u00b7 Devi Ahilyabai Holkar",
+
+  "aviationText.mumbai": "Arrivals holding, 25 min average",
+  "aviationText.delhi": "Normal operations",
+  "aviationText.chennai": "Normal operations",
+  "aviationText.kochi": "Convective activity, minor delays",
+  "aviationText.vizag": "Crosswind limits approaching, diversions possible",
+  "aviationText.indore": "Normal operations, occasional showers",
+
+  "landfall.vizag": "Between 03:00 and 06:00 IST, 05 Sep",
 
   /* ---- rules table ---- */
   "why.heading": "Why this card",
@@ -617,7 +747,7 @@ const hi: Dict = {
   "card.beach.line": "{advice} — 2 मी सलाह-रेखा से {side}।",
   "card.beach.spring": "इस सप्ताह वृहद ज्वार, इसलिए उतार-चढ़ाव सबसे अधिक है।",
   "card.beach.neap": "इस सप्ताह लघु ज्वार, इसलिए उतार-चढ़ाव असामान्य रूप से कम है।",
-  "card.beach.transitional": "चंद्रमा {phase} है, {pct}% पर, इसलिए उतार-चढ़ाव मध्यम है।",
+  "card.beach.transitional": "{phase}, {pct}% प्रकाशित — इसलिए उतार-चढ़ाव मध्यम है।",
   "card.travel.note": "{total} में से {warned} सहेजे गंतव्य सक्रिय चेतावनी में हैं।",
   "card.family.umbrella": "छाता भेजें।",
   "card.family.noUmbrella": "छाते की ज़रूरत नहीं।",
@@ -634,6 +764,7 @@ const hi: Dict = {
   "unit.mmNext24": "मिमी अगले 24 घं",
   "unit.kmVisibility": "किमी दृश्यता",
   "unit.comfort": "/ 100 आराम",
+  "unit.km": "किमी",
   "unit.kmh": "{v} किमी/घं",
   "unit.to": "{v} तक",
   "unit.pct": "{v}%",
@@ -799,6 +930,127 @@ const hi: Dict = {
   "capText.indore.headline": "पीली चेतावनी · भारी वर्षा",
   "capText.indore.body":
     "इंदौर, देवास और उज्जैन ज़िलों में कुछ स्थानों पर भारी वर्षा की प्रबल संभावना है।",
+
+  /* ---- seeded place text (see the English block for the contract) ---- */
+  "axis.plus12h": "+12 घं",
+  "axis.plus24h": "+24 घं",
+  "lang.name.bn": "बांग्ला",
+  "lang.name.ta": "तमिल",
+  "lang.name.te": "तेलुगु",
+  "lang.name.mr": "मराठी",
+  "lang.name.gu": "गुजराती",
+  "lang.name.kn": "कन्नड़",
+  "lang.name.ml": "मलयालम",
+  "lang.name.pa": "पंजाबी",
+  "lang.name.or": "ओड़िया",
+  "lang.name.as": "असमिया",
+  "capText.mumbai.validUntil": "08:30 IST, 05 सित",
+  "capText.mumbai.issuingOffice": "IMD मुंबई RMC",
+  "capText.delhi.validUntil": "23:30 IST, 04 सित",
+  "capText.delhi.issuingOffice": "IMD दिल्ली RMC",
+  "capText.kochi.validUntil": "20:30 IST, 04 सित",
+  "capText.kochi.issuingOffice": "IMD आकस्मिक बाढ़ मार्गदर्शन · तिरुवनंतपुरम",
+  "capText.vizag.validUntil": "17:30 IST, 05 सित",
+  "capText.vizag.issuingOffice": "IMD चक्रवात चेतावनी प्रभाग · विशाखापत्तनम",
+  "capText.indore.validUntil": "23:30 IST, 04 सित",
+  "capText.indore.issuingOffice": "IMD भोपाल RMC",
+  "val.thisDistrict": "इस ज़िले",
+  "place.mumbai": "मुंबई",
+  "place.delhi": "नई दिल्ली",
+  "place.chennai": "चेन्नई",
+  "place.kochi": "कोच्चि",
+  "place.vizag": "विशाखापत्तनम",
+  "place.indore": "इंदौर",
+
+  "station.mumbai": "सांताक्रूज़ · MH",
+  "station.delhi": "सफ़दरजंग · DL",
+  "station.chennai": "नुंगमबक्कम · TN",
+  "station.kochi": "एर्नाकुलम · KL",
+  "station.vizag": "वाल्टेयर · AP",
+  "station.indore": "इंदौर AP · MP",
+
+  "aqiCat.good": "अच्छी",
+  "aqiCat.satisfactory": "संतोषजनक",
+  "aqiCat.moderate": "मध्यम",
+  "aqiCat.poor": "खराब",
+  "aqiCat.veryPoor": "बहुत खराब",
+  "aqiCat.severe": "गंभीर",
+
+  "pollenLevel.low": "कम",
+  "pollenLevel.moderate": "मध्यम",
+  "pollenLevel.high": "अधिक",
+
+  "risk.low": "कम",
+  "risk.moderate": "मध्यम",
+  "risk.high": "अधिक",
+
+  "soil.saturated": "संतृप्त",
+  "soil.adequate": "पर्याप्त",
+  "soil.dry": "सूखी",
+  "soil.wet": "नम",
+
+  "tide.spring": "वृहद",
+  "tide.neap": "लघु",
+  "tide.transitional": "मध्यवर्ती",
+
+  "moonPhase.waningGibbous": "घटता चंद्रमा",
+
+  "urbanText.mumbai": "हिंदमाता और सायन जंक्शन पर 60 मिमी/दिन से ऊपर आमतौर पर पानी भर जाता है।",
+  "urbanText.delhi": "मिंटो ब्रिज अंडरपास 40 मिमी/घंटा से ऊपर बंद कर दिया जाता है।",
+  "urbanText.chennai": "जलभराव की आशंका नहीं; इस समय शहरी जोखिम गर्मी का दबाव है।",
+  "urbanText.kochi": "एर्नाकुलम के निचले वार्डों से ऊँचे ज्वार पर पानी धीरे निकलता है।",
+  "urbanText.vizag": "होर्डिंग और ढीली छतें बाँध दें; 60 किमी/घंटा से तेज़ झोंके संभावित हैं।",
+  "urbanText.indore": "भँवरकुआँ और खजराना जंक्शन पर 45 मिमी/घंटा से ऊपर पानी जमा हो जाता है।",
+
+  "agrometText.mumbai":
+    "बारिश का दौर थमने तक यूरिया की टॉप-ड्रेसिंग रोक दें — सतही बहाव उसे बहा ले जाएगा। सब्ज़ी की क्यारियों से जमा पानी निकालें।",
+  "agrometText.delhi":
+    "खरीफ़ सब्ज़ियों की सिंचाई सुबह जल्दी करें। उमस के बाद बैंगन पर सफ़ेद मक्खी पर नज़र रखें।",
+  "agrometText.chennai":
+    "मिट्टी की नमी घट रही है — मूँगफली के लिए ड्रिप सिंचाई तय करें। अगली बारिश तक रोपाई टाल दें।",
+  "agrometText.kochi":
+    "काली मिर्च और इलायची के खेतों में जल निकासी करें। बारिश रुकते ही क्विक विल्ट के विरुद्ध बचाव छिड़काव करें।",
+  "agrometText.vizag":
+    "पकी हुई मूँगफली तुरंत काट लें और तंत्र आने से पहले उपज को ढके भंडार में पहुँचाएँ।",
+  "agrometText.indore":
+    "सोयाबीन के खेतों से जमा पानी निकालें और बारिश थमने तक फली-छेदक का छिड़काव टालें। तेज़ हवाओं में गिरने से बचाने के लिए मक्के में मिट्टी चढ़ाएँ।",
+
+  "agrometIssued.mumbai": "मंगल 01 सित · कोंकण AAS",
+  "agrometIssued.delhi": "मंगल 01 सित · दिल्ली AAS",
+  "agrometIssued.chennai": "मंगल 01 सित · तमिलनाडु AAS",
+  "agrometIssued.kochi": "मंगल 01 सित · केरल AAS",
+  "agrometIssued.vizag": "मंगल 01 सित · आंध्र प्रदेश AAS",
+  "agrometIssued.indore": "मंगल 01 सित · मध्य प्रदेश AAS",
+
+  "tourismText.mumbai": "सप्ताहांत तक बारिश; भीतर की योजनाएँ बेहतर।",
+  "tourismText.delhi": "गर्म और उमसभरा; 19:00 के बाद शाम ठीक रहेगी।",
+  "tourismText.chennai": "तेज़ धूप और गर्मी; सूर्यास्त के बाद तट आरामदेह।",
+  "tourismText.kochi": "तेज़ बौछारें; बैकवाटर यात्राएँ बाधित रह सकती हैं।",
+  "tourismText.vizag": "समुद्र तट बंद; तंत्र हटने तक यात्रा की सलाह नहीं।",
+  "tourismText.indore": "सप्ताह के मध्य तक बौछारें; सुबह का समय सबसे उपयुक्त।",
+
+  "tourismDay.mumbai": "रवि 07 सित",
+  "tourismDay.delhi": "मंगल 09 सित",
+  "tourismDay.chennai": "शनि 06 सित",
+  "tourismDay.kochi": "सोम 08 सित",
+  "tourismDay.vizag": "बुध 10 सित",
+  "tourismDay.indore": "बुध 10 सित",
+
+  "aviationAirport.mumbai": "VABB · छत्रपति शिवाजी",
+  "aviationAirport.delhi": "VIDP · इंदिरा गांधी",
+  "aviationAirport.chennai": "VOMM · चेन्नई",
+  "aviationAirport.kochi": "VOCI · कोच्चि",
+  "aviationAirport.vizag": "VOVZ · विशाखापत्तनम",
+  "aviationAirport.indore": "VAID · देवी अहिल्याबाई होल्कर",
+
+  "aviationText.mumbai": "आगमन रोके गए, औसत 25 मिनट",
+  "aviationText.delhi": "सामान्य संचालन",
+  "aviationText.chennai": "सामान्य संचालन",
+  "aviationText.kochi": "गरज-चमक की गतिविधि, मामूली देरी",
+  "aviationText.vizag": "क्रॉसविंड सीमा के निकट, मार्ग बदलना संभव",
+  "aviationText.indore": "सामान्य संचालन, बीच-बीच में बौछारें",
+
+  "landfall.vizag": "05 सित, 03:00 से 06:00 IST के बीच",
 
   /* ---- rules table ---- */
   "why.heading": "यह कार्ड क्यों",

@@ -17,6 +17,7 @@ import { relativeAge } from "../lib/time";
 import { useMotionWindow } from "../lib/useMotionWindow";
 import type { SheetTarget } from "../components/DetailSheet";
 import { useT } from "../i18n/context";
+import { placeName, stationName } from "../i18n/seedText";
 
 export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
   const tr = useT();
@@ -90,7 +91,7 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
                     <circle cx="7" cy="5.6" r="1.5" fill="currentColor" />
                   </svg>
                 ) : null}
-                {p.name}
+                {placeName(tr, p)}
               </motion.button>
             );
           })}
@@ -103,14 +104,14 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
           <AlertBanner
             key={`${place.id}-alert`}
             alert={place.alert}
-            place={place.name}
+            place={placeName(tr, place)}
             placeId={place.id}
             onOpen={() => onOpen({ kind: "alert", placeId: place.id })}
           />
         ) : (
           <NoAlerts
             key={`${place.id}-none`}
-            place={place.name}
+            place={placeName(tr, place)}
             checked={relativeAge(dataAgeMinutes, tr)}
           />
         )}
@@ -143,7 +144,7 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
         <div className="lg:flex lg:items-end lg:gap-8">
           <div>
             <RollingText
-              value={place.name}
+              value={placeName(tr, place)}
               className="text-[27px] font-medium leading-[1.15] tracking-[-0.03em] lg:text-[40px]"
             />
             <div className="mt-2 flex items-start justify-between gap-3 lg:mt-1 lg:block">
@@ -158,7 +159,8 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
                   {tr(`cond.${condition}`)}
                 </div>
                 <div className="sky-txt-2 mt-0.5 text-[12.5px] lg:text-[14px]">
-                  {place.station} · {tr("home.feelsLike", { v: String(place.feelsLike) })}
+                  {stationName(tr, place)} ·{" "}
+                  {tr("home.feelsLike", { v: String(place.feelsLike) })}
                 </div>
               </div>
               <div className="lg:hidden">
@@ -176,7 +178,7 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
           {[
             [tr("home.humidity"), `${place.humidity}%`],
             [tr("home.wind"), tr("unit.kmh", { v: String(place.wind) })],
-            [tr("home.visibility"), `${place.visibility.toFixed(1)} km`],
+            [tr("home.visibility"), `${place.visibility.toFixed(1)} ${tr("unit.km")}`],
             [tr("home.sunset"), place.sunset],
           ].map(([label, value]) => (
             <div key={label} className="flex flex-col gap-px">
@@ -232,7 +234,7 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
         <p className="sky-txt-2 mt-3 px-6 text-[11.5px] leading-[1.45] lg:mt-5 lg:px-0 lg:text-[12.5px]">
           {tr(suppressed.length > 1 ? "home.suppressedMany" : "home.suppressedOne", {
             names: suppressed.map((s) => tr(`persona.${s.id}`)).join(", "),
-            place: place.name,
+            place: placeName(tr, place),
           })}
         </p>
       ) : null}

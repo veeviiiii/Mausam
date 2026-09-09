@@ -55,7 +55,7 @@ export const AlertBanner = forwardRef<
           {text.body}
         </span>
         <span className="mt-1.5 block font-mono text-[10.5px] text-white/85">
-          {t("alert.validTill", { until: alert.validUntil, office: alert.issuingOffice })}
+          {t("alert.validTill", { until: text.validUntil, office: text.issuingOffice })}
         </span>
       </span>
     </motion.button>

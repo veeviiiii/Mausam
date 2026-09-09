@@ -25,6 +25,7 @@ import {
   measureHourChip,
 } from "../src/design/tokens";
 import { DICT, LANGUAGES } from "../src/i18n/dictionary";
+import { PLACES } from "../src/data/seed";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const PROTOTYPE = resolve(here, "../../design/mausam-home.html");
@@ -254,6 +255,86 @@ for (const [id, seeded] of seedAlerts) {
   }
 }
 
+/* ---- 7b. every seeded string a screen renders must have a translation ----
+
+   The dictionary carries an English copy of each seeded string so the Hindi can
+   sit beside it key-for-key, exactly as the CAP text above does. Both halves are
+   checked: the key must exist (or the UI silently falls back to English, which
+   is the bug this was written for), and the English copy must still match
+   seed.ts (or the Hindi is a translation of wording that no longer ships).
+
+   PLACES is imported rather than regex-scraped: two different fields are called
+   `advisory`, and a parser that picks the wrong one fails silently. */
+let seedChecked = 0;
+{
+  const perPlace: [string, (p: (typeof PLACES)[number]) => string | undefined][] = [
+    ["place", (p) => p.name],
+    ["station", (p) => p.station],
+    ["urbanText", (p) => p.urban.advisory],
+    ["agrometText", (p) => p.agromet.advisory],
+    ["agrometIssued", (p) => p.agromet.issued],
+    ["tourismText", (p) => p.tourism.outlook],
+    ["tourismDay", (p) => p.tourism.bestDay],
+    ["aviationAirport", (p) => p.aviation?.airport],
+    ["aviationText", (p) => p.aviation?.terminalStatus],
+    ["landfall", (p) => p.alert?.track?.landfall],
+  ];
+
+  // Same slug rule as seedEnum in src/i18n/seedText.ts.
+  const slug = (v: string) =>
+    v
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+(.)/g, (_, c: string) => c.toUpperCase());
+
+  const enums: [string, (p: (typeof PLACES)[number]) => string][] = [
+    ["aqiCat", (p) => p.aqiCategory],
+    ["pollenLevel", (p) => p.pollen],
+    ["risk", (p) => p.urban.waterloggingRisk],
+    ["soil", (p) => p.agromet.soilCategory],
+    ["tide", (p) => p.moon.tideRegime],
+    ["moonPhase", (p) => p.moon.phase],
+  ];
+
+  const check = (key: string, seeded: string) => {
+    const inDict = DICT.en[key];
+    if (inDict === undefined) {
+      fail(`seed text: no dictionary key "${key}" for the seeded value ${JSON.stringify(seeded)}`);
+      return;
+    }
+    if (inDict !== seeded) {
+      fail(
+        `seed text drift on "${key}"
+    seed.ts    : ${seeded}
+    dictionary : ${inDict}`,
+      );
+      return;
+    }
+    seedChecked++;
+  };
+
+  for (const p of PLACES) {
+    for (const [prefix, read] of perPlace) {
+      const seeded = read(p);
+      if (seeded !== undefined) check(`${prefix}.${p.id}`, seeded);
+    }
+    for (const [prefix, read] of enums) check(`${prefix}.${slug(read(p))}`, read(p));
+
+    // The rest of the seeded bulletin. Check 7 above covers its headline and
+    // body; these two are text on the banner just as much as those are.
+    if (p.alert) {
+      check(`capText.${p.id}.validUntil`, p.alert.validUntil);
+      check(`capText.${p.id}.issuingOffice`, p.alert.issuingOffice);
+    }
+  }
+
+  // AQI bands come from the live feed too, not only from the seed, so every
+  // band name has to resolve even if no seeded city currently sits in it.
+  for (const band of ["Good", "Satisfactory", "Moderate", "Poor", "Very poor", "Severe"]) {
+    check(`aqiCat.${slug(band)}`, band);
+  }
+}
+
 /* ---- 8. serverless routes must be self-contained ----
 
    client/package.json is "type": "module", so Vercel emits each api/*.ts as
@@ -311,7 +392,7 @@ console.log(
 console.log(
   `  language verified — ${base.size} keys x ${LANGUAGES.length} languages in step; ` +
     `${referenced.size} literal keys referenced in src resolve; ` +
-    `${capChecked} CAP strings match seed.ts`,
+    `${capChecked} CAP + ${seedChecked} seeded strings match seed.ts`,
 );
 console.log(
   `  contrast verified — ${skyCount}/${skyCount} skies clear AA ${AA_THRESHOLD}:1 on glass and bare; ` +

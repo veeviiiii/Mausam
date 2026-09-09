@@ -1,6 +1,7 @@
 import { advisoriesFor, type Advisory } from "./advisories";
 import { sourcesFor } from "../data/provenance";
 import type { Place } from "../data/types";
+import { placeName } from "../i18n/seedText";
 
 /**
  * Packing suggestions for saved destinations — "carry a raincoat in London".
@@ -76,7 +77,7 @@ export function packingFor(destinations: Place[], t: Translate): PackingLine[] {
   return destinations.flatMap((d) => {
     const advisory = advisoriesFor(d, sourcesFor(d, null, t), t).find((a) => PACKABLE[a.id]);
     return advisory
-      ? [{ placeId: d.id, placeName: d.name, itemKey: PACKABLE[advisory.id], advisory }]
+      ? [{ placeId: d.id, placeName: placeName(t, d), itemKey: PACKABLE[advisory.id], advisory }]
       : [];
   });
 }

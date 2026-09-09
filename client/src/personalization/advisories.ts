@@ -1,6 +1,7 @@
 import type { Place } from "../data/types";
 import type { Source, Sources } from "../data/provenance";
 import { capText } from "../i18n/capText";
+import { placeName, seedText } from "../i18n/seedText";
 
 /**
  * "What to do" — the same rule-based, explainable machinery as the card
@@ -89,7 +90,10 @@ export function advisoriesFor(place: Place, sources: Sources, tr: Translate): Ad
    * the level needs no parsing and cannot drift.
    */
   const warnLabel = p.alert
-    ? { event: capText(p.id, p.alert, tr).headline, until: p.alert.validUntil }
+    ? (() => {
+        const cap = capText(p.id, p.alert, tr);
+        return { event: cap.headline, until: cap.validUntil };
+      })()
     : null;
 
   /* ---- life safety ---- */
@@ -98,7 +102,10 @@ export function advisoriesFor(place: Place, sources: Sources, tr: Translate): Ad
       id: "secure",
       titleKey: "adv.secure",
       whyKey: "adv.secureWhy",
-      vars: { system: p.alert.track.systemName, when: p.alert.track.landfall },
+      vars: {
+        system: p.alert.track.systemName,
+        when: seedText(tr, `landfall.${p.id}`, p.alert.track.landfall),
+      },
       tone: "danger",
       source: sources.alert,
     });
@@ -109,7 +116,7 @@ export function advisoriesFor(place: Place, sources: Sources, tr: Translate): Ad
       id: "higher-ground",
       titleKey: "adv.higherGround",
       whyKey: "adv.higherGroundWhy",
-      vars: { place: p.name },
+      vars: { place: placeName(tr, p) },
       tone: "danger",
       source: sources.alert,
     });
@@ -122,7 +129,7 @@ export function advisoriesFor(place: Place, sources: Sources, tr: Translate): Ad
       whyKey: warnsStorm && warnLabel ? "adv.indoorsWarnWhy" : "adv.indoorsWhy",
       vars:
         warnsStorm && warnLabel
-          ? { office: p.alert?.issuingOffice ?? "the district" }
+          ? { office: p.alert ? capText(p.id, p.alert, tr).issuingOffice : tr("val.thisDistrict") }
           : undefined,
       tone: "danger",
       source: warnsStorm ? sources.alert : sources.temp,
@@ -244,7 +251,7 @@ export function advisoriesFor(place: Place, sources: Sources, tr: Translate): Ad
       id: "underpass",
       titleKey: "adv.avoidUnderpass",
       whyKey: "adv.avoidUnderpassWhy",
-      vars: { place: p.name },
+      vars: { place: placeName(tr, p) },
       tone: "warn",
       source: sources.waterlogging,
     });
@@ -304,7 +311,7 @@ export function advisoriesFor(place: Place, sources: Sources, tr: Translate): Ad
       id: "none",
       titleKey: "adv.none",
       whyKey: "adv.noneWhy",
-      vars: { place: p.name },
+      vars: { place: placeName(tr, p) },
       tone: "info",
       source: sources.alert,
     });

@@ -7,6 +7,7 @@ import { RADIUS, WARNING_COLOR } from "../design/tokens";
 import { springCard } from "../animations/variants";
 import { timeOfDayFor } from "../lib/time";
 import { useT } from "../i18n/context";
+import { placeName, stationName } from "../i18n/seedText";
 
 /**
  * MapLibre is ~800 kB of the bundle on its own. Splitting it out keeps the
@@ -74,9 +75,10 @@ export function PlacesScreen() {
             <span className="flex items-center gap-3">
               <WeatherIcon condition={p.condition} size={30} />
               <span className="min-w-0 flex-1">
-                <b className="block text-[15px] font-semibold">{p.name}</b>
+                <b className="block text-[15px] font-semibold">{placeName(t, p)}</b>
                 <small className="mt-px block text-[11.5px]" style={{ color: "var(--txt-2)" }}>
-                  {t(`cond.${p.condition}`)} · {t(`tod.${timeOfDayFor(p, nowFor(p))}`)} · {p.station}
+                  {t(`cond.${p.condition}`)} · {t(`tod.${timeOfDayFor(p, nowFor(p))}`)} ·{" "}
+                  {stationName(t, p)}
                 </small>
               </span>
               <span className="tnum ml-auto text-[25px] font-light tracking-[-0.03em]">{p.temp}°</span>

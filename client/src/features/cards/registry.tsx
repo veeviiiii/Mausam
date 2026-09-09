@@ -5,6 +5,7 @@ import { WeatherIcon } from "../../components/WeatherIcon";
 import { savedPlaces } from "../../personalization/rules";
 import { packingFor } from "../../personalization/packing";
 import { useT } from "../../i18n/context";
+import { placeName, seedEnum, seedText } from "../../i18n/seedText";
 import type { LiveAqi } from "../../lib/useLiveAqi";
 import { Band, Bars, Gauge, KeyValues, Note, Readout, WindowPair } from "./viz";
 
@@ -76,7 +77,10 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         : [t("kv.pm25"), String(place.pm25)];
       return (
         <>
-          <Readout value={place.aqi} unit={t("unit.aqi", { band: band.name })} />
+          <Readout
+            value={place.aqi}
+            unit={t("unit.aqi", { band: seedEnum(t, "aqiCat", band.name) })}
+          />
           {/* Which station and when, on the card itself. Without this a figure
               that disagrees with another source is unverifiable rather than
               explainable — which is the whole point of the rest of this app. */}
@@ -89,7 +93,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
                 })
               : place.cpcbCity
                 ? t("card.health.noLive")
-                : t("card.health.noStation", { place: place.name })}
+                : t("card.health.noStation", { place: placeName(t, place) })}
           </Note>
           <Band
             segments={AQI_BANDS.map((b) => ({ color: b.color }))}
@@ -105,7 +109,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
           <KeyValues
             items={[
               governing,
-              [t("kv.pollen"), place.pollen],
+              [t("kv.pollen"), seedEnum(t, "pollenLevel", place.pollen)],
               [t("kv.peakUv"), String(place.uv)],
               [t("kv.humidity"), `${place.humidity}%`],
             ]}
@@ -116,10 +120,10 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
     detail: (p, t) => ({
       lede: t("card.health.lede"),
       rows: [
-        [t("row.aqi"), `${p.aqi} · ${p.aqiCategory}`],
+        [t("row.aqi"), `${p.aqi} · ${seedEnum(t, "aqiCat", p.aqiCategory)}`],
         [t("row.pm25"), `${p.pm25} µg/m³`],
         [t("row.pm10"), `${Math.round(p.pm25 * 1.9)} µg/m³`],
-        [t("row.pollenLoad"), p.pollen],
+        [t("row.pollenLoad"), seedEnum(t, "pollenLevel", p.pollen)],
         [t("row.peakUv"), String(p.uv)],
         [t("row.rh"), `${p.humidity} %`],
         [t("row.dewPoint"), `${p.dewPoint} °C`],
@@ -207,7 +211,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
           : place.moon.tideRegime === "neap"
             ? t("card.beach.neap")
             : t("card.beach.transitional", {
-                phase: place.moon.phase.toLowerCase(),
+                phase: seedEnum(t, "moonPhase", place.moon.phase).toLowerCase(),
                 pct: String(place.moon.illumination),
               });
       return (
@@ -234,8 +238,11 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         [t("row.nextHigh"), `${p.tideHigh} · ${one(p.tideHighM ?? 0)} m`],
         [t("row.nextLow"), p.tideLow ?? "—"],
         [t("row.seaTemp"), `${one(p.seaTemp ?? 0)} °C`],
-        [t("row.moonPhase"), `${p.moon.phase} · ${p.moon.illumination}%`],
-        [t("row.tideRegime"), p.moon.tideRegime],
+        [
+          t("row.moonPhase"),
+          `${seedEnum(t, "moonPhase", p.moon.phase)} · ${p.moon.illumination}%`,
+        ],
+        [t("row.tideRegime"), seedEnum(t, "tide", p.moon.tideRegime)],
         [t("row.onshoreWind"), t("unit.kmh", { v: String(p.wind) })],
       ],
       source:
@@ -283,7 +290,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
                 >
                   <WeatherIcon condition={d.condition} size={22} />
                   <span className="min-w-0 flex-1">
-                    <b className="block text-[13.5px] font-semibold">{d.name}</b>
+                    <b className="block text-[13.5px] font-semibold">{placeName(t, d)}</b>
                     {pack ? (
                       <small
                         className="block text-[11px] leading-[1.35]"
@@ -324,7 +331,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
           ...others.map(
             (d) =>
               [
-                d.name,
+                placeName(t, d),
                 `${d.temp}° · ${
                   d.alert
                     ? `${t(`level.${d.alert.level}`)} ${t(`alert.kind.${d.alert.kind}`)}`
@@ -342,10 +349,13 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
             : []),
           ...(p.aviation
             ? ([
-                [t("row.airport"), p.aviation.airport],
+                [t("row.airport"), seedText(t, `aviationAirport.${p.id}`, p.aviation.airport)],
                 [t("row.runwayVis"), `${p.aviation.visibilityM} m`],
                 [t("row.crosswind"), `${p.aviation.crosswindKt} kt`],
-                [t("row.terminal"), p.aviation.terminalStatus],
+                [
+                  t("row.terminal"),
+                  seedText(t, `aviationText.${p.id}`, p.aviation.terminalStatus),
+                ],
               ] as [string, string][])
             : []),
         ],
@@ -436,14 +446,14 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
           <Bars
             values={place.rainProbability}
             highlight={0}
-            axis={[t("home.now"), "+12 h", "+24 h"]}
+            axis={[t("home.now"), t("axis.plus12h"), t("axis.plus24h")]}
           />
           <Gauge percent={place.agromet.soilMoisture * 100} />
-          <Note>{place.agromet.advisory}</Note>
+          <Note>{seedText(t, `agrometText.${place.id}`, place.agromet.advisory)}</Note>
           <KeyValues
             items={[
               [
-                t("kv.soil", { cat: place.agromet.soilCategory }),
+                t("kv.soil", { cat: seedEnum(t, "soil", place.agromet.soilCategory) }),
                 place.agromet.soilMoisture.toFixed(2),
               ],
               [t("kv.humidity"), `${place.humidity}%`],
@@ -458,9 +468,9 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         [t("row.rain24"), `${p.rain24} mm`],
         [
           t("row.soilMoisture"),
-          `${p.agromet.soilMoisture.toFixed(2)} m³/m³ · ${p.agromet.soilCategory}`,
+          `${p.agromet.soilMoisture.toFixed(2)} m³/m³ · ${seedEnum(t, "soil", p.agromet.soilCategory)}`,
         ],
-        [t("row.advisoryIssued"), p.agromet.issued],
+        [t("row.advisoryIssued"), seedText(t, `agrometIssued.${p.id}`, p.agromet.issued)],
         [t("row.rh"), `${p.humidity} %`],
         [t("row.frostRisk"), p.temp < 6 ? t("val.watch") : t("val.none")],
       ],
@@ -500,12 +510,17 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
         <>
           <Readout value={one(place.visibility)} unit={t("unit.kmVisibility")} />
           <Gauge percent={(place.visibility / 10) * 100} />
-          <Note>{t("card.commute.note", { risk, advisory: place.urban.advisory })}</Note>
+          <Note>
+            {t("card.commute.note", {
+              risk,
+              advisory: seedText(t, `urbanText.${place.id}`, place.urban.advisory),
+            })}
+          </Note>
           <KeyValues
             items={[
               [t("kv.wind"), t("unit.kmh", { v: String(place.wind) })],
               [t("kv.gusting"), t("unit.kmh", { v: String(place.gust) })],
-              [t("kv.waterlogging"), place.urban.waterloggingRisk],
+              [t("kv.waterlogging"), seedEnum(t, "risk", place.urban.waterloggingRisk)],
             ]}
           />
         </>
@@ -515,8 +530,8 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       lede: t("card.commute.lede"),
       rows: [
         [t("row.visibility"), `${one(p.visibility)} km`],
-        [t("row.waterlogging"), p.urban.waterloggingRisk],
-        [t("row.urbanAdvisory"), p.urban.advisory],
+        [t("row.waterlogging"), seedEnum(t, "risk", p.urban.waterloggingRisk)],
+        [t("row.urbanAdvisory"), seedText(t, `urbanText.${p.id}`, p.urban.advisory)],
         [t("row.wind"), t("unit.kmh", { v: String(p.wind) })],
         [t("row.gustingTo"), t("unit.kmh", { v: String(p.gust) })],
         [t("row.rain3h"), `${rainWithin(p, 3)} %`],
@@ -547,7 +562,7 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
           <Bars
             values={place.rainProbability}
             highlight={place.rainProbability.indexOf(min)}
-            axis={[t("home.now"), "+12 h", "+24 h"]}
+            axis={[t("home.now"), t("axis.plus12h"), t("axis.plus24h")]}
           />
           <Note>{t("card.event.note", { pct: String(min) })}</Note>
         </>
@@ -557,9 +572,9 @@ export const CARD_UI: Record<PersonaId, CardPresentation> = {
       lede: t("card.event.lede"),
       rows: [
         [t("row.comfortToday"), `${p.comfortIndex} / 100`],
-        [t("row.driestDay"), p.tourism.bestDay],
+        [t("row.driestDay"), seedText(t, `tourismDay.${p.id}`, p.tourism.bestDay)],
         [t("row.lowestRain"), `${Math.min(...p.rainProbability)} %`],
-        [t("row.tourismOutlook"), p.tourism.outlook],
+        [t("row.tourismOutlook"), seedText(t, `tourismText.${p.id}`, p.tourism.outlook)],
         [t("row.rh"), `${p.humidity} %`],
       ],
       source:

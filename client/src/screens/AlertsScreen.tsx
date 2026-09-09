@@ -3,6 +3,7 @@ import { AlertBanner, NoAlerts } from "../components/AlertBanner";
 import { ScreenHeading } from "../components/ScreenHeading";
 import type { SheetTarget } from "../components/DetailSheet";
 import { useT } from "../i18n/context";
+import { placeName } from "../i18n/seedText";
 import { relativeAge } from "../lib/time";
 import { useApp } from "../state/AppState";
 
@@ -34,13 +35,13 @@ export function AlertsScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
             <AlertBanner
               key={p.id}
               alert={p.alert!}
-              place={p.name}
+              place={placeName(t, p)}
               placeId={p.id}
               onOpen={() => onOpen({ kind: "alert", placeId: p.id })}
             />
           ))}
           {clear.map((p) => (
-            <NoAlerts key={p.id} place={p.name} checked={checked} />
+            <NoAlerts key={p.id} place={placeName(t, p)} checked={checked} />
           ))}
         </AnimatePresence>
       </div>

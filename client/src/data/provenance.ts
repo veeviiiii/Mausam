@@ -1,5 +1,6 @@
 import type { Place } from "./types";
 import type { LiveAqi } from "../lib/useLiveAqi";
+import { placeName } from "../i18n/seedText";
 
 /**
  * Where each reading actually came from.
@@ -60,7 +61,7 @@ export function sourcesFor(place: Place, liveAqi: LiveAqi | null, t: Translate):
     ? { name: t("src.cpcb", { station: liveAqi.station }), status: "live", asOf: liveAqi.updated }
     : place.cpcbCity
       ? seeded
-      : { name: t("src.cpcbNoStation", { place: place.name }), status: "seeded" };
+      : { name: t("src.cpcbNoStation", { place: placeName(t, place) }), status: "seeded" };
 
   const alert: Source = place.alert?.live
     ? {

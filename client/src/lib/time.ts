@@ -1,5 +1,6 @@
 import type { TimeOfDay } from "../design/tokens";
 import type { Place } from "../data/types";
+import { placeName } from "../i18n/seedText";
 
 export const toMinutes = (hhmm: string) => {
   const [h, m] = hhmm.split(":").map(Number);
@@ -58,7 +59,7 @@ export function timeOfDayReason(place: Place, tod: TimeOfDay, t: Translate): str
   return t(`tod.reason.${tod}`, {
     rise: place.sunrise,
     set: place.sunset,
-    place: place.name,
+    place: placeName(t, place),
   });
 }
 

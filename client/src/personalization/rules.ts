@@ -1,5 +1,6 @@
 import type { Persona, PersonaId, Place } from "../data/types";
 import { PERSONA_BY_ID } from "../data/seed";
+import { placeName } from "../i18n/seedText";
 
 /**
  * Rule-based personalization. No model, no embedding, no opaque ranking —
@@ -303,9 +304,19 @@ export function explain(
   ];
 
   if (card.boostKey) {
+    /*
+     * A boost's vars are baked at scoring time, where there is no translator --
+     * scoreCards runs in AppState, which has no language context. Only one rule
+     * puts a place name in them (boost.commute.water), so it is swapped here,
+     * where tr and the place are both in hand. Without this the Hindi read
+     * "Mumbai के लिए शहरी जलभराव जोखिम अधिक है".
+     */
+    const boostVars = card.boostVars?.place
+      ? { ...card.boostVars, place: placeName(tr, place) }
+      : card.boostVars;
     return [
       ...head,
-      t(tr("explain.boost", { place: place.name, reason: tr(card.boostKey, card.boostVars) })),
+      t(tr("explain.boost", { place: placeName(tr, place), reason: tr(card.boostKey, boostVars) })),
       v(`+${card.boost}`),
       t(tr("explain.for")),
       v(String(card.score)),
@@ -315,7 +326,7 @@ export function explain(
 
   return [
     ...head,
-    t(tr("explain.none", { place: place.name })),
+    t(tr("explain.none", { place: placeName(tr, place) })),
     v(String(card.score)),
     t(tr("explain.end")),
   ];

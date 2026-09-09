@@ -5,6 +5,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { MAP, WARNING_COLOR } from "../design/tokens";
 import type { Place } from "../data/types";
 import { useT } from "../i18n/context";
+import { placeName } from "../i18n/seedText";
 
 type Status = "loading" | "live" | "fallback";
 
@@ -176,7 +177,7 @@ export function LocationMap({
         }
 
         for (const p of places) {
-          const el = markerElement(p, p.id === activeId);
+          const el = markerElement(p, p.id === activeId, placeName(t, p));
           el.addEventListener("click", () => onSelect(p.id));
           new maplibregl.Marker({ element: el }).setLngLat([p.lon, p.lat]).addTo(map);
         }
@@ -247,10 +248,12 @@ export function LocationMap({
   );
 }
 
-function markerElement(place: Place, active: boolean): HTMLElement {
+/* `name` is passed in rather than read off the place: this builds raw DOM for
+   MapLibre, outside React, so it cannot call the translation hook itself. */
+function markerElement(place: Place, active: boolean, name: string): HTMLElement {
   const el = document.createElement("button");
   el.type = "button";
-  el.setAttribute("aria-label", `${place.name}, ${place.temp} degrees`);
+  el.setAttribute("aria-label", `${name}, ${place.temp} degrees`);
   el.style.cssText = [
     "display:flex;align-items:center;gap:5px;padding:3px 7px 3px 4px",
     "border-radius:999px;cursor:pointer;font:600 11px/1 var(--font-ui,sans-serif)",
@@ -263,7 +266,7 @@ function markerElement(place: Place, active: boolean): HTMLElement {
   dot.style.cssText = `width:7px;height:7px;border-radius:50%;background:${
     place.alert ? WARNING_COLOR[place.alert.level] : "#37C57D"
   }`;
-  el.append(dot, document.createTextNode(`${place.name} ${place.temp}°`));
+  el.append(dot, document.createTextNode(`${name} ${place.temp}°`));
   return el;
 }
 
@@ -277,6 +280,7 @@ function StaticPlate({
   activeId: string;
   onSelect: (id: string) => void;
 }) {
+  const t = useT();
   const { west, east, south, north } = MAP.bounds;
   const x = (lon: number) => ((lon - west) / (east - west)) * 100;
   const y = (lat: number) => ((north - lat) / (north - south)) * 100;
@@ -310,7 +314,7 @@ function StaticPlate({
             className="block h-[6px] w-[6px] rounded-full"
             style={{ background: p.alert ? WARNING_COLOR[p.alert.level] : "#37C57D" }}
           />
-          {p.name}
+          {placeName(t, p)}
         </button>
       ))}
     </div>

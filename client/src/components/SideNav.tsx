@@ -6,6 +6,7 @@ import { WeatherIcon } from "./WeatherIcon";
 import { NAV_ITEMS, NavIcon } from "./navItems";
 import { relativeAge } from "../lib/time";
 import { useT } from "../i18n/context";
+import { placeName } from "../i18n/seedText";
 
 /**
  * Desktop navigation rail.
@@ -97,7 +98,7 @@ export function SideNav() {
                     className="block truncate text-[13px]"
                     style={{ fontWeight: active ? 600 : 500 }}
                   >
-                    {p.name}
+                    {placeName(t, p)}
                   </b>
                   {p.alert ? (
                     <span
