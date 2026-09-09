@@ -26,8 +26,6 @@ interface Props {
   arrange: boolean;
   onOpen: () => void;
   onMove: (dir: "up" | "down") => void;
-  /** Opens the stack's motion window so the press-scale is not blurred. */
-  onPressStart?: () => void;
   /** Non-null once CPCB has answered; the health card reads and labels it. */
   liveAqi?: LiveAqi | null;
 }
@@ -42,7 +40,6 @@ export function PersonaCard({
   arrange,
   onOpen,
   onMove,
-  onPressStart,
   liveAqi = null,
 }: Props) {
   const t = useT();
@@ -76,7 +73,25 @@ export function PersonaCard({
               }
             }
       }
-      onPointerDown={onPressStart}
+      /*
+       * No motion window on press.
+       *
+       * This used to call beginMotion() on pointerdown, which stripped
+       * backdrop-filter off every card in the stack for 520 ms. Two things were
+       * wrong with that. On touch, pointerdown fires the instant a finger lands
+       * — before the browser has decided whether it is a tap or a scroll — so
+       * swiping the page flattened the whole stack and kept it flat for as long
+       * as the swiping continued. And a press-and-hold sat inside that window
+       * with nothing moving to mask it, so the card just visibly de-frosted and
+       * darkened under the finger.
+       *
+       * The optimisation was written for the case where the WHOLE STACK
+       * animates at once — reorder, persona change, location change — which is
+       * still covered, by the stackSignature effect in HomeScreen. A single
+       * card scaling 2.5% is one blur recompute per frame, not N, and the
+       * low-end escape hatch for that is the flat-glass toggle on the You
+       * screen, which is a deliberate setting rather than a surprise.
+       */
       whileTap={arrange ? undefined : { scale: 0.975 }}
       className={`glass flex h-full flex-col px-4 pb-3.5 pt-4 ${arrange ? "" : "cursor-pointer"}`}
       style={{ borderRadius: RADIUS.card }}

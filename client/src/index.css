@@ -48,10 +48,16 @@
   }
   /* Deliberately no backdrop-filter: at chip size the blur is imperceptible but
      each one is a separate composited layer. The fill alone carries it. */
-  /* While a surface is animating, drop the blur and swap in the flat fill.
-     A transformed backdrop-filter element is re-sampled and re-blurred every
-     frame; across a stack of cards that is the dominant cost of the whole
-     interaction. Restored automatically when the motion window closes. */
+  /* While the whole card stack is animating, drop the blur and swap in the flat
+     fill. A transformed backdrop-filter element is re-sampled and re-blurred
+     every frame; across a stack of cards that is the dominant cost of the whole
+     interaction. Restored automatically when the motion window closes.
+
+     The swap is visible if nothing else is moving — on a dark sky the fill goes
+     0.10 -> 0.16 and the blur goes 10px -> 0 at the same instant — so it is
+     only ever opened by reorder, persona change and location change, where the
+     cards are flying and it reads as part of the motion. It is NOT opened by
+     press or scroll; that was the bug this comment used to describe as free. */
   [data-motion="on"] .glass,
   [data-motion="on"] .glass-chip {
     backdrop-filter: none !important;

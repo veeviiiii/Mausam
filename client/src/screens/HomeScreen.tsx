@@ -40,9 +40,15 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
   const suppressed = suppressedPersonas(place, personas);
 
   /**
-   * Cards drop their blur while the stack is moving. Opened by any change to
-   * the stack's membership or order, by entering arrange mode, and by a tap
-   * (the press-scale and the sheet morph that follows are the same problem).
+   * Cards drop their blur while the STACK is moving: a change to its membership
+   * or order, or entering arrange mode. Those are the cases where every card
+   * animates at once and each one re-blurs its backdrop through a transform on
+   * every frame.
+   *
+   * Deliberately not opened by a tap any more. Pointerdown fires before a touch
+   * is known to be a tap or a scroll, so that flattened the stack on every
+   * swipe; and the card-to-sheet morph the tap case was also written for no
+   * longer exists (see the layoutId note in PersonaCard).
    */
   const [inMotion, beginMotion] = useMotionWindow();
   const stackSignature = cards.map((c) => c.id).join("|") + (arrange ? "|arrange" : "");
@@ -210,7 +216,6 @@ export function HomeScreen({ onOpen }: { onOpen: (t: SheetTarget) => void }) {
                 arrange={arrange}
                 onOpen={() => onOpen({ kind: "card", id: card.id })}
                 onMove={(dir) => moveCard(card.id, dir)}
-                onPressStart={beginMotion}
                 liveAqi={liveAqi}
               />
             ))}
