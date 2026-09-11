@@ -1,0 +1,1164 @@
+<title>Mausam Technical Brief</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans+Flex:wght@300..800&family=Google+Sans+Code:wght@400..700&display=swap">
+
+<style>
+  :root {
+    --paper:   #F5F6F8;
+    --surface: #FFFFFF;
+    --ink:     #0E1521;
+    --slate:   #59657A;
+    --hair:    #DDE1E8;
+    --navy:    #1B2C54;
+    --sky:     #1E7FB8;
+    --sky-dim: #E7F2F9;
+    --red:     #C92E22;
+    --orange:  #DE6C10;
+    --yellow:  #A87E05;
+    --green:   #188A4C;
+    --code-bg: #EDF0F4;
+
+    --ui:   "Google Sans Flex", -apple-system, Roboto, system-ui, sans-serif;
+    --mono: "Google Sans Code", ui-monospace, "SF Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper:   #0B1017;
+      --surface: #121A25;
+      --ink:     #E9EDF3;
+      --slate:   #97A3B4;
+      --hair:    #26303E;
+      --navy:    #9FC0E8;
+      --sky:     #5FB6E8;
+      --sky-dim: #14283A;
+      --red:     #E4574C;
+      --orange:  #E8A33C;
+      --yellow:  #D7B23C;
+      --green:   #3FBF77;
+      --code-bg: #18222F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper:   #0B1017;
+    --surface: #121A25;
+    --ink:     #E9EDF3;
+    --slate:   #97A3B4;
+    --hair:    #26303E;
+    --navy:    #9FC0E8;
+    --sky:     #5FB6E8;
+    --sky-dim: #14283A;
+    --red:     #E4574C;
+    --orange:  #E8A33C;
+    --yellow:  #D7B23C;
+    --green:   #3FBF77;
+    --code-bg: #18222F;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--ui);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 22px 100px;
+  }
+  @media (min-width: 1080px) {
+    .shell { grid-template-columns: 218px minmax(0, 1fr); gap: 56px; padding: 0 32px 120px; }
+  }
+
+  /* ---------- masthead ---------- */
+  .mast { grid-column: 1 / -1; padding: 56px 0 34px; border-bottom: 1px solid var(--hair); }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; font-weight: 600;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--slate);
+  }
+  .mast h1 {
+    font-size: clamp(34px, 5.4vw, 52px); font-weight: 700; letter-spacing: -.035em;
+    line-height: 1.04; margin: 12px 0 10px; text-wrap: balance;
+  }
+  .mast .standfirst {
+    font-size: 17.5px; color: var(--slate); max-width: 62ch; margin: 0; font-weight: 300;
+  }
+
+  /* the instrument strip — the numbers a judge asks for first */
+  .readout {
+    grid-column: 1 / -1;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+    gap: 1px; background: var(--hair);
+    border: 1px solid var(--hair); border-radius: 10px; overflow: hidden;
+    margin: 30px 0 8px;
+  }
+  .readout div { background: var(--surface); padding: 13px 15px; }
+  .readout b {
+    display: block; font-family: var(--mono); font-size: 19px; font-weight: 600;
+    letter-spacing: -.02em; font-variant-numeric: tabular-nums;
+  }
+  .readout span {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--slate);
+  }
+
+  /* ---------- index rail ---------- */
+  nav.rail { display: none; }
+  @media (min-width: 1080px) {
+    nav.rail {
+      display: block; position: sticky; top: 0; align-self: start;
+      max-height: 100vh; overflow-y: auto; padding: 44px 0 40px;
+    }
+    nav.rail p {
+      font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .12em;
+      text-transform: uppercase; color: var(--slate); margin: 0 0 12px;
+    }
+    nav.rail a {
+      display: block; padding: 4.5px 0; font-size: 13.5px; line-height: 1.35;
+      color: var(--slate); text-decoration: none; border-left: 2px solid transparent; padding-left: 11px;
+    }
+    nav.rail a:hover { color: var(--ink); border-left-color: var(--sky); }
+  }
+
+  main { min-width: 0; padding-top: 44px; }
+
+  section { scroll-margin-top: 22px; padding-bottom: 14px; }
+  section + section { border-top: 1px solid var(--hair); padding-top: 40px; margin-top: 30px; }
+
+  h2 {
+    font-size: 27px; font-weight: 700; letter-spacing: -.028em; line-height: 1.14;
+    margin: 6px 0 6px; text-wrap: balance;
+  }
+  h3 {
+    font-size: 17px; font-weight: 650; letter-spacing: -.012em;
+    margin: 30px 0 6px; text-wrap: balance;
+  }
+  h4 {
+    font-family: var(--mono); font-size: 11px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--slate); margin: 26px 0 8px;
+  }
+  p { margin: 0 0 14px; max-width: 70ch; }
+  ul { margin: 0 0 14px; padding-left: 19px; max-width: 70ch; }
+  li { margin-bottom: 6px; }
+  a { color: var(--sky); }
+  strong { font-weight: 650; }
+
+  code {
+    font-family: var(--mono); font-size: .86em; background: var(--code-bg);
+    padding: 1.5px 5px; border-radius: 4px; word-break: break-word;
+  }
+
+  .lede { font-size: 17px; color: var(--slate); font-weight: 300; max-width: 66ch; margin-bottom: 20px; }
+
+  /* ---------- tables ---------- */
+  .scroll { overflow-x: auto; margin: 0 0 18px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 460px; }
+  th, td { text-align: left; padding: 9px 14px 9px 0; border-bottom: 1px solid var(--hair); vertical-align: top; }
+  th {
+    font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--slate); border-bottom-width: 1px;
+  }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .tag {
+    display: inline-block; font-family: var(--mono); font-size: 9.5px; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px;
+    border: 1px solid currentColor; white-space: nowrap;
+  }
+  .live   { color: var(--green); }
+  .seeded { color: var(--orange); }
+  .absent { color: var(--slate); }
+
+  /* ---------- stack entries: the one repeated object ---------- */
+  .stack { display: grid; gap: 14px; margin: 20px 0 6px; }
+  @media (min-width: 720px) { .stack { grid-template-columns: 1fr 1fr; } }
+  .tool {
+    background: var(--surface); border: 1px solid var(--hair); border-radius: 12px;
+    padding: 17px 18px 15px; display: flex; flex-direction: column;
+  }
+  .tool h5 {
+    margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -.015em;
+    display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  }
+  .tool h5 em {
+    font-family: var(--mono); font-style: normal; font-size: 10.5px; font-weight: 500;
+    color: var(--slate); letter-spacing: .02em;
+  }
+  .tool dl { margin: 11px 0 0; display: grid; gap: 9px; }
+  .tool dt {
+    font-family: var(--mono); font-size: 9.5px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--slate); margin-bottom: 1px;
+  }
+  .tool dd { margin: 0; font-size: 14px; line-height: 1.5; }
+
+  /* ---------- judge questions ---------- */
+  .qa { border-left: 2px solid var(--sky); padding: 2px 0 2px 18px; margin: 20px 0; max-width: 70ch; }
+  .qa + .qa { margin-top: 22px; }
+  .qa .q {
+    font-family: var(--mono); font-size: 13px; font-weight: 600; letter-spacing: -.005em;
+    color: var(--ink); margin: 0 0 7px; line-height: 1.45;
+  }
+  .qa p:last-child { margin-bottom: 0; }
+
+  .flag {
+    background: var(--sky-dim); border-radius: 10px; padding: 15px 17px; margin: 18px 0;
+    max-width: 70ch; font-size: 14.5px;
+  }
+  .flag p:last-child { margin-bottom: 0; }
+  .flag strong { color: var(--ink); }
+
+  /* ---------- figures ---------- */
+  figure { margin: 26px 0; }
+  figure svg { display: block; width: 100%; max-width: 100%; height: auto; color: var(--ink); }
+  figcaption { font-size: 13px; color: var(--slate); margin-top: 10px; max-width: 66ch; line-height: 1.5; }
+
+  hr.soft { border: 0; border-top: 1px solid var(--hair); margin: 26px 0; }
+
+  footer {
+    grid-column: 1 / -1; border-top: 1px solid var(--hair); margin-top: 44px; padding-top: 22px;
+    font-family: var(--mono); font-size: 11px; color: var(--slate); letter-spacing: .04em;
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  a:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--sky); outline-offset: 3px; border-radius: 3px; }
+
+  /* ---------------------------------------------------------------- *
+   * Print / PDF.
+   *
+   * The screen layout puts a sticky index rail beside the text, which on
+   * paper is a dead column. Print drops it and gives the measure back to the
+   * prose. The palette is pinned to the light tokens regardless of the
+   * renderer's colour scheme, because a headless browser inheriting a dark
+   * system theme would otherwise produce 14 pages of near-black.
+   * ---------------------------------------------------------------- */
+  @page {
+    size: A4;
+    margin: 16mm 15mm 15mm;
+  }
+
+  @media print {
+    :root, :root[data-theme="dark"], :root:not([data-theme="light"]) {
+      --paper:   #FFFFFF;
+      --surface: #FFFFFF;
+      --ink:     #10161F;
+      --slate:   #55606F;
+      --hair:    #D3D8E0;
+      --navy:    #1B2C54;
+      --sky:     #17618E;
+      --sky-dim: #EEF4F9;
+      --red:     #B32A1F;
+      --orange:  #B85A0D;
+      --yellow:  #8C6904;
+      --green:   #14743F;
+      --code-bg: #F0F2F5;
+    }
+
+    /* keep the status tags and tinted panels readable on paper */
+    * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    body { font-size: 10.5pt; line-height: 1.5; background: #fff; }
+
+    .shell {
+      display: block;
+      max-width: none;
+      padding: 0;
+    }
+    nav.rail { display: none !important; }
+    main { padding-top: 0; }
+
+    /* the measure can widen once the rail is gone */
+    p, ul, .qa, .flag, figcaption, .lede { max-width: none; }
+
+    .mast { padding: 0 0 14pt; }
+    .mast h1 { font-size: 30pt; }
+    .mast .standfirst { font-size: 11.5pt; }
+
+    /* six figures: three columns fill exactly two rows. auto-fit gives four
+       at this measure and leaves two empty cells showing as grey gaps. */
+    .readout { margin: 14pt 0 0; break-inside: avoid; grid-template-columns: repeat(3, 1fr); }
+    .readout b { font-size: 14pt; }
+
+    /* one section per page keeps figures with the prose that explains them */
+    section { break-before: page; padding-top: 0; margin-top: 0; border-top: 0; }
+    section:first-of-type { break-before: auto; }
+    section + section { border-top: 0; padding-top: 0; margin-top: 0; }
+
+    h2 { font-size: 19pt; break-after: avoid; }
+    h3 { font-size: 13pt; break-after: avoid; }
+    h4 { break-after: avoid; }
+
+    /* nothing that reads as one object may split across a page */
+    figure, .tool, .qa, .flag, tr, .stack { break-inside: avoid; }
+    figure svg { max-height: 108mm; }
+
+    .stack { grid-template-columns: 1fr 1fr; gap: 10pt; }
+    .scroll { overflow: visible; }
+    table { min-width: 0; font-size: 9.5pt; }
+
+    a { color: var(--ink); text-decoration: none; }
+
+    footer { break-inside: avoid; margin-top: 20pt; }
+  }
+</style>
+
+<div class="shell">
+
+  <header class="mast">
+    <div class="eyebrow">SIH26076 · Ministry of Earth Sciences · India Meteorological Department</div>
+    <h1>Mausam Technical Brief</h1>
+    <p class="standfirst">
+      Everything behind the personalized homepage — what each piece of the stack is, why it was
+      chosen over the obvious alternative, how a request actually travels, and which numbers on
+      screen are real. Written from the code, not from the plan.
+    </p>
+  </header>
+
+  <div class="readout">
+    <div><b>4</b><span>runtime deps</span></div>
+    <div><b>2</b><span>live feeds</span></div>
+    <div><b>135 kB</b><span>main JS, gzip</span></div>
+    <div><b>444 × 2</b><span>i18n keys</span></div>
+    <div><b>28/28</b><span>skies pass AA</span></div>
+    <div><b>8</b><span>build checks</span></div>
+  </div>
+
+  <nav class="rail">
+    <p>Contents</p>
+    <a href="#what">1 · What this is</a>
+    <a href="#how">2 · How it works</a>
+    <a href="#stack">3 · The stack, and why</a>
+    <a href="#hosting">4 · Hosting &amp; the backend</a>
+    <a href="#data">5 · Data: live vs seeded</a>
+    <a href="#aqi">6 · The AQI maths</a>
+    <a href="#cap">7 · The warning pipeline</a>
+    <a href="#rules">8 · Personalization</a>
+    <a href="#design">9 · Design system</a>
+    <a href="#perf">10 · Performance</a>
+    <a href="#i18n">11 · Two languages</a>
+    <a href="#checks">12 · What the build proves</a>
+    <a href="#limits">13 · Honest limits</a>
+    <a href="#rapid">14 · Rapid fire</a>
+  </nav>
+
+  <main>
+
+    <!-- ============================================ 1 -->
+    <section id="what">
+      <div class="eyebrow">01</div>
+      <h2>What this is</h2>
+      <p class="lede">
+        Problem statement <strong>SIH26076</strong> asks for a personalized homepage for Mausam,
+        IMD's public weather app. Today every user sees the same generic screen.
+      </p>
+      <p>
+        The brief names eight user types and the data each one needs. Our build reflows the
+        homepage around one to three of those personas, chosen at first launch and editable
+        afterwards, and orders the cards by a rule that can be read out loud.
+      </p>
+      <p>The eight personas, exactly as the problem statement defines them:</p>
+      <ul>
+        <li><strong>Health-conscious</strong> — AQI, pollen, UV index, humidity</li>
+        <li><strong>Outdoor fitness</strong> — sunrise/sunset, best running hours, wind, heat alerts</li>
+        <li><strong>Beachgoers &amp; surfers</strong> — sea state, tide timings, wave height, water temperature</li>
+        <li><strong>Travellers</strong> — saved destinations, flight-relevant alerts, packing suggestions</li>
+        <li><strong>Parents &amp; families</strong> — school-commute conditions, rain and severe alerts</li>
+        <li><strong>Farmers &amp; gardeners</strong> — soil moisture, rainfall, frost alerts, planting guidance</li>
+        <li><strong>Commuters</strong> — visibility, fog and storm alerts, road-relevant conditions</li>
+        <li><strong>Event planners</strong> — rain probability and a comfort index</li>
+      </ul>
+      <p>
+        Two things the brief does not say out loud but the app's own store reviews do: the current
+        app is slow, and its favourites are unreliable. That set the second bar — the homepage had
+        to be dramatically lighter than what ships today.
+      </p>
+    </section>
+
+    <!-- ============================================ 2 -->
+    <section id="how">
+      <div class="eyebrow">02</div>
+      <h2>How the app actually works</h2>
+      <p class="lede">
+        A React single-page app served as static files, two serverless functions that hold the
+        secrets, and four keyless feeds the browser is allowed to call directly.
+      </p>
+
+      <figure>
+        <svg viewBox="0 0 760 420" role="img" aria-label="Request flow: the browser loads static files from Vercel, calls two serverless functions that hold the API key and call data.gov.in and NDMA Sachet, and calls four keyless map feeds directly.">
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+          </defs>
+
+          <!-- browser -->
+          <rect x="16" y="150" width="150" height="112" rx="9" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <text x="91" y="190" text-anchor="middle" font-size="14" font-weight="600" fill="currentColor">Browser</text>
+          <text x="91" y="210" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".72">React SPA</text>
+          <text x="91" y="228" text-anchor="middle" font-size="11.5" fill="currentColor" opacity=".72">135 kB gzip</text>
+
+          <!-- vercel boundary -->
+          <rect x="248" y="34" width="216" height="252" rx="10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-dasharray="5 4" opacity=".55"/>
+          <text x="356" y="26" text-anchor="middle" font-size="11" font-weight="600" fill="currentColor" opacity=".72">VERCEL</text>
+
+          <rect x="268" y="56" width="176" height="52" rx="8" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <text x="356" y="79" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Static CDN</text>
+          <text x="356" y="96" text-anchor="middle" font-size="11" fill="currentColor" opacity=".72">HTML · JS · CSS</text>
+
+          <rect x="268" y="132" width="176" height="60" rx="8" fill="none" stroke="#1E7FB8" stroke-width="1.8"/>
+          <text x="356" y="155" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1E7FB8">/api/aqi</text>
+          <text x="356" y="176" text-anchor="middle" font-size="10.5" fill="#1E7FB8" opacity=".85">holds DATA_GOV_KEY</text>
+
+          <rect x="268" y="212" width="176" height="52" rx="8" fill="none" stroke="#1E7FB8" stroke-width="1.8"/>
+          <text x="356" y="243" text-anchor="middle" font-size="12.5" font-weight="600" fill="#1E7FB8">/api/warnings</text>
+
+          <!-- upstreams -->
+          <rect x="546" y="128" width="198" height="52" rx="8" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <text x="645" y="150" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">data.gov.in</text>
+          <text x="645" y="167" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".72">CPCB real-time AQI</text>
+
+          <rect x="546" y="208" width="198" height="52" rx="8" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <text x="645" y="230" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">sachet.ndma.gov.in</text>
+          <text x="645" y="247" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".72">CAP 1.2 warnings</text>
+
+          <rect x="546" y="318" width="198" height="76" rx="8" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".75"/>
+          <text x="645" y="340" text-anchor="middle" font-size="11.5" font-weight="600" fill="currentColor">Keyless map feeds</text>
+          <text x="645" y="358" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".72">RainViewer · Open-Meteo</text>
+          <text x="645" y="374" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".72">OpenWeather · OpenFreeMap</text>
+
+          <!-- arrows -->
+          <line x1="166" y1="182" x2="262" y2="94" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"/>
+          <text x="196" y="128" font-size="10.5" fill="currentColor" opacity=".72">loads</text>
+
+          <line x1="166" y1="200" x2="262" y2="162" stroke="#1E7FB8" stroke-width="1.5" marker-end="url(#ar)"/>
+          <text x="176" y="188" font-size="10.5" fill="#1E7FB8">fetch</text>
+
+          <line x1="166" y1="220" x2="262" y2="238" stroke="#1E7FB8" stroke-width="1.5" marker-end="url(#ar)"/>
+
+          <line x1="444" y1="160" x2="540" y2="154" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"/>
+          <text x="452" y="140" font-size="10.5" fill="currentColor" opacity=".72">key in header</text>
+
+          <line x1="444" y1="238" x2="540" y2="234" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar)"/>
+          <text x="452" y="222" font-size="10.5" fill="currentColor" opacity=".72">no key needed</text>
+
+          <path d="M104 262 L104 356 L540 356" fill="none" stroke="currentColor" stroke-width="1.4" opacity=".75" marker-end="url(#ar)"/>
+          <text x="196" y="349" font-size="10.5" fill="currentColor" opacity=".72">direct — nothing secret to protect</text>
+        </svg>
+        <figcaption>
+          The only arrow that carries a secret is the one from a serverless function to data.gov.in.
+          The map feeds bypass the backend entirely because they need no key, so routing them
+          through a function would add a hop and buy nothing.
+        </figcaption>
+      </figure>
+
+      <h3>What happens on load, in order</h3>
+      <ul>
+        <li>Vercel's CDN serves <code>index.html</code> and one JS bundle. MapLibre is not in it.</li>
+        <li>The app renders immediately from <code>data/seed.ts</code> — six cities of demo data. Nothing is blank while the network works.</li>
+        <li><code>useLiveAqi</code> calls <code>/api/aqi?city=…</code> for the selected city. <code>useLiveWarnings</code> calls <code>/api/warnings</code> once.</li>
+        <li>When either answers, the value is merged into the place object in <code>AppState</code>. Cards, the banner, the advice line and the scoring rules all read the merged place, so nothing else needs wiring.</li>
+        <li>Opening Places lazy-loads the MapLibre chunk. Only then does the browser pay 218 kB for a map.</li>
+      </ul>
+
+      <div class="flag">
+        <p>
+          <strong>The one design decision worth defending here:</strong> the seeded dataset is not a
+          placeholder waiting to be deleted. It is the floor. If data.gov.in is slow or down during
+          the demo, the card keeps the seeded number and changes its label from
+          <span class="tag live">live</span> to <span class="tag seeded">seeded</span>. The app never
+          shows a blank card or a spinner that never resolves.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================ 3 -->
+    <section id="stack">
+      <div class="eyebrow">03</div>
+      <h2>The stack, and why each piece</h2>
+      <p class="lede">
+        Four runtime dependencies. Everything else is a build tool that ships no code to the user.
+      </p>
+
+      <div class="stack">
+
+        <article class="tool">
+          <h5>React <em>18.3.1</em></h5>
+          <dl>
+            <div><dt>Generally</dt><dd>The most widely used UI library for building interfaces out of components that re-render when their data changes.</dd></div>
+            <div><dt>Here</dt><dd>Every screen, card and sheet. State lives in one context, <code>AppState</code>, which merges live data into the seeded places.</dd></div>
+            <div><dt>Why not Vue or Svelte</dt><dd>Both are fine choices. React won on hiring reality — it is what the team already knew, and a hackathon is not the place to learn a framework. Svelte would have produced a smaller bundle.</dd></div>
+          </dl>
+        </article>
+
+        <article class="tool">
+          <h5>TypeScript <em>5.6</em></h5>
+          <dl>
+            <div><dt>Generally</dt><dd>JavaScript with a type checker. Catches mismatched data shapes before the code runs.</dd></div>
+            <div><dt>Here</dt><dd>The <code>Place</code> type is the contract between seeded data, the CPCB response and every card. Adding a field without deciding where it comes from is a compile error.</dd></div>
+            <div><dt>Why it earns its cost</dt><dd>The provenance map is exhaustive by type. Forgetting to say whether a reading is live or seeded fails the build rather than shipping a wrong label.</dd></div>
+          </dl>
+        </article>
+
+        <article class="tool">
+          <h5>Vite <em>5.4</em></h5>
+          <dl>
+            <div><dt>Generally</dt><dd>A build tool and dev server. Serves source files natively during development, bundles with Rollup for production.</dd></div>
+            <div><dt>Here</dt><dd>Dev server, production bundle, code-splitting the map into its own chunk, and a small custom plugin that runs the <code>/api</code> routes locally.</dd></div>
+            <div><dt>Why not Create React App</dt><dd>CRA is deprecated and its dev server is markedly slower. Vite starts in under a second and its Rollup output is what gives us the lazy map chunk.</dd></div>
+          </dl>
+        </article>
+
+        <article class="tool">
+          <h5>Tailwind CSS <em>3.4</em></h5>
+          <dl>
+            <div><dt>Generally</dt><dd>Utility classes for styling in markup, with unused classes stripped at build time.</dd></div>
+            <div><dt>Here</dt><dd>Layout and spacing only. Every colour, blur, radius and spring comes from <code>design/tokens.ts</code> instead — one source of truth the build verifies.</dd></div>
+            <div><dt>Why the split</dt><dd>Contrast has to be computed against real gradients. That is arithmetic, and arithmetic belongs in TypeScript where a script can check it, not in class names.</dd></div>
+          </dl>
+        </article>
+
+        <article class="tool">
+          <h5>Framer Motion <em>11</em></h5>
+          <dl>
+            <div><dt>Generally</dt><dd>An animation library for React with spring physics and automatic layout transitions.</dd></div>
+            <div><dt>Here</dt><dd>Card enter/exit, FLIP reordering when the score changes, the pull-to-refresh gesture, and the detail sheet.</dd></div>
+            <div><dt>Why not CSS transitions</dt><dd>CSS cannot animate an element between two layout positions it does not yet occupy. Reordering the stack with a spring is exactly that problem, and <code>layout</code> solves it in one prop.</dd></div>
+          </dl>
+        </article>
+
+        <article class="tool">
+          <h5>MapLibre GL JS <em>4.7</em></h5>
+          <dl>
+            <div><dt>Generally</dt><dd>An open-source vector map renderer. The community fork of Mapbox GL JS from before Mapbox changed its licence.</dd></div>
+            <div><dt>Here</dt><dd>The map screen: radar tiles, wind tiles, and our own AQI labels drawn over an OpenFreeMap basemap.</dd></div>
+            <div><dt>Why not Mapbox or Google Maps</dt><dd>Both need an account, a billed key and a usage cap. MapLibre plus OpenFreeMap needs no key at all, which matters for a government app that should not depend on a commercial quota.</dd></div>
+          </dl>
+        </article>
+
+      </div>
+
+      <h3>What is deliberately <em>not</em> here</h3>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Commonly expected</th><th>Status</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td>Express</td><td><span class="tag absent">not used</span></td><td>Vercel functions are plain <code>(req, res)</code> handlers. Express would add a dependency to do routing the platform already does.</td></tr>
+            <tr><td>TanStack Query</td><td><span class="tag absent">not used</span></td><td>Two endpoints with different cache rules. Two small hooks are ~90 lines total; the library is larger than the problem.</td></tr>
+            <tr><td>SQLite</td><td><span class="tag absent">not used</span></td><td>Serverless functions have no persistent disk. Caching is an in-memory <code>Map</code> per warm instance plus HTTP cache headers.</td></tr>
+            <tr><td>Redux / Zustand</td><td><span class="tag absent">not used</span></td><td>One context with one state object. There is no cross-screen state complex enough to need a store.</td></tr>
+            <tr><td>An <code>axios</code>-style HTTP client</td><td><span class="tag absent">not used</span></td><td>Global <code>fetch</code> is in Node 18+ and every target browser.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The serverless functions have <strong>zero dependencies</strong>. They import nothing but
+        Node's own <code>http</code> types. That is why a cold start is fast and why there is no
+        supply chain to audit on the server side.
+      </p>
+    </section>
+
+    <!-- ============================================ 4 -->
+    <section id="hosting">
+      <div class="eyebrow">04</div>
+      <h2>Hosting, and where the backend went</h2>
+
+      <h3>Vercel</h3>
+      <p>
+        <strong>Generally:</strong> a hosting platform for front-end apps. It builds from a Git
+        push, serves the result from a CDN, and turns files in an <code>api/</code> directory into
+        serverless functions — small programs that run on demand and shut down after.
+      </p>
+      <p>
+        <strong>Here:</strong> it does both jobs. The Vite build output is served statically, and
+        <code>client/api/aqi.ts</code> and <code>client/api/warnings.ts</code> become HTTP endpoints
+        automatically. There is no <code>vercel.json</code> — the layout is detected.
+      </p>
+
+      <h4>Why Vercel and not Netlify, Render or a VPS</h4>
+      <ul>
+        <li><strong>Netlify</strong> is genuinely comparable and would have worked. Vercel's zero-config detection of a Vite app plus an <code>api/</code> folder needed no configuration file at all, which is one less thing to be wrong on demo day.</li>
+        <li><strong>Render or a VPS</strong> would give a long-running server and a static IP — see below. It also means managing a machine, and a free-tier Render instance sleeps and cold-starts in tens of seconds, which is a bad property for a live demo.</li>
+        <li><strong>GitHub Pages</strong> was ruled out immediately: static only, so there is nowhere to hide the CPCB key.</li>
+      </ul>
+
+      <div class="flag">
+        <p>
+          <strong>The honest trade-off a judge may find:</strong> IMD's own API requires the calling
+          server's IP to be whitelisted. Vercel functions do not have a fixed outbound IP, so this
+          hosting choice rules out ever calling <code>api.imd.gov.in</code> directly. We accepted
+          that because NDMA's Sachet feed republishes the same IMD bulletins with no key and no
+          whitelist. If IMD access is granted for the final build, the backend moves to a fixed-IP
+          host and the two route files move with it unchanged — they are plain Node handlers, not
+          Vercel-specific code.
+        </p>
+      </div>
+
+      <h3>Why the secret has to sit server-side</h3>
+      <p>
+        Anything Vite inlines into the bundle is public — a user can read it in devtools. Vite only
+        inlines variables prefixed <code>VITE_</code>, so the split is enforced by naming:
+      </p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Variable</th><th>Where it lives</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td class="num">DATA_GOV_KEY</td><td>Server only</td><td>Registered to us. In the bundle it could be lifted and used against our quota.</td></tr>
+            <tr><td class="num">VITE_OWM_KEY</td><td>In the bundle</td><td>OpenWeather map tiles are fetched by the browser and the key is visible in the tile URL by design. Free tier, rate-limited by them.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The same <code>/api</code> files run in development through a custom Vite plugin
+        (<code>vite-plugin-api.ts</code>) that imports them via Vite's SSR loader. It is the same
+        TypeScript file Vercel builds — not a second copy — so a route that works locally works
+        deployed.
+      </p>
+    </section>
+
+    <!-- ============================================ 5 -->
+    <section id="data">
+      <div class="eyebrow">05</div>
+      <h2>Which numbers are real</h2>
+      <p class="lede">
+        This is the section to know cold. Every value on screen carries a
+        <span class="tag live">live</span> or <span class="tag seeded">seeded</span> badge in the
+        app itself, so a judge can check any claim by tapping it.
+      </p>
+
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Data</th><th>Status</th><th>Source</th></tr></thead>
+          <tbody>
+            <tr><td>Air quality index, PM2.5, PM10</td><td><span class="tag live">live</span></td><td>CPCB continuous monitoring via data.gov.in</td></tr>
+            <tr><td>Severe weather warnings</td><td><span class="tag live">live</span></td><td>NDMA Sachet CAP feed — carries IMD, SDMA and CWC bulletins</td></tr>
+            <tr><td>Precipitation radar</td><td><span class="tag live">live</span></td><td>RainViewer</td></tr>
+            <tr><td>Wind overlay</td><td><span class="tag live">live</span></td><td>OpenWeather Weather Maps</td></tr>
+            <tr><td>Map air-quality labels</td><td><span class="tag live">live</span></td><td>Open-Meteo — <strong>US AQI</strong>, not CPCB</td></tr>
+            <tr><td>Temperature, humidity, wind, visibility</td><td><span class="tag seeded">seeded</span></td><td><code>data/seed.ts</code></td></tr>
+            <tr><td>Rain probability, hourly outlook</td><td><span class="tag seeded">seeded</span></td><td>Derived from a seeded 24-hour curve</td></tr>
+            <tr><td>Soil moisture, Agromet advisory</td><td><span class="tag seeded">seeded</span></td><td>Written to read like a real AAS bulletin, labelled as demo</td></tr>
+            <tr><td>Tides, wave height, sea temperature</td><td><span class="tag seeded">seeded</span></td><td>No marine source is wired. INCOIS has never been called.</td></tr>
+            <tr><td>Urban waterlogging, named junctions</td><td><span class="tag seeded">seeded</span></td><td>Illustrative — no urban nowcast source exists in this build</td></tr>
+            <tr><td>Airport / aviation rows</td><td><span class="tag seeded">seeded</span></td><td>Illustrative, not IMD Aviation Services</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flag">
+        <p>
+          <strong>Two AQI scales are on screen and that is deliberate.</strong> The saved-place cards
+          show <strong>CPCB Indian AQI</strong>, computed by our own server from raw pollutant
+          concentrations. The map shows <strong>US AQI</strong> from Open-Meteo, because it is the
+          only keyless source with national coverage per coordinate. The two use different
+          breakpoints, so the same city legitimately reads differently. The map chip says
+          <code>US AQI</code> for exactly this reason. Do not let a judge catch this before you say it.
+        </p>
+      </div>
+
+      <h3>Caching, and why one TTL would be wrong</h3>
+      <p>
+        CPCB publishes hourly. CAP warnings arrive when they are issued, not on a schedule. Radar
+        refreshes every few minutes. Using one number for all of them would either hammer the
+        upstream or serve stale warnings.
+      </p>
+
+      <figure>
+        <svg viewBox="0 0 720 232" role="img" aria-label="Five cache layers between the browser and upstream, each with its own success and failure lifetime.">
+          <defs>
+            <marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <polygon points="0,0 10,5 0,10" fill="currentColor"/>
+            </marker>
+          </defs>
+          <text x="16" y="22" font-size="11" font-weight="600" fill="currentColor" opacity=".7">BROWSER</text>
+          <text x="286" y="22" font-size="11" font-weight="600" fill="currentColor" opacity=".7">VERCEL FUNCTION</text>
+          <text x="596" y="22" font-size="11" font-weight="600" fill="currentColor" opacity=".7">UPSTREAM</text>
+
+          <rect x="16" y="36" width="180" height="58" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="106" y="59" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">Hook memory</text>
+          <text x="106" y="78" text-anchor="middle" font-size="10.5" fill="#188A4C">10 min ok · 45 s fail</text>
+
+          <rect x="16" y="112" width="180" height="58" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="106" y="135" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">HTTP cache</text>
+          <text x="106" y="154" text-anchor="middle" font-size="10.5" fill="#188A4C">15 min · no-store on fail</text>
+
+          <rect x="286" y="36" width="180" height="58" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="376" y="59" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">/api/aqi map</text>
+          <text x="376" y="78" text-anchor="middle" font-size="10.5" fill="#188A4C">20 min ok · 2 min fail</text>
+
+          <rect x="286" y="112" width="180" height="58" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="376" y="135" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">/api/warnings map</text>
+          <text x="376" y="154" text-anchor="middle" font-size="10.5" fill="#188A4C">5 min ok · 60 s fail</text>
+
+          <rect x="556" y="74" width="148" height="58" rx="8" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".8"/>
+          <text x="630" y="97" text-anchor="middle" font-size="12" font-weight="600" fill="currentColor">CPCB · NDMA</text>
+          <text x="630" y="116" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".72">5 s deadline</text>
+
+          <line x1="196" y1="65" x2="280" y2="65" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar2)"/>
+          <line x1="196" y1="141" x2="280" y2="141" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar2)"/>
+          <line x1="466" y1="80" x2="550" y2="98" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar2)"/>
+          <line x1="466" y1="130" x2="550" y2="110" stroke="currentColor" stroke-width="1.4" marker-end="url(#ar2)"/>
+
+          <text x="16" y="206" font-size="11.5" fill="currentColor" opacity=".78">Every layer keeps a separate failure lifetime — a failed fetch must not be cached like a success.</text>
+          <text x="16" y="224" font-size="11.5" fill="currentColor" opacity=".78">Pull-to-refresh clears the hook cache and re-requests with <tspan font-family="monospace">cache: "reload"</tspan>.</text>
+        </svg>
+        <figcaption>
+          Five stores, each with its own success and failure lifetime. The failure split was a real
+          bug: a failed response was once cached for fifteen minutes, so <code>curl</code> returned
+          live data while the app still showed "seeded".
+        </figcaption>
+      </figure>
+    </section>
+
+    <!-- ============================================ 6 -->
+    <section id="aqi">
+      <div class="eyebrow">06</div>
+      <h2>The AQI maths, in full</h2>
+      <p class="lede">
+        data.gov.in publishes <em>pollutant concentrations</em>, not an index. The index is computed
+        on our server, using CPCB's published method.
+      </p>
+      <p>
+        Six pollutants are used: PM2.5, PM10, NO<sub>2</sub>, SO<sub>2</sub>, NH<sub>3</sub> and
+        ozone. Each has a table of breakpoints mapping a concentration band to an index band. For a
+        reading inside a band, the sub-index is a straight-line interpolation:
+      </p>
+
+      <figure>
+        <svg viewBox="0 0 720 300" role="img" aria-label="A concentration is interpolated linearly inside its breakpoint band to give a sub-index; the AQI is the maximum of the six sub-indices and its pollutant is the governing pollutant.">
+          <!-- axes -->
+          <line x1="70" y1="212" x2="330" y2="212" stroke="currentColor" stroke-width="1.4"/>
+          <line x1="70" y1="212" x2="70" y2="52" stroke="currentColor" stroke-width="1.4"/>
+          <text x="200" y="240" text-anchor="middle" font-size="11" fill="currentColor" opacity=".75">concentration (µg/m³)</text>
+          <text x="34" y="132" text-anchor="middle" font-size="11" fill="currentColor" opacity=".75" transform="rotate(-90 34 132)">sub-index</text>
+
+          <!-- band -->
+          <line x1="110" y1="192" x2="290" y2="92" stroke="#1E7FB8" stroke-width="2.4"/>
+          <circle cx="110" cy="192" r="3.4" fill="#1E7FB8"/>
+          <circle cx="290" cy="92" r="3.4" fill="#1E7FB8"/>
+          <text x="110" y="208" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".8">C low</text>
+          <text x="290" y="208" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".8">C high</text>
+          <text x="62" y="196" text-anchor="end" font-size="10.5" fill="currentColor" opacity=".8">I low</text>
+          <text x="62" y="96" text-anchor="end" font-size="10.5" fill="currentColor" opacity=".8">I high</text>
+
+          <!-- sample point -->
+          <line x1="200" y1="212" x2="200" y2="142" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>
+          <line x1="70" y1="142" x2="200" y2="142" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>
+          <circle cx="200" cy="142" r="4.6" fill="#DE6C10"/>
+          <text x="212" y="136" font-size="11" fill="#DE6C10" font-weight="600">this reading</text>
+
+          <text x="70" y="272" font-size="12" fill="currentColor" font-family="monospace">I = I_low + (I_high − I_low) / (C_high − C_low) × (C − C_low)</text>
+
+          <!-- max side -->
+          <line x1="392" y1="52" x2="392" y2="230" stroke="currentColor" stroke-width="1" opacity=".28"/>
+          <text x="424" y="66" font-size="11.5" font-weight="600" fill="currentColor" opacity=".75">SIX SUB-INDICES</text>
+
+          <rect x="424" y="80" width="52" height="20" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <text x="450" y="94" text-anchor="middle" font-size="10.5" fill="currentColor">PM2.5</text>
+          <rect x="484" y="80" width="52" height="20" rx="4" fill="none" stroke="#C92E22" stroke-width="1.9"/>
+          <text x="510" y="94" text-anchor="middle" font-size="10.5" fill="#C92E22" font-weight="700">PM10</text>
+          <rect x="544" y="80" width="52" height="20" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <text x="570" y="94" text-anchor="middle" font-size="10.5" fill="currentColor">NO₂</text>
+          <rect x="604" y="80" width="52" height="20" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <text x="630" y="94" text-anchor="middle" font-size="10.5" fill="currentColor">SO₂</text>
+          <rect x="424" y="108" width="52" height="20" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <text x="450" y="122" text-anchor="middle" font-size="10.5" fill="currentColor">NH₃</text>
+          <rect x="484" y="108" width="52" height="20" rx="4" fill="none" stroke="currentColor" stroke-width="1.3"/>
+          <text x="510" y="122" text-anchor="middle" font-size="10.5" fill="currentColor">O₃</text>
+
+          <text x="424" y="162" font-size="12" fill="currentColor">AQI = <tspan font-weight="700">max</tspan> of the six</text>
+          <text x="424" y="184" font-size="12" fill="#C92E22" font-weight="600">PM10 governs this station</text>
+          <text x="424" y="212" font-size="11" fill="currentColor" opacity=".72">The card names the governing</text>
+          <text x="424" y="228" font-size="11" fill="currentColor" opacity=".72">pollutant, not just the number.</text>
+        </svg>
+        <figcaption>
+          Indian AQI is defined as the worst sub-index, not an average. That is why the card shows
+          which pollutant produced the figure — an AQI of 169 driven by NO₂ means something different
+          from one driven by PM2.5.
+        </figcaption>
+      </figure>
+
+      <h4>Details worth knowing</h4>
+      <ul>
+        <li><strong>Carbon monoxide is deliberately excluded.</strong> CPCB defines CO breakpoints in mg/m³ while the feed publishes µg/m³. Mixing the units would produce a wildly wrong sub-index, and since AQI is a maximum, one wrong sub-index corrupts the whole index.</li>
+        <li><strong>Up to 600 rows per city.</strong> Delhi returns roughly 308 rows across 44 stations. An earlier limit of 200 silently truncated it.</li>
+        <li><strong>Station names are exact-match.</strong> CPCB files the capital under "Delhi", not "New Delhi" — that mismatch returned zero rows and the card showed seeded data under a live label for the entire life of the feature. Each place now carries an explicit <code>cpcbCity</code>.</li>
+        <li><strong>Kochi has no CPCB station at all.</strong> Kerala reports Kannur, Thiruvananthapuram and Thrissur. The card says so rather than inventing a number.</li>
+        <li>The index is capped at 500, as CPCB caps its published figure.</li>
+      </ul>
+    </section>
+
+    <!-- ============================================ 7 -->
+    <section id="cap">
+      <div class="eyebrow">07</div>
+      <h2>The warning pipeline</h2>
+      <p class="lede">
+        Severe weather is the one thing in this app that must never be wrong, and it is the one
+        thing that is fully live.
+      </p>
+      <p>
+        <strong>CAP</strong> — the Common Alerting Protocol — is an OASIS standard for emergency
+        alerts, used internationally. NDMA publishes India's alerts as CAP 1.2 XML through its
+        Sachet portal, with no key and no whitelisting, and that feed carries the same IMD, state
+        SDMA and Central Water Commission bulletins that IMD's own API would.
+      </p>
+
+      <h4>What <code>/api/warnings</code> does</h4>
+      <ul>
+        <li>Fetches the national RSS index (6-second deadline), then fetches individual CAP entries through a <strong>12-way worker pool under a 7-second budget</strong> — enough parallelism to enrich the feed without exceeding a serverless invocation.</li>
+        <li>Maps CAP's <code>severity</code> to IMD's public colour code, which happens to be the same four-value shape:
+          <span class="tag" style="color:var(--red)">Extreme → red</span>
+          <span class="tag" style="color:var(--orange)">Severe → orange</span>
+          <span class="tag" style="color:var(--yellow)">Moderate → yellow</span>
+          <span class="tag" style="color:var(--green)">Minor → green</span>
+        </li>
+        <li>Drops anything not currently in force: <code>status</code> other than <code>Actual</code>, a <code>msgType</code> of <code>Cancel</code>, or an <code>expires</code> time in the past. An expired Chennai bulletin was on screen before this check existed.</li>
+        <li>Matches districts against each saved place using <strong>word-boundary Unicode matching</strong>. Plain substring matching put a Tamil Nadu thunderstorm on Indore, because "Dhar" appears inside "Dharmapuri".</li>
+      </ul>
+
+      <div class="flag">
+        <p>
+          <strong>A live warning is never translated.</strong> The app has full Hindi, but a live CAP
+          bulletin is shown exactly as issued. Rewording a real warning would put words in IMD's
+          mouth. Seeded bulletins do carry Hindi, because we wrote them. The rule is applied in one
+          place, <code>i18n/capText.ts</code>, and it covers the headline, the body, the expiry time
+          and the issuing office.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================ 8 -->
+    <section id="rules">
+      <div class="eyebrow">08</div>
+      <h2>How a card earns its place</h2>
+      <p class="lede">
+        The problem statement asks for personalization. Ours is arithmetic, not a model — a judge
+        can ask why any card is where it is and get a specific answer with numbers in it.
+      </p>
+
+      <figure>
+        <svg viewBox="0 0 720 250" role="img" aria-label="A card's score is its base position value plus an urgency boost from one threshold on one live reading; the stack sorts by that total.">
+          <text x="16" y="30" font-size="12.5" font-family="monospace" fill="currentColor">score  =  base  +  urgency boost</text>
+
+          <rect x="16" y="52" width="196" height="82" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="114" y="76" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Base</text>
+          <text x="114" y="96" text-anchor="middle" font-size="11" fill="currentColor" opacity=".75">from the order you</text>
+          <text x="114" y="112" text-anchor="middle" font-size="11" fill="currentColor" opacity=".75">picked the personas</text>
+          <text x="114" y="128" text-anchor="middle" font-size="11" font-family="monospace" fill="#1E7FB8">100 · 90 · 80</text>
+
+          <text x="228" y="98" font-size="18" fill="currentColor" opacity=".6">+</text>
+
+          <rect x="252" y="52" width="238" height="82" rx="8" fill="none" stroke="#DE6C10" stroke-width="1.7"/>
+          <text x="371" y="76" text-anchor="middle" font-size="12.5" font-weight="600" fill="#DE6C10">Boost</text>
+          <text x="371" y="96" text-anchor="middle" font-size="11" fill="currentColor" opacity=".8">one threshold on one reading</text>
+          <text x="371" y="114" text-anchor="middle" font-size="10.5" font-family="monospace" fill="currentColor" opacity=".78">AQI &gt; 150 → +40</text>
+          <text x="371" y="130" text-anchor="middle" font-size="10.5" font-family="monospace" fill="currentColor" opacity=".78">visibility &lt; 3 km → +36</text>
+
+          <text x="506" y="98" font-size="18" fill="currentColor" opacity=".6">=</text>
+
+          <rect x="530" y="52" width="174" height="82" rx="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          <text x="617" y="82" text-anchor="middle" font-size="12.5" font-weight="600" fill="currentColor">Sorted stack</text>
+          <text x="617" y="104" text-anchor="middle" font-size="11" fill="currentColor" opacity=".75">highest score on top</text>
+          <text x="617" y="122" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".6">manual order overrides</text>
+
+          <line x1="16" y1="164" x2="704" y2="164" stroke="currentColor" stroke-width="1" opacity=".25"/>
+          <text x="16" y="190" font-size="12" fill="currentColor" opacity=".85">On screen, in the reader's language:</text>
+          <text x="16" y="216" font-size="12.5" font-style="italic" fill="currentColor">“Commuters is persona 2 of 2, worth 90. In Mumbai right now, visibility is down to</text>
+          <text x="16" y="236" font-size="12.5" font-style="italic" fill="currentColor">2.4 km, below our own 3 km driving-caution line — that adds +36, for 126.”</text>
+        </svg>
+        <figcaption>
+          Every card carries a "Why this card" disclosure holding that sentence, assembled from the
+          same numbers the rule used. Nothing is hidden behind a model.
+        </figcaption>
+      </figure>
+
+      <h3>Three rules the engine also applies</h3>
+      <ul>
+        <li><strong>Severe warnings outrank everything.</strong> The banner is pinned above the persona cards regardless of which personas are active.</li>
+        <li><strong>Suppression is explained, not silent.</strong> The beach card cannot show for an inland city, so it is removed and a line below the stack says which persona was suppressed and why.</li>
+        <li><strong>Advice ordering is by consequence, not by data source.</strong> Life-safety first, then whatever the active warning is about, then health, then comfort — capped at four items, because a list of nine things to do is a list nobody reads.</li>
+      </ul>
+
+      <h4>Packing suggestions reuse the same engine</h4>
+      <p>
+        The problem statement asks travellers for packing suggestions — "carry a raincoat in London".
+        Rather than write a second rule set, each destination's top advisory is projected onto a
+        thing you can put in a bag: <em>carry an umbrella</em> becomes <em>pack rain cover</em>.
+        Advisories with no honest packing equivalent — "use fog lights", "avoid the underpass" — are
+        absent rather than stretched into one.
+      </p>
+    </section>
+
+    <!-- ============================================ 9 -->
+    <section id="design">
+      <div class="eyebrow">09</div>
+      <h2>The design system</h2>
+      <p class="lede">
+        One TypeScript file, <code>design/tokens.ts</code>, holds every colour, blur, radius and
+        spring in the app. Nothing is hard-coded in a component.
+      </p>
+
+      <h3>The sky is a lookup, not a gradient someone picked</h3>
+      <p>
+        The background is a function of two inputs: <strong>condition</strong> (clear, partly cloudy,
+        overcast, rain, thunderstorm, fog, snow) × <strong>time of day</strong> (dawn, day, dusk,
+        night). That is <strong>7 × 4 = 28</strong> defined gradients.
+      </p>
+      <p>
+        Time of day derives from the <em>location's</em> own sunrise and sunset via
+        <code>Intl.DateTimeFormat</code>, not the device clock — so checking Kochi from Delhi shows
+        Kochi's night. Each place carries an IANA timezone for this reason.
+      </p>
+
+      <h3>Glass, and the contrast problem it creates</h3>
+      <p>
+        Cards are frosted surfaces over that moving background. That is a legibility risk in a
+        severe-weather app, so contrast is not eyeballed — it is computed. A build script composites
+        each glass surface over the real gradient at the screen position where cards actually sit,
+        then measures the WCAG contrast ratio of both text colours against it.
+      </p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Check</th><th>Result</th></tr></thead>
+          <tbody>
+            <tr><td>Skies clearing WCAG AA 4.5:1 on glass and bare</td><td class="num">28 / 28</td></tr>
+            <tr><td>Skies needing a scrim behind the hero text</td><td class="num">16</td></tr>
+            <tr><td>Hourly-chip tint samples measured</td><td class="num">700</td></tr>
+            <tr><td>Worst chip contrast found</td><td class="num">5.02 : 1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Two glass tiers exist — one for dark skies, one for light — and the app measures which
+        polarity a given sky needs rather than assuming. There is also a flat, blur-free tier for
+        low-end Android, exposed as a toggle, because <code>backdrop-filter</code> is the single
+        most expensive thing on the screen.
+      </p>
+    </section>
+
+    <!-- ============================================ 10 -->
+    <section id="perf">
+      <div class="eyebrow">10</div>
+      <h2>Performance</h2>
+      <p class="lede">
+        The current app's reviews complain about slow loads. This is the number that answers that.
+      </p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>Asset</th><th>Gzipped</th><th>When</th></tr></thead>
+          <tbody>
+            <tr><td>Main JS bundle</td><td class="num">135.1 kB</td><td>First load</td></tr>
+            <tr><td>CSS</td><td class="num">5.4 kB</td><td>First load</td></tr>
+            <tr><td>HTML</td><td class="num">0.7 kB</td><td>First load</td></tr>
+            <tr><td>MapLibre GL</td><td class="num">217.6 kB</td><td>Only when the map opens</td></tr>
+            <tr><td>MapLibre CSS</td><td class="num">9.2 kB</td><td>Only when the map opens</td></tr>
+            <tr><td>Devanagari font</td><td class="num">121.2 kB</td><td>Only when a Hindi glyph renders</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flag">
+        <p>
+          <strong>Quote the number carefully.</strong> "135 kB" is the JavaScript bundle. A cold first
+          visit in English is closer to <strong>250 kB</strong> once the web fonts are counted. Both
+          are good figures for a weather app — but say which one you mean, because a judge with
+          devtools open will see the larger number.
+        </p>
+      </div>
+
+      <h4>Where the speed comes from</h4>
+      <ul>
+        <li><strong>The map is deferred.</strong> 218 kB of MapLibre is a separate chunk that only downloads when someone opens Places. That is the single biggest win, and it is a deliberate architectural choice rather than a small bundle by luck.</li>
+        <li><strong>Blur is dropped while the stack animates.</strong> A transformed <code>backdrop-filter</code> element re-blurs its backdrop every frame; across a stack of cards that is the dominant cost. A short motion window swaps in a flat surface during reorders.</li>
+        <li><strong>Fonts are subset by unicode-range.</strong> An English session downloads the Devanagari stylesheet but none of its 121 kB of glyphs.</li>
+        <li><strong>Skeletons, never spinners.</strong> Every fetch has a defined loading and offline state.</li>
+      </ul>
+    </section>
+
+    <!-- ============================================ 11 -->
+    <section id="i18n">
+      <div class="eyebrow">11</div>
+      <h2>Two languages, verified</h2>
+      <p>
+        English and Hindi are complete: <strong>444 keys in each</strong>, including every seeded
+        advisory, city name, station name, AQI band, soil category and warning bulletin. The language
+        picker also lists ten more Indian languages as downloadable packs — that list is a UI
+        demonstration, and only English and Hindi are implemented.
+      </p>
+      <p>
+        The hard part was not the UI chrome, it was the data. Seeded prose used to render straight
+        from the data file in English, so a Hindi sentence would switch language halfway through.
+        Those strings now live in the dictionary with the data file's English as the fallback of
+        record, and the build diffs the two copies.
+      </p>
+      <p>
+        <strong>What stays in English on purpose:</strong> live CPCB station names and live CAP
+        bulletins, shown exactly as the upstream issued them. Plus acronyms and codes — IMD, CPCB,
+        AQI, IST, RMC, state codes.
+      </p>
+    </section>
+
+    <!-- ============================================ 12 -->
+    <section id="checks">
+      <div class="eyebrow">12</div>
+      <h2>What the build refuses to ship</h2>
+      <p class="lede">
+        <code>npm run check</code> runs the type checker plus eight verification passes. These exist
+        because each one corresponds to a bug that actually happened.
+      </p>
+      <div class="scroll">
+        <table>
+          <thead><tr><th>#</th><th>Check</th><th>The bug it prevents</th></tr></thead>
+          <tbody>
+            <tr><td class="num">1–3</td><td>Design tokens match the design study</td><td>The standalone prototype drifting from the app</td></tr>
+            <tr><td class="num">4</td><td>Contrast on all 28 skies, both text contexts</td><td>Unreadable text on one weather condition nobody demoed</td></tr>
+            <tr><td class="num">5</td><td>Contrast on 700 hourly-chip tint samples</td><td>The tinted carousel dropping below AA at one hour</td></tr>
+            <tr><td class="num">6</td><td>Both dictionaries in step; every literal <code>t()</code> key resolves</td><td>A key that exists in English and not Hindi</td></tr>
+            <tr><td class="num">7</td><td>CAP English in the dictionary matches the data file</td><td>Rewording a bulletin and leaving the Hindi behind</td></tr>
+            <tr><td class="num">7b</td><td>All 107 seeded strings have a translation and have not drifted</td><td>Exactly the half-English sentence described above</td></tr>
+            <tr><td class="num">8</td><td>Serverless routes have no relative imports</td><td>A real production crash — see below</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Check 8 has a story worth telling. <code>/api/aqi</code> imported a sibling file, which works
+        locally but produced <code>ERR_MODULE_NOT_FOUND</code> on Vercel, because
+        <code>"type": "module"</code> means emitted ESM and ESM cannot resolve an extensionless
+        relative import. The fix was to inline the shared code so each route is self-contained; the
+        check makes sure nobody reintroduces it. It was tested by putting the bug back and confirming
+        the build failed.
+      </p>
+    </section>
+
+    <!-- ============================================ 13 -->
+    <section id="limits">
+      <div class="eyebrow">13</div>
+      <h2>Honest limits</h2>
+      <p class="lede">
+        Say these before a judge finds them. Every one has a reason and a route forward.
+      </p>
+
+      <div class="qa">
+        <p class="q">Is this a PWA? Can I install it?</p>
+        <p>
+          Not yet. There is no web app manifest and no service worker. The original plan called for
+          both; neither is built. It is a responsive web app that works well on a phone browser.
+        </p>
+      </div>
+
+      <div class="qa">
+        <p class="q">Does it work offline?</p>
+        <p>
+          No — and be careful with the wording here. The seeded dataset means the app never shows a
+          blank screen when a <em>feed</em> fails, and there is a defined stale-data state with an
+          "updated X ago" timestamp. But with no network at all, the page itself will not load,
+          because there is no service worker caching it. Demo-safe is not the same as offline-first.
+        </p>
+      </div>
+
+      <div class="qa">
+        <p class="q">Are my saved places and personas remembered?</p>
+        <p>
+          Within a session, yes. Across a reload, no — nothing is persisted to
+          <code>localStorage</code> yet. Given that broken favourites are a top complaint about the
+          current app, this is the first thing to build next; it is roughly an hour of work.
+        </p>
+      </div>
+
+      <div class="qa">
+        <p class="q">Why are the forecast numbers not live?</p>
+        <p>
+          IMD's forecast APIs require the calling server's IP to be whitelisted, which is a
+          procurement timeline, not an engineering one. We wired everything that <em>is</em>
+          reachable without it — CPCB air quality and NDMA's CAP warnings — and labelled everything
+          else as seeded rather than presenting demo values as measurements.
+        </p>
+      </div>
+
+      <div class="qa">
+        <p class="q">Is there any traffic data on the commute card?</p>
+        <p>
+          No, and the card does not imply one. It reads visibility, gusts and waterlogging risk —
+          weather-side commute conditions. Traffic integration is a named next step, not a claim.
+        </p>
+      </div>
+
+      <div class="qa">
+        <p class="q">Pull-to-refresh — what actually refreshes?</p>
+        <p>
+          Air quality does: the gesture clears the client cache and re-requests with
+          <code>cache: "reload"</code>. Warnings do not currently invalidate on pull; they refresh on
+          their own five-minute cycle. That is a known gap.
+        </p>
+      </div>
+
+      <div class="qa">
+        <p class="q">Is the "updated X ago" timestamp real?</p>
+        <p>
+          The live air-quality card shows CPCB's own publication timestamp, which is real. The
+          header's overall data age is currently a fixed value, not a measured one.
+        </p>
+      </div>
+    </section>
+
+    <!-- ============================================ 14 -->
+    <section id="rapid">
+      <div class="eyebrow">14</div>
+      <h2>Rapid fire</h2>
+      <p class="lede">One-line answers to the questions most likely to come fast.</p>
+
+      <div class="qa">
+        <p class="q">Why not just use OpenWeather for everything?</p>
+        <p>The brief is an IMD product. A homepage for India's national meteorological agency that quietly runs on an American commercial API would fail on the thing it is being judged for. We use OpenWeather for one map overlay and say so.</p>
+      </div>
+
+      <div class="qa">
+        <p class="q">How is this personalized if there is no login?</p>
+        <p>Persona choice plus location plus time of day. No account, no tracking, no profile leaving the device — which is also why it needs no privacy policy to demo.</p>
+      </div>
+
+      <div class="qa">
+        <p class="q">Why rule-based instead of machine learning?</p>
+        <p>Explainability is a hard requirement, not a preference. A judge asking "why is this card here" gets a sentence with the threshold and the reading in it. An ML ranker could not answer that, and there is no training data for eight personas anyway.</p>
+      </div>
+
+      <div class="qa">
+        <p class="q">How many API calls does a screen load make?</p>
+        <p>Two to our backend — air quality for the selected city, and warnings once for all saved places. The map adds its own requests only when opened.</p>
+      </div>
+
+      <div class="qa">
+        <p class="q">What happens if data.gov.in is down during this demo?</p>
+        <p>A five-second deadline and one four-second retry, then the card keeps its seeded value and relabels itself as seeded. You will see the badge change; nothing breaks.</p>
+      </div>
+
+      <div class="qa">
+        <p class="q">How do you know the Hindi is complete?</p>
+        <p>The build fails if any key exists in one language and not the other, and separately if any of the 107 seeded strings loses its translation. It is not a manual check.</p>
+      </div>
+
+      <div class="qa">
+        <p class="q">Could this scale to all of India?</p>
+        <p>The map's air layer already covers 154 cities in three zoom tiers. The persona and card logic is per-place and stateless, so scaling is a matter of the data source's coverage, not of our architecture.</p>
+      </div>
+
+      <div class="qa">
+        <p class="q">What is the single most technically interesting thing here?</p>
+        <p>Pick one and own it. Reasonable answers: computing CPCB's Indian AQI from raw concentrations on our own server; the zoom-tiered map labels that prevent clutter by never drawing it; or a build that refuses to ship a contrast failure or a missing translation.</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    Written from the codebase at commit 011b411 · 18 commits · ~11,000 lines TS/TSX/CSS · verified against package.json, client/api, and src/design/tokens.ts
+  </footer>
+
+</div>

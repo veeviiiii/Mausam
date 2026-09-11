@@ -4,8 +4,25 @@
     {
       "name": "mausam-client",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "client", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "client",
+        "run",
+        "dev"
+      ],
       "port": 5173,
+      "autoPort": true
+    },
+    {
+      "name": "mausam-preview",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "client",
+        "run",
+        "preview"
+      ],
+      "port": 4173,
       "autoPort": true
     }
   ]

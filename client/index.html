@@ -7,6 +7,20 @@
     <meta name="description" content="Mausam — India Meteorological Department's weather app, personalised around how you actually use the forecast." />
     <title>Mausam</title>
 
+    <!-- Installable. The manifest is what lets Android offer "Add to home
+         screen" and launch without browser chrome; the service worker
+         registered in main.tsx is what makes that launch work offline. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <!-- iOS ignores the manifest's display mode and reads these instead. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Mausam" />
+    <!-- black-translucent lets the sky gradient run under the status bar, which
+         is the whole point of the background on this app. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <!-- Loaded as separate requests: if one family is unavailable it fails alone
