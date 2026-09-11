@@ -2,7 +2,7 @@ import type { Plugin } from "vite";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 /**
- * Serves the /api routes in `vite dev` and `vite preview`.
+ * Serves the /api routes in `vite dev`.
  *
  * Vercel runs client/api/*.ts as functions in production; nothing runs them
  * locally. Without this you develop against a 404 and only find out the route
@@ -12,6 +12,19 @@ import type { IncomingMessage, ServerResponse } from "node:http";
  * The handler module is imported through Vite's own SSR loader, so it is the
  * same TypeScript file Vercel builds, transpiled on demand and hot-reloaded on
  * edit. No second copy of the logic.
+ *
+ * NOT `vite preview`, despite what this comment used to claim. Only
+ * configureServer is implemented below, and the hook preview would need,
+ * configurePreviewServer, has no ssrLoadModule to reach for — the preview
+ * server serves built files and runs no module graph, so there is nothing there
+ * that can transpile a .ts handler on demand. `npm run preview` therefore gets
+ * a 404 on /api and the app falls back to its seeded data, which is a correct
+ * and deliberately supported state rather than a break.
+ *
+ * If live data against a production build is ever needed locally, the honest
+ * options are to build the routes to JS first and serve those, or to point the
+ * client's API base at the deployed Vercel origin. Do not quietly re-add the
+ * claim to this comment without implementing one of them.
  */
 export function devApi(): Plugin {
   return {
